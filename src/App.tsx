@@ -4192,10 +4192,11 @@ export default function App() {
                       updateUI(`${targetProfile} (${format}) done`);
                     };
 
-                    if (exportFormats.xlsx) await handleExport('XLSX', () => exportMediaLibraryToExcel(filteredItems, profileRules, excelColumns, targetDir, files));
-                    if (exportFormats.csv) await handleExport('CSV', () => exportMediaLibraryToCSV(jsonCsvItems, profileRules, excelColumns, targetDir, files));
-                    if (exportFormats.html) await handleExport('HTML', () => exportMediaLibraryToHTML(filteredItems, profileRules, excelColumns, targetDir, files));
-                    if (exportFormats.json) await handleExport('JSON', () => exportMediaLibraryToJSON(jsonCsvItems, profileRules, targetDir, files));
+                    const allItems = [...scannedFilesList, ...corruptFiles];
+                    if (exportFormats.xlsx) await handleExport('XLSX', () => exportMediaLibraryToExcel(filteredItems, profileRules, excelColumns, targetDir, allItems));
+                    if (exportFormats.csv) await handleExport('CSV', () => exportMediaLibraryToCSV(jsonCsvItems, profileRules, excelColumns, targetDir, allItems));
+                    if (exportFormats.html) await handleExport('HTML', () => exportMediaLibraryToHTML(filteredItems, profileRules, excelColumns, targetDir, allItems));
+                    if (exportFormats.json) await handleExport('JSON', () => exportMediaLibraryToJSON(jsonCsvItems, profileRules, targetDir, allItems));
                     
                     return { success: s, fail: f };
                   };
