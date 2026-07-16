@@ -74,3 +74,5 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Reverted the Discovery Mode grid spacing to `grid-cols-1 sm:grid-cols-2 xl:grid-cols-3` to avoid layout stretching issues on standard screen sizes.
 - Added adaptive layout wrappers to Discovery Mode headers (Video, Surround, Stereo, Container, Music, HDR) using `flex-wrap` and flexible widths, ensuring the "All | None" control links slide neatly below the headers instead of overlapping or causing layout breakages on narrower displays.
+Update changelog
+- 2026-07-16: Fixed an issue where the duplicate files summary displayed zero duplicates due to activeRules not being properly computed within the dupSummary block. Restored the calculation logic for activeRules within Dashboard.tsx.

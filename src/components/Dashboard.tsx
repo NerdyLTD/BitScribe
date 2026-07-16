@@ -968,9 +968,16 @@ export default memo(function Dashboard({
     let mDup = 0;
     let totalSizeGB = 0;
     
+    const isDuplicatesCardVisible = isCustomBlocksActive 
+      ? !!visibleBlocks['media-duplicates-card'] 
+      : (customRules.useDuplicationScan || customRules.useDuplicationVideoScan || customRules.useDuplicationMusicScan || isTourActive || document.body.classList.contains("tour-active"));
+    const activeRules = isDuplicatesCardVisible 
+      ? { ...customRules, useDuplicationScan: true } 
+      : customRules;
+
     // Use getDuplicatePairRows to calculate only the actual extra copies (wasted space)
     const items = metricsFilteredFiles.map(i => i.item);
-    const pairs = getDuplicatePairRows(items, customRules);
+    const pairs = getDuplicatePairRows(items, activeRules);
     
     pairs.forEach(pair => {
       if (isMusicCategory(pair.category)) {
@@ -983,7 +990,7 @@ export default memo(function Dashboard({
 
     const total = vDup + mDup;
     return { vDup, mDup, total, totalSizeGB };
-  }, [metricsFilteredFiles, customRules]);
+  }, [metricsFilteredFiles, customRules, isCustomBlocksActive, visibleBlocks, isTourActive]);
 
   const anomalySummary = useMemo(() => {
     let vBloated = 0;
