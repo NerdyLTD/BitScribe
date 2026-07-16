@@ -189,8 +189,8 @@ export async function exportMediaLibraryToExcel(
   subTitleCell.alignment = { horizontal: "center", vertical: "middle" };
   overviewWs.getRow(2).height = 25;
 
-  const corruptedFilesList = items.filter((it) => it.category === "Corrupted");
-  const healthyFilesList = items.filter(
+  const corruptedFilesList = itemsForDups.filter((it) => it.category === "Corrupted");
+  const healthyFilesList = itemsForDups.filter(
     (it) => it.category !== "Corrupted" && it.category !== "Static",
   );
   const totalAuditedCount = healthyFilesList.length;
@@ -205,7 +205,7 @@ export async function exportMediaLibraryToExcel(
   const containerCounts: Record<string, number> = {};
   const musicCounts: Record<string, number> = {};
 
-  items.forEach((item) => {
+  itemsForDups.forEach((item) => {
     if (item.category === "Static") {
       return;
     }
@@ -336,25 +336,39 @@ export async function exportMediaLibraryToExcel(
       rules.useVideoMetadataScan ||
       rules.useMusicMetadataScan
     ) {
-      const totalAudited = items.filter(
-        (it) => it.category !== "Corrupted" && it.category !== "Static",
+      const auditVideo = rules.useMetadataScan || rules.useVideoMetadataScan;
+      const auditMusic = rules.useMetadataScan || rules.useMusicMetadataScan;
+
+      const targetItems = itemsForDups.filter(
+        (it) => {
+          if (it.category === "Corrupted" || it.category === "Static") return false;
+          const isMusic = isMusicCategory(it.category);
+          if (isMusic && !auditMusic) return false;
+          if (!isMusic && !auditVideo) return false;
+          return true;
+        }
+      );
+
+      const totalAudited = targetItems.length;
+      const completeCount = targetItems.filter(
+        (it) => getMissingMetadataTags(it).length === 0,
       ).length;
-      const completeCount = items.filter(
-        (it) =>
-          it.category !== "Corrupted" &&
-          it.category !== "Static" &&
-          evaluatePlexCompatibility(it, rules).level === "modern",
-      ).length;
+
       const pct =
         totalAudited > 0
           ? Math.round((completeCount / totalAudited) * 100)
           : 100;
-      writeLeftCell(leftRowIdx++, "      Metadata Compliance", `${pct}%`);
-      writeRightCell(rightRowIdx++, "      Files Missing Metadata", `${totalAudited - completeCount} files`);
+
+      const labelPrefix = rules.useVideoMetadataScan && !rules.useMusicMetadataScan 
+        ? "Video " 
+        : (rules.useMusicMetadataScan && !rules.useVideoMetadataScan ? "Music " : "");
+
+      writeLeftCell(leftRowIdx++, `      ${labelPrefix}Metadata Compliance`, `${pct}%`);
+      writeRightCell(rightRowIdx++, `      Files Missing ${labelPrefix}Metadata`, `${totalAudited - completeCount} files`);
     } else if (rules.useSubtitleScan) {
-      const videoItems = items.filter(
+      const videoItems = itemsForDups.filter(
         (it) =>
-          it.category !== "Music" &&
+          !isMusicCategory(it.category) &&
           it.category !== "Corrupted" &&
           it.category !== "Static",
       );
@@ -372,7 +386,7 @@ export async function exportMediaLibraryToExcel(
       writeRightCell(rightRowIdx++, "      Missing Subtitles", `${missingSubsCount} files`);
     } else if (rules.useAnomalyScan) {
       let bloated = 0, starved = 0;
-      const auditedItems = items.filter(
+      const auditedItems = itemsForDups.filter(
         (it) => it.category !== "Corrupted" && it.category !== "Static"
       );
 
@@ -398,15 +412,15 @@ export async function exportMediaLibraryToExcel(
       writeRightCell(rightRowIdx++, "      Bloated Bitrates", `${bloated} files`);
       writeRightCell(rightRowIdx++, "      Starved Bitrates", `${starved} files`);
     } else if (globalScanType === "Duplication Scan") {
-      const dupRows = getDuplicatePairRows(items, rules);
+      const dupRows = getDuplicatePairRows(itemsForDups, rules);
       const dupCount = dupRows.length;
       let spaceSavedGB = 0;
       dupRows.forEach(row => {
         spaceSavedGB += row.dupSizeGB || 0;
       });
 
-      const uniquePct = items.length > 0
-        ? Math.round(((items.length - dupCount) / items.length) * 100)
+      const uniquePct = itemsForDups.length > 0
+        ? Math.round(((itemsForDups.length - dupCount) / itemsForDups.length) * 100)
         : 100;
 
       writeLeftCell(
@@ -436,7 +450,7 @@ export async function exportMediaLibraryToExcel(
     // Discovery
     const videoCounts: Record<string, number> = {};
     const audioCounts: Record<string, number> = {};
-    items.forEach(it => {
+    itemsForDups.forEach(it => {
       if (!isMusicCategory(it.category) && it.category !== 'Corrupted' && it.category !== 'Static') {
         const vc = getPrimaryVideoCodec(it);
         if (vc && vc !== "-") videoCounts[vc] = (videoCounts[vc] || 0) + 1;

@@ -1,3 +1,11 @@
+## [1.4.6] - 2026-07-16
+
+### Fixed
+- Fixed an issue where the UI Dashboard erroneously split music albums with minor casing variations (e.g., "Dare to Be Stupid" vs "Dare To Be Stupid") into separate groups. Replaced the strict string equality check with a normalized case-insensitive grouping function identical to the Excel exporter logic.
+- Fixed the UI Dashboard library table sorting logic for music tracks. Previously, secondary sorting incorrectly alphabetized songs by title rather than organizing them chronologically by Disc and Track numbers, causing out-of-order album listings. The Dashboard now mimics the primary Excel exporter logic by properly resolving tracks chronologically.
+- Fixed an issue where the Excel and HTML Metadata Scanner modules erroneously audited music files as non-compliant by relying on streaming compatibility flags rather than the dedicated metadata scanner. Music files are now properly audited for their own trackable metadata (Title, Year, Artist, Album, Disc, Track).
+- Separated `Metadata Scan` metric rendering in Excel and HTML into responsive variants that respect the isolation of `Video Metadata Scan` and `Music Metadata Scan` preferences.
+
 ## [1.4.5] - 2026-07-16
 ### Changed
 - Eliminated all duplicate, hard-coded logic for metric calculations across the entire application. Created a centralized "source of truth" in `plexEvaluator.ts` by adding standardized boolean flags (`isBloated`, `isStarved`, `isAnomaly`) to the `EvaluationResult` interface.

@@ -434,12 +434,16 @@ export default memo(function Dashboard({
         } else if (activeSortCol === 'artist') {
           secondaryData = {
             album: getDisplayAlbum(item, customRules) || '',
-            title: getDisplaySongTitle(item, customRules) || ''
+            title: getDisplaySongTitle(item, customRules) || '',
+            disc: parseInt((item.tags as any)?.disc || "1") || 1,
+            track: parseInt((item.tags as any)?.track || (item.tags as any)?.tracknumber || "0") || 0
           };
         } else if (activeSortCol === 'album') {
           secondaryData = {
             artist: getDisplayArtist(item, customRules) || '',
-            title: getDisplaySongTitle(item, customRules) || ''
+            title: getDisplaySongTitle(item, customRules) || '',
+            disc: parseInt((item.tags as any)?.disc || "1") || 1,
+            track: parseInt((item.tags as any)?.track || (item.tags as any)?.tracknumber || "0") || 0
           };
         }
 
@@ -470,6 +474,15 @@ export default memo(function Dashboard({
             const albumB = cachedB?.secondaryData?.album || '';
             const albumComp = albumA.localeCompare(albumB, undefined, { numeric: true, sensitivity: 'base' });
             if (albumComp !== 0) return albumComp;
+            
+            const discA = cachedA?.secondaryData?.disc || 1;
+            const discB = cachedB?.secondaryData?.disc || 1;
+            if (discA !== discB) return discA - discB;
+            
+            const trackA = cachedA?.secondaryData?.track || 0;
+            const trackB = cachedB?.secondaryData?.track || 0;
+            if (trackA !== trackB) return trackA - trackB;
+            
             const titleA = cachedA?.secondaryData?.title || '';
             const titleB = cachedB?.secondaryData?.title || '';
             return titleA.localeCompare(titleB, undefined, { numeric: true, sensitivity: 'base' });
@@ -479,6 +492,15 @@ export default memo(function Dashboard({
             const artistB = cachedB?.secondaryData?.artist || '';
             const artistComp = artistA.localeCompare(artistB, undefined, { numeric: true, sensitivity: 'base' });
             if (artistComp !== 0) return artistComp;
+            
+            const discA = cachedA?.secondaryData?.disc || 1;
+            const discB = cachedB?.secondaryData?.disc || 1;
+            if (discA !== discB) return discA - discB;
+            
+            const trackA = cachedA?.secondaryData?.track || 0;
+            const trackB = cachedB?.secondaryData?.track || 0;
+            if (trackA !== trackB) return trackA - trackB;
+            
             const titleA = cachedA?.secondaryData?.title || '';
             const titleB = cachedB?.secondaryData?.title || '';
             return titleA.localeCompare(titleB, undefined, { numeric: true, sensitivity: 'base' });
@@ -2529,7 +2551,7 @@ const handleCategoryToggle = (cat: string) => {
             </td>
           </tr>
         ) : (() => {
-          let lastSection: string | null = null;
+          let lastSectionNorm: string | null = null;
           return paginatedFiles.map((dataRow) => {
             const { item, level } = dataRow || {};
             if (!item) return null;
@@ -2565,8 +2587,9 @@ const handleCategoryToggle = (cat: string) => {
                 section = `${artist} — ${album}`;
               }
 
-              if (section !== lastSection) {
-                lastSection = section;
+              const normSection = String(section).replace(/['"\[\]()]/g, "").replace(/\s+/g, " ").trim().toLowerCase();
+              if (normSection !== lastSectionNorm) {
+                lastSectionNorm = normSection;
                 if (group === 'Movies') {
                   sectionHeaderRow = (
                     <tr key={`section-${section}-${item.id}`} className="border-y border-[#00B0F0]/30" style={{ backgroundColor: '#00B0F0', height: '18px' }}>

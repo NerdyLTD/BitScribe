@@ -554,6 +554,7 @@ export async function exportMediaLibraryToHTML(
     ];
   }
 
+  let allOptimizedItems: any[] = [];
   let optimizedItems: any[] = [];
   let finalColumns = { ...columns };
 
@@ -591,7 +592,8 @@ export async function exportMediaLibraryToHTML(
     allPossibleHeaders = ["File", "Path", "Duplicate File", "Duplicate Path", "Flag Reason"];
     finalColumns = { "File": true, "Path": true, "Duplicate File": true, "Duplicate Path": true, "Flag Reason": true };
   } else {
-    optimizedItems = targetItems.map(item => {
+    
+    const mapItemRow = (item: MediaItem) => {
       const isDup = duplicatesMap.get(item.id) ?? false;
       const evalResult = evaluatePlexCompatibility(item, rules, isDup);
       const parsedMeta = parseVideoMetadata(item);
@@ -603,7 +605,7 @@ export async function exportMediaLibraryToHTML(
 
       const missing = getMissingMetadataTags(item);
       
-      const rowData: Record<string, string | number> = {};
+      const rowData: Record<string, string | number | boolean> = {};
       if (isMetadata) {
         const isMusic = isMusicCategory(item.category);
         const isTv = getCategoryGroup(item.category) === "TV";
@@ -784,7 +786,13 @@ export async function exportMediaLibraryToHTML(
       if (item.filePath) rowData["File Path"] = item.filePath;
       
       return rowData;
-    });
+
+    };
+
+    allOptimizedItems = itemsForDups.map(item => mapItemRow(item));
+    const targetItemIds = new Set(targetItems.map(i => i.id));
+    optimizedItems = allOptimizedItems.filter((row, idx) => targetItemIds.has(itemsForDups[idx].id));
+
   }
 
   const htmlTemplate = `<!DOCTYPE html>
@@ -967,6 +975,7 @@ export async function exportMediaLibraryToHTML(
 
 <script>
   const RAW_DATA = __DATA__;
+  const ALL_DATA = __ALL_DATA__;
   const INITIAL_COLUMNS = __COLUMNS__;
   const ALL_POSSIBLE_HEADERS = __HEADERS__;
   const SCAN_TYPE = "__SCAN_TYPE__";
@@ -1188,9 +1197,18 @@ export async function exportMediaLibraryToHTML(
     const container = document.getElementById('metrics-container');
     if (!container) return;
 
+    const isMusicCat = (cat) => ["Music Albums", "Soundtracks", "Music Compilations", "Music", "audio"].includes(cat || "");
+    const baseItems = ALL_DATA.filter(i => {
+      const isMusic = isMusicCat(i.category);
+      if (isMusic && (SCAN_TYPE === "Subtitle Scan" || SCAN_TYPE === "Stream Audit Scan" || SCAN_TYPE === "Video Metadata Scan" || SCAN_TYPE === "Quality Audit")) return false;
+      if (!isMusic && SCAN_TYPE === "Music Metadata Scan") return false;
+      if (i.category === "Corrupted" || i.category === "Static") return false;
+      return true;
+    });
+
     const targetItems = showAllMetricsMode 
-      ? RAW_DATA 
-      : RAW_DATA.filter(i => SCAN_TYPE === "Duplication Scan" || (i.category || "Other") === activeCategory);
+      ? baseItems 
+      : baseItems.filter(i => SCAN_TYPE === "Duplication Scan" || (i.category || "Other") === activeCategory);
 
     const total = targetItems.length;
     let html = '';
@@ -1367,7 +1385,7 @@ export async function exportMediaLibraryToHTML(
     const audioCounts = {};
     const musicCounts = {};
 
-    RAW_DATA.forEach(i => {
+    ALL_DATA.forEach(i => {
       const cat = i.category || 'Other';
       const isMusic = isMusicCat(cat);
 
@@ -1669,6 +1687,7 @@ export async function exportMediaLibraryToHTML(
 
   const finalHtml = htmlTemplate
     .replace('__DATA__', () => JSON.stringify(optimizedItems).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029'))
+    .replace('__ALL_DATA__', () => JSON.stringify(allOptimizedItems).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029'))
     .replace('__COLUMNS__', () => JSON.stringify(finalColumns).replace(/</g, '\\u003c'))
     .replace('__HEADERS__', () => JSON.stringify(allPossibleHeaders).replace(/</g, '\\u003c'))
     .replace('__SCAN_TYPE__', () => scanType)
