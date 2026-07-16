@@ -207,6 +207,11 @@ function getTopLevelFolder(filePath: string): string {
 
 export async function scanDirectories(paths: string[], rules: any, onStart: (total: number) => void, onLog: (msg: string) => void, onProgress: (prog: any) => void, isResume: boolean = false) {
     onLog("Initializing scan...");
+    const normalizePath = (pStr: string) => {
+        if (!pStr) return "";
+        return pStr.replace(/\\/g, '/').toLowerCase().trim();
+    };
+
     let existingPaths = new Set<string>();
     let existingFilesMap = new Map<string, any>();
     if (isResume) {
@@ -214,8 +219,9 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
         try {
             const dbFiles = await getDbFiles();
             dbFiles.forEach(f => {
-                existingPaths.add(f.filePath || f.id);
-                existingFilesMap.set(f.filePath || f.id, f);
+                const normPath = normalizePath(f.filePath || f.id);
+                existingPaths.add(normPath);
+                existingFilesMap.set(normPath, f);
             });
             onLog(`Found ${existingPaths.size} already scanned files to skip.`);
         } catch (e) {
@@ -227,12 +233,16 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
     let allFiles: string[] = [];
     for (const p of paths) {
         onLog(`Walking directory: ${p}`);
-        const files = isTauri() ? await invoke<string[]>("walk_dir", { path: p }) : [];
+        const files = isTauri() ? await invoke<{path: string, size: number}[]>("walk_dir", { path: p }) : [];
         let validCount = 0;
-        for (const file of files) {
+        for (const fileObj of files) {
+            const file = fileObj.path;
             const lower = file.toLowerCase();
             if (allowedExtensions.some(ext => lower.endsWith(ext))) {
                 allFiles.push(file);
+                const normPath = normalizePath(file);
+                // Temporarily store the physical size in the map so we can use it later
+                existingFilesMap.set(normPath + "_physical_size", fileObj.size);
                 validCount++;
             }
         }
@@ -243,10 +253,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
         onLog("Pruning database and detecting file moves/deletions...");
         try {
             const existingDbFiles = await getDbFiles();
-            const normalizePath = (pStr: string) => {
-                if (!pStr) return "";
-                return pStr.replace(/\\/g, '/').toLowerCase().trim();
-            };
+
             const isUnderPath = (file: string, activePath: string) => {
                 const normFile = normalizePath(file);
                 const normActive = normalizePath(activePath);
@@ -385,14 +392,18 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
             const i = currentIndex++;
             const file = allFiles[i];
             let skipFile = false;
-            if (existingPaths.has(file)) {
+            const normPath = normalizePath(file);
+            if (existingPaths.has(normPath)) {
                 if (isResume) {
                     try {
-                        const fileInfo = await stat(file);
-                        const currentSizeGB = fileInfo.size / (1024 * 1024 * 1024);
-                        const storedSizeGB = existingFilesMap.get(file)?.sizeGB || 0;
+                        const physicalSize = existingFilesMap.get(normPath + "_physical_size");
+                        const currentSizeGB = (physicalSize || 0) / (1024 * 1024 * 1024);
+                        const storedSizeGB = existingFilesMap.get(normPath)?.sizeGB || 0;
+                        
+                        // We check difference up to 1MB
                         if (Math.abs(currentSizeGB - storedSizeGB) > 0.001) {
                             skipFile = false;
+                            onLog(`Change detected for ${file}: Size changed from ${storedSizeGB.toFixed(3)}GB to ${currentSizeGB.toFixed(3)}GB.`);
                         } else {
                             skipFile = true;
                         }
