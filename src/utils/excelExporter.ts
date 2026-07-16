@@ -371,33 +371,25 @@ export async function exportMediaLibraryToExcel(
       writeLeftCell(leftRowIdx++, "      Subtitle Coverage Rate", `${subPct}%`);
       writeRightCell(rightRowIdx++, "      Missing Subtitles", `${missingSubsCount} files`);
     } else if (rules.useAnomalyScan) {
-      const videoBitrates = items.filter(
-        (it) =>
-          it.category !== "Music" &&
-          it.category !== "Corrupted" &&
-          it.category !== "Static" &&
-          it.videoBitrateMbps,
+      let bloated = 0, starved = 0;
+      const auditedItems = items.filter(
+        (it) => it.category !== "Corrupted" && it.category !== "Static"
       );
-      let bloated = 0,
-        starved = 0;
-      videoBitrates.forEach((it) => {
-        const res = (it.videoResolution || "").toLowerCase();
-        const br = it.videoBitrateMbps;
-        if (res.includes("4k") && br < 10) starved++;
-        else if (res.includes("1080p") && br > 20) bloated++;
-        else if (res.includes("1080p") && br < 2) starved++;
-        else if (res.includes("720p") && br > 10) bloated++;
-        else if ((res.includes("sd") || res.includes("480p")) && br > 4)
-          bloated++;
+
+      auditedItems.forEach(item => {
+        const evalRes = evaluatePlexCompatibility(item, rules, false);
+        if (evalRes.level === "unfriendly" && evalRes.reason.includes("Bloated")) bloated++;
+        else if (evalRes.level === "unfriendly" && evalRes.reason.includes("Starved")) starved++;
       });
+
       const totalAnomalies = bloated + starved;
       const healthyPct =
-        videoBitrates.length > 0
+        auditedItems.length > 0
           ? Math.round(
-              ((videoBitrates.length - totalAnomalies) / videoBitrates.length) *
-                100,
+              ((auditedItems.length - totalAnomalies) / auditedItems.length) * 100,
             )
           : 100;
+
       writeLeftCell(
         leftRowIdx++,
         "      Optimal Sizing Ratio",
