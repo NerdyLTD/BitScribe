@@ -104,8 +104,13 @@ export async function exportMediaLibraryToCSV(
   items: MediaItem[],
   rules: RuleCriteria,
   columns: Record<string, boolean>,
-  targetDir?: string
+  targetDir?: string,
+  allItems?: MediaItem[]
 ) {
+  const itemsForDups = allItems && allItems.length > 0 ? allItems : items;
+  const isDuplication = getScanType(rules, items) === "Duplication Scan";
+  const duplicatesMap = isDuplication ? new Map() : computeDuplicatesMap(itemsForDups, rules);
+
   const getCompatibilityLabel = (level: string) => {
     if (level === "pending") return "Pending Scan";
     if (level === "legacy") return "Legacy+";
@@ -117,7 +122,9 @@ export async function exportMediaLibraryToCSV(
   const scanType = getScanType(rules, items);
   const isMetadata = scanType === "Metadata Scan" || scanType === "Video Metadata Scan" || scanType === "Music Metadata Scan";
 
-  let allPossibleHeaders = [
+  let allPossibleHeaders = isDuplication 
+    ? ["File", "Path", "Duplicate File", "Duplicate Path", "Flag Reason"]
+    : [
     "Alert Level",
     "Stream Audit",
     "File Name",
@@ -172,7 +179,35 @@ export async function exportMediaLibraryToCSV(
     ];
   }
 
-  const headers = allPossibleHeaders.filter((col) => columns[col] !== false);
+  const headers = isDuplication ? allPossibleHeaders : allPossibleHeaders.filter((col) => columns[col] !== false);
+
+  if (isDuplication) {
+    const dupRows = getDuplicatePairRows(itemsForDups, rules);
+    const filteredItemIds = new Set(items.map(i => i.id));
+    const visiblePairs = dupRows.filter(pair => filteredItemIds.has(pair.dupId) || filteredItemIds.has(pair.id));
+    
+    const rows = visiblePairs.map(row => {
+      let data: Record<string, any> = {
+        "File": row.fileName,
+        "Path": row.filePath,
+        "Duplicate File": row.dupFileName,
+        "Duplicate Path": row.dupFilePath,
+        "Flag Reason": row.flagReason || "",
+      };
+      return headers
+        .map((h) => {
+          let val = String(data[h] ?? "");
+          if (val.includes(",") || val.includes('"') || val.includes("\n")) {
+            return `"${val.replace(/"/g, '""')}"`;
+          }
+          return val;
+        })
+        .join(",");
+    });
+    const csvContent = [headers.join(","), ...rows].join("\n");
+    const filename = `${getReportFileName(rules, items)}.csv`;
+    return await triggerClientDownload(filename, csvContent, "text/csv;charset=utf-8;", targetDir);
+  }
 
   const rows = items
     .filter((item) => {
@@ -257,7 +292,8 @@ export async function exportMediaLibraryToCSV(
           data["File Path"] = item.filePath;
         }
       } else {
-        const evalResult = evaluatePlexCompatibility(item, rules);
+        const isDup = duplicatesMap.get(item.id) ?? false;
+        const evalResult = evaluatePlexCompatibility(item, rules, isDup);
         const parsedMeta = parseVideoMetadata(item);
 
         const audioStr = item.audioTracks
@@ -387,14 +423,16 @@ export async function exportMediaLibraryToCSV(
 export async function exportMediaLibraryToJSON(
   items: MediaItem[],
   rules: RuleCriteria,
-  targetDir?: string
+  targetDir?: string,
+  allItems?: MediaItem[]
 ) {
+  const itemsForDups = allItems && allItems.length > 0 ? allItems : items;
   const scanType = getScanType(rules, items);
   const isDuplication = scanType === "Duplication Scan";
   
   let targetItems = items;
   if (isDuplication) {
-    const dupRows = getDuplicatePairRows(items, rules);
+    const dupRows = getDuplicatePairRows(itemsForDups, rules);
     const dupIds = new Set<string>();
     dupRows.forEach(r => {
       if (r.id) dupIds.add(r.id);
@@ -402,12 +440,15 @@ export async function exportMediaLibraryToJSON(
     });
     targetItems = items.filter(i => dupIds.has(i.id));
   }
+  
+  const duplicatesMap = computeDuplicatesMap(itemsForDups, rules);
 
   const reports = targetItems.map((item) => {
+    const isDup = duplicatesMap.get(item.id) ?? false;
     return {
       ...item,
       parsedMetadata: parseVideoMetadata(item),
-      evaluation: evaluatePlexCompatibility(item, rules),
+      evaluation: evaluatePlexCompatibility(item, rules, isDup),
     };
   });
   const jsonContent = JSON.stringify(
@@ -433,8 +474,10 @@ export async function exportMediaLibraryToHTML(
   items: MediaItem[],
   rules: RuleCriteria,
   columns: Record<string, boolean>,
-  targetDir?: string
+  targetDir?: string,
+  allItems?: MediaItem[]
 ) {
+  const itemsForDups = allItems && allItems.length > 0 ? allItems : items;
   const scanType = getScanType(rules, items);
 
   const getCompatibilityLabel = (level: string) => {
@@ -445,7 +488,7 @@ export async function exportMediaLibraryToHTML(
     return "Transcode Required";
   };
 
-  const duplicatesMap = computeDuplicatesMap(items, rules);
+  const duplicatesMap = computeDuplicatesMap(itemsForDups, rules);
 
   const isCorrupted = scanType === "Corrupted Files Scan";
   const isDuplication = scanType === "Duplication Scan";
@@ -531,8 +574,12 @@ export async function exportMediaLibraryToHTML(
   }
 
   if (isDuplication) {
-    const dupRows = getDuplicatePairRows(targetItems, rules);
-    optimizedItems = dupRows.map(row => ({
+    const dupRows = getDuplicatePairRows(itemsForDups, rules);
+    const filteredItemIds = new Set(targetItems.map(i => i.id));
+    const visibleDupRows = dupRows.filter(pair => filteredItemIds.has(pair.dupId) || filteredItemIds.has(pair.id));
+    
+    optimizedItems = visibleDupRows.map(row => ({
+
       category: row.category,
       topLevelFolder: row.topLevelFolder,
       "File": row.fileName,

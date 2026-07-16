@@ -4192,10 +4192,10 @@ export default function App() {
                       updateUI(`${targetProfile} (${format}) done`);
                     };
 
-                    if (exportFormats.xlsx) await handleExport('XLSX', () => exportMediaLibraryToExcel(filteredItems, profileRules, excelColumns, targetDir));
-                    if (exportFormats.csv) await handleExport('CSV', () => exportMediaLibraryToCSV(jsonCsvItems, profileRules, excelColumns, targetDir));
-                    if (exportFormats.html) await handleExport('HTML', () => exportMediaLibraryToHTML(filteredItems, profileRules, excelColumns, targetDir));
-                    if (exportFormats.json) await handleExport('JSON', () => exportMediaLibraryToJSON(jsonCsvItems, profileRules, targetDir));
+                    if (exportFormats.xlsx) await handleExport('XLSX', () => exportMediaLibraryToExcel(filteredItems, profileRules, excelColumns, targetDir, files));
+                    if (exportFormats.csv) await handleExport('CSV', () => exportMediaLibraryToCSV(jsonCsvItems, profileRules, excelColumns, targetDir, files));
+                    if (exportFormats.html) await handleExport('HTML', () => exportMediaLibraryToHTML(filteredItems, profileRules, excelColumns, targetDir, files));
+                    if (exportFormats.json) await handleExport('JSON', () => exportMediaLibraryToJSON(jsonCsvItems, profileRules, targetDir, files));
                     
                     return { success: s, fail: f };
                   };

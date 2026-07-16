@@ -975,11 +975,12 @@ export default memo(function Dashboard({
       ? { ...customRules, useDuplicationScan: true } 
       : customRules;
 
-    // Use getDuplicatePairRows to calculate only the actual extra copies (wasted space)
-    const items = metricsFilteredFiles.map(i => i.item);
-    const pairs = getDuplicatePairRows(items, activeRules);
+    // Compute duplicates globally to find pairs, then filter for pairs visible in the current view
+    const allPairs = getDuplicatePairRows(allCurrentFiles, activeRules);
+    const filteredItemIds = new Set(metricsFilteredFiles.map(i => i.item.id));
+    const visiblePairs = allPairs.filter(pair => filteredItemIds.has(pair.dupId) || filteredItemIds.has(pair.id));
     
-    pairs.forEach(pair => {
+    visiblePairs.forEach(pair => {
       if (isMusicCategory(pair.category)) {
         mDup++;
       } else {
@@ -990,7 +991,7 @@ export default memo(function Dashboard({
 
     const total = vDup + mDup;
     return { vDup, mDup, total, totalSizeGB };
-  }, [metricsFilteredFiles, customRules, isCustomBlocksActive, visibleBlocks, isTourActive]);
+  }, [allCurrentFiles, metricsFilteredFiles, customRules, isCustomBlocksActive, visibleBlocks, isTourActive]);
 
   const anomalySummary = useMemo(() => {
     let vBloated = 0;

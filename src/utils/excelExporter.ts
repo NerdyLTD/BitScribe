@@ -123,10 +123,17 @@ export async function exportMediaLibraryToExcel(
   items: MediaItem[],
   rules: RuleCriteria,
   columnVisibility?: Record<string, boolean>,
-  targetDir?: string
+  targetDir?: string,
+  allItems?: MediaItem[]
 ) {
   const globalScanType = getScanType(rules, items);
-  const allDupRows = globalScanType === "Duplication Scan" ? getDuplicatePairRows(items, rules) : [];
+  const itemsForDups = allItems && allItems.length > 0 ? allItems : items;
+  
+  // Get all pairs globally, then filter to only those visible in the current exported items list
+  const globalDupRows = globalScanType === "Duplication Scan" ? getDuplicatePairRows(itemsForDups, rules) : [];
+  const filteredItemIds = new Set(items.map(i => i.id));
+  const allDupRows = globalDupRows.filter(pair => filteredItemIds.has(pair.dupId) || filteredItemIds.has(pair.id));
+
   const wb = new ExcelJS.Workbook();
   wb.creator = "StreamFriendly Scanner";
   wb.created = new Date();
@@ -941,7 +948,7 @@ export async function exportMediaLibraryToExcel(
         ]);
       });
     } else {
-      const duplicatesMap = computeDuplicatesMap(dataItems, rules);
+      const duplicatesMap = computeDuplicatesMap(itemsForDups, rules);
 
     dataItems.forEach((item) => {
       const isDuplicate = duplicatesMap.get(item.id) ?? false;
