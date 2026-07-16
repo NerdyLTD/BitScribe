@@ -4,6 +4,8 @@ import { MediaItem, RuleCriteria } from "../types";
 import {
   evaluatePlexCompatibility,
   computeDuplicatesMap,
+  isMissingSubtitles,
+  hasBadSubtitles
 } from "./plexEvaluator";
 import { getDuplicatePairRows } from "./duplicateHelper";
 import {
@@ -558,10 +560,7 @@ export async function exportMediaLibraryToHTML(
   let targetItems = items;
   if (isSubtitle) {
     targetItems = items.filter(item => {
-      if (isMusicCategory(item.category) || item.category === "Static" || item.category === "Corrupted" || item.category === "Other") return false;
-      const hasBadSubs = item.subtitleTracks?.some(s => s.codec?.toLowerCase() === "pgs" || s.codec?.toLowerCase() === "vobsub");
-      const missingSubs = !item.subtitleTracks || item.subtitleTracks.length === 0;
-      return hasBadSubs || missingSubs;
+      return hasBadSubtitles(item) || isMissingSubtitles(item);
     });
   } else if (isMetadata) {
     targetItems = items.filter(item => {
@@ -683,6 +682,10 @@ export async function exportMediaLibraryToHTML(
         const tlf = item.topLevelFolder || "";
         if (cat) rowData["category"] = cat;
         if (tlf) rowData["topLevelFolder"] = tlf;
+        
+        if (evalResult.isBloated) rowData["isBloated"] = true;
+        if (evalResult.isStarved) rowData["isStarved"] = true;
+        if (evalResult.isAnomaly) rowData["isAnomaly"] = true;
         
         if (missing.length > 0) rowData["Missing Metadata"] = missing.join(", ");
         
@@ -1302,17 +1305,13 @@ export async function exportMediaLibraryToHTML(
       let totalAnom = 0;
 
       targetItems.forEach(i => {
-        const action = i["Remediation Action"] || "";
-        const note = i["Analysis Notes"] || "";
-        const isAnom = action.includes("Bloated") || action.includes("Starved") || note.includes("Bloated") || note.includes("Starved") || (i["Stream Audit"] && i["Stream Audit"] === "Transcode Required");
-        
-        if (action.includes("Bloated") || note.includes("Bloated")) {
+        if (i["isBloated"]) {
           bloated++;
           totalAnom++;
-        } else if (action.includes("Starved") || note.includes("Starved")) {
+        } else if (i["isStarved"]) {
           starved++;
           totalAnom++;
-        } else if (isAnom) {
+        } else if (i["isAnomaly"]) {
           totalAnom++;
         }
       });

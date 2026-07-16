@@ -1,5 +1,5 @@
 import { MediaItem, RuleCriteria, isMusicCategory } from "../types";
-import { evaluatePlexCompatibility } from "./plexEvaluator";
+import { evaluatePlexCompatibility, isMissingSubtitles, hasBadSubtitles } from "./plexEvaluator";
 import { getScanType } from "./reportExporter";
 import { getMissingMetadataTags } from "./excelExporter";
 
@@ -46,22 +46,12 @@ export function filterItemsForReport(
     // 5. Quality Audit Report ("Anomaly Scan"): Only include data for media that fits the criteria for remediation.
     if (scanType === "Anomaly Scan") {
       const evalResult = evaluatePlexCompatibility(item, rules);
-      // Only include items that have Starved, Bloated, or Anomaly issues.
-      const r = evalResult.reason || "";
-      if (r.includes("Starved") || r.includes("Bloated") || r.includes("Anomaly")) {
-        return true;
-      }
-      return false;
+      return !!evalResult.isAnomaly;
     }
 
     // 6. Subtitle Audit Report ("Subtitle Scan"): Only media missing subtitles or forcing transcoding.
     if (scanType === "Subtitle Scan") {
-      if (isMusicCategory(item.category)) return false;
-      if (item.category === "Static" || item.category === "Corrupted") return false;
-      
-      const hasBadSubs = item.subtitleTracks?.some(s => s.codec?.toLowerCase() === "pgs" || s.codec?.toLowerCase() === "vobsub");
-      const missingSubs = !item.subtitleTracks || item.subtitleTracks.length === 0;
-      return hasBadSubs || missingSubs;
+      return hasBadSubtitles(item) || isMissingSubtitles(item);
     }
 
     // 7. Corrupted & Failed files Report ("Corrupted Audit"): Only corrupted.

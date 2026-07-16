@@ -51,10 +51,12 @@ export interface MediaItem {
 export type PlexFriendlyLevel = 'bleeding' | 'modern' | 'legacy' | 'unfriendly' | 'corrupted' | 'pending';
 
 export interface EvaluationResult {
-
   level: PlexFriendlyLevel;
   reason: string;
   suggestion: string;
+  isBloated?: boolean;
+  isStarved?: boolean;
+  isAnomaly?: boolean;
 }
 
 export const APP_NAME = "BitScribe Digital Library Steward";

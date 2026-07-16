@@ -49,7 +49,34 @@ export const DEFAULT_RULES: RuleCriteria = {
   ]
 };
 
+export function isMissingSubtitles(item: MediaItem): boolean {
+  if (isMusicCategory(item.category) || item.category === "Static" || item.category === "Corrupted") return false;
+  return !item.subtitleTracks || item.subtitleTracks.length === 0;
+}
+
+export function hasBadSubtitles(item: MediaItem): boolean {
+  if (isMusicCategory(item.category) || item.category === "Static" || item.category === "Corrupted") return false;
+  return !!item.subtitleTracks?.some(s => s.codec?.toLowerCase() === "pgs" || s.codec?.toLowerCase() === "vobsub");
+}
+
 export function evaluatePlexCompatibility(item: MediaItem, customRules: RuleCriteria = DEFAULT_RULES, isDuplicate: boolean = false, forceEvaluate: boolean = false): EvaluationResult {
+  const result = _evaluatePlexCompatibility(item, customRules, isDuplicate, forceEvaluate);
+  
+  // Set central source of truth for Anomaly metrics
+  const reason = result.reason || "";
+  const isBloated = reason.includes("Bloated");
+  const isStarved = reason.includes("Starved");
+  const isAnomaly = isBloated || isStarved || reason.includes("Anomaly") || result.level === "unfriendly" && result.suggestion?.includes("Transcode Required");
+
+  return {
+    ...result,
+    isBloated,
+    isStarved,
+    isAnomaly
+  };
+}
+
+function _evaluatePlexCompatibility(item: MediaItem, customRules: RuleCriteria = DEFAULT_RULES, isDuplicate: boolean = false, forceEvaluate: boolean = false): EvaluationResult {
   if (item.category === 'Corrupted') {
     return {
       level: 'unfriendly',

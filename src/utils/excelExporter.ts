@@ -378,8 +378,8 @@ export async function exportMediaLibraryToExcel(
 
       auditedItems.forEach(item => {
         const evalRes = evaluatePlexCompatibility(item, rules, false);
-        if (evalRes.level === "unfriendly" && evalRes.reason.includes("Bloated")) bloated++;
-        else if (evalRes.level === "unfriendly" && evalRes.reason.includes("Starved")) starved++;
+        if (evalRes.isBloated) bloated++;
+        else if (evalRes.isStarved) starved++;
       });
 
       const totalAnomalies = bloated + starved;
@@ -536,8 +536,8 @@ export async function exportMediaLibraryToExcel(
         let bloatedCount = 0, starvedCount = 0;
         catItems.forEach(item => {
           const evalRes = evaluatePlexCompatibility(item, rules, false);
-          if (evalRes.level === "unfriendly" && evalRes.reason.includes("Bloated")) bloatedCount++;
-          else if (evalRes.level === "unfriendly" && evalRes.reason.includes("Starved")) starvedCount++;
+          if (evalRes.isBloated) bloatedCount++;
+          else if (evalRes.isStarved) starvedCount++;
         });
         if (bloatedCount > 0) writeCell(rIdx++, "            Bloated Bitrates", `${bloatedCount} files`);
         if (starvedCount > 0) writeCell(rIdx++, "            Starved Bitrates", `${starvedCount} files`);

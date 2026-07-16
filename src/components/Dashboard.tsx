@@ -3,9 +3,10 @@ import { createPortal } from "react-dom";
 import React, { useState, useEffect, useMemo, memo, useTransition } from "react";
 import { MediaItem, RuleCriteria, sortCategories, getCategoryGroup, isMusicCategory } from "../types";
 import { MOCK_MEDIA_LIBRARY } from "../data/mockMediaData";
-import { evaluatePlexCompatibility, computeDuplicatesMap, getDuplicatePairRows } from "../utils/plexEvaluator";
+import { evaluatePlexCompatibility, computeDuplicatesMap, getDuplicatePairRows, isMissingSubtitles } from "../utils/plexEvaluator";
 import { parseVideoMetadata } from "../utils/mediaParser";
 import { getDisplayArtist, getDisplayAlbum, getDisplaySongTitle } from "../utils/musicHelper";
+import { getMissingMetadataTags } from "../utils/excelExporter";
 import DiagnosticPanel from "./DiagnosticPanel";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LabelList } from 'recharts';
 import {
@@ -641,105 +642,39 @@ export default memo(function Dashboard({
       }
 
       // Missing Subtitles
-      if (!isMusicCategory(item.category) && item.category !== 'Static') {
-        if (!item.subtitleTracks || item.subtitleTracks.length === 0) {
-          let cat = item.category;
-          if (cat === 'TV Shows') cat = 'TV';
-          if (cat === 'Movies') cat = 'Movie';
-          missingSubtitleCounts[cat] = (missingSubtitleCounts[cat] || 0) + 1;
-        } else {
-          item.subtitleTracks.forEach(track => {
-            const codec = (track.codec || "unknown").toLowerCase();
-            const friendlyName = codec === "subrip" ? "srt" : codec;
-            const prefix = track.isExternal ? "External" : "Embedded";
-            const displayName = `${prefix} ${formatCodecString(friendlyName)}`;
-            subtitleCodecCounts[displayName] = (subtitleCodecCounts[displayName] || 0) + 1;
-          });
-        }
+      if (isMissingSubtitles(item)) {
+        let cat = item.category;
+        if (cat === 'TV Shows') cat = 'TV';
+        if (cat === 'Movies') cat = 'Movie';
+        missingSubtitleCounts[cat] = (missingSubtitleCounts[cat] || 0) + 1;
+      } else if (!isMusicCategory(item.category) && item.category !== 'Static' && item.category !== 'Corrupted') {
+        item.subtitleTracks?.forEach(track => {
+          const codec = (track.codec || "unknown").toLowerCase();
+          const friendlyName = codec === "subrip" ? "srt" : codec;
+          const prefix = track.isExternal ? "External" : "Embedded";
+          const displayName = `${prefix} ${formatCodecString(friendlyName)}`;
+          subtitleCodecCounts[displayName] = (subtitleCodecCounts[displayName] || 0) + 1;
+        });
       }
 
       // Missing Metadata Tags
-      if (item.category !== 'Static') {
-        const tags = typeof item.tags === 'string' ? (item.tags ? JSON.parse(item.tags) : {}) : (item.tags || {});
-        const titleVal = tags.title || tags.TITLE || '';
-        const yearVal = item.year || parseInt(tags.date || tags.DATE || tags.year || tags.YEAR || '0') || 0;
-        const titleCleaned = titleVal.trim();
-        const hasTitle = !!titleCleaned && titleCleaned.toLowerCase() !== item.filename.toLowerCase();
-
+      if (item.category !== 'Static' && item.category !== 'Corrupted') {
+        const missing = getMissingMetadataTags(item);
         const isMusCat = isMusicCategory(item.category);
-
-        if (!hasTitle) {
-          if (isMusCat) {
-            metadataFieldMissingCounts["Missing Music Title"] = (metadataFieldMissingCounts["Missing Music Title"] || 0) + 1;
-          } else {
-            metadataFieldMissingCounts["Missing Video Title"] = (metadataFieldMissingCounts["Missing Video Title"] || 0) + 1;
+        const catGroup = getCategoryGroup(item.category || "");
+        
+        missing.forEach(tag => {
+          let key = `Missing ${tag} Tag`;
+          if (tag === "Title") {
+            key = isMusCat ? "Missing Music Title" : "Missing Video Title";
+          } else if (tag === "Release Year") {
+            if (isMusCat) key = "Missing Music Year";
+            else if (catGroup === 'Movies') key = "Missing Video Year (Movies)";
+            else if (catGroup === 'TV') key = "Missing Video Year (TV)";
+            else key = "Missing Video Year (Other)";
           }
-        }
-        const catGroup = getCategoryGroup(item.category);
-        const isMovie = catGroup === 'Movies';
-        const isTV = catGroup === 'TV';
-
-        if (!yearVal) {
-          if (isMusCat) {
-            metadataFieldMissingCounts["Missing Music Year"] = (metadataFieldMissingCounts["Missing Music Year"] || 0) + 1;
-          } else if (isMovie) {
-            metadataFieldMissingCounts["Missing Video Year (Movies)"] = (metadataFieldMissingCounts["Missing Video Year (Movies)"] || 0) + 1;
-          } else if (isTV) {
-            metadataFieldMissingCounts["Missing Video Year (TV)"] = (metadataFieldMissingCounts["Missing Video Year (TV)"] || 0) + 1;
-          } else {
-            metadataFieldMissingCounts["Missing Video Year (Other)"] = (metadataFieldMissingCounts["Missing Video Year (Other)"] || 0) + 1;
-          }
-        }
-
-        if (isMovie || isTV) {
-          const directorVal = tags.director || tags.DIRECTOR || '';
-          const writerVal = tags.writer || tags.WRITER || '';
-          const castVal = tags.cast || tags.CAST || tags.actors || tags.ACTORS || tags.actor || tags.ACTOR || '';
-          const studioVal = tags.studio || tags.STUDIO || tags.publisher || tags.PUBLISHER || tags.network || tags.NETWORK || '';
-
-          if (isMovie) {
-            if (!directorVal) {
-              metadataFieldMissingCounts["Missing Director Tag"] = (metadataFieldMissingCounts["Missing Director Tag"] || 0) + 1;
-            }
-          } else {
-            const showVal = tags.show || tags.SHOW || tags.series || tags.SERIES || tags.show_name || tags.SHOW_NAME || '';
-            if (!showVal) {
-              metadataFieldMissingCounts["Missing Show Title"] = (metadataFieldMissingCounts["Missing Show Title"] || 0) + 1;
-            }
-          }
-
-          if (!writerVal) {
-            metadataFieldMissingCounts["Missing Writer Tag"] = (metadataFieldMissingCounts["Missing Writer Tag"] || 0) + 1;
-          }
-          if (!castVal) {
-            metadataFieldMissingCounts["Missing Cast/Actors Tag"] = (metadataFieldMissingCounts["Missing Cast/Actors Tag"] || 0) + 1;
-          }
-          if (!studioVal) {
-            metadataFieldMissingCounts["Missing Studio Tag"] = (metadataFieldMissingCounts["Missing Studio Tag"] || 0) + 1;
-          }
-        } else if (isMusCat) {
-          const artistVal = tags.artist || tags.ARTIST || '';
-          const albumVal = tags.album || tags.ALBUM || '';
-          const albumArtistVal = tags.album_artist || tags.ALBUM_ARTIST || '';
-          const trackVal = tags.track || tags.TRACK || tags.tracknumber || tags.TRACKNUMBER || '';
-          const discVal = tags.disc || tags.DISC || '';
-          
-          if (!artistVal) {
-            metadataFieldMissingCounts["Missing Artist Tag"] = (metadataFieldMissingCounts["Missing Artist Tag"] || 0) + 1;
-          }
-          if (!albumVal) {
-            metadataFieldMissingCounts["Missing Album Tag"] = (metadataFieldMissingCounts["Missing Album Tag"] || 0) + 1;
-          }
-          if (!albumArtistVal) {
-            metadataFieldMissingCounts["Missing Album Artist Tag"] = (metadataFieldMissingCounts["Missing Album Artist Tag"] || 0) + 1;
-          }
-          if (!trackVal) {
-            metadataFieldMissingCounts["Missing Track Tag"] = (metadataFieldMissingCounts["Missing Track Tag"] || 0) + 1;
-          }
-          if (!discVal) {
-            metadataFieldMissingCounts["Missing Disc Tag"] = (metadataFieldMissingCounts["Missing Disc Tag"] || 0) + 1;
-          }
-        }
+          metadataFieldMissingCounts[key] = (metadataFieldMissingCounts[key] || 0) + 1;
+        });
       }
 
       // Duplications
@@ -775,10 +710,9 @@ export default memo(function Dashboard({
         useAnomalyScan: true,
       };
       const evalRes = evaluatePlexCompatibility(item, anomalyRules, false, true);
-      const reason = evalRes.reason || "";
-      if (reason.includes("Bloated")) {
+      if (evalRes.isBloated) {
         anomalyCounts["Bloated"]++;
-      } else if (reason.includes("Starved")) {
+      } else if (evalRes.isStarved) {
         anomalyCounts["Starved"]++;
       }
     });
@@ -1013,9 +947,8 @@ export default memo(function Dashboard({
       if (item.category === 'Corrupted') return;
       const isMusic = isMusicCategory(item.category);
       const evalResult = evaluatePlexCompatibility(item, anomalyRules, false, true);
-      const reason = evalResult.reason || "";
       
-      if (reason.includes("Bloated")) {
+      if (evalResult.isBloated) {
         if (isMusic) {
           mBloated++;
           const name = item.filename || "Unknown Music";
@@ -1026,7 +959,7 @@ export default memo(function Dashboard({
           vBloatedList.push(`${name} (${item.videoBitrateMbps ? item.videoBitrateMbps.toFixed(1) : "0"} Mbps)`);
         }
         bloatedSizeGB += (item.sizeGB || 0);
-      } else if (reason.includes("Starved")) {
+      } else if (evalResult.isStarved) {
         if (isMusic) {
           mStarved++;
           const name = item.filename || "Unknown Music";

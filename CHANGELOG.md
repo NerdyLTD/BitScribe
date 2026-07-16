@@ -1,3 +1,10 @@
+## [1.4.5] - 2026-07-16
+### Changed
+- Eliminated all duplicate, hard-coded logic for metric calculations across the entire application. Created a centralized "source of truth" in `plexEvaluator.ts` by adding standardized boolean flags (`isBloated`, `isStarved`, `isAnomaly`) to the `EvaluationResult` interface.
+- Updated `Dashboard.tsx`, `reportFilters.ts`, `excelExporter.ts`, and `reportExporter.ts` to consume the unified boolean flags instead of performing brittle string matching against remediation text.
+- Extracted subtitle evaluation logic into centralized `isMissingSubtitles` and `hasBadSubtitles` helper functions inside `plexEvaluator.ts`.
+- Integrated `getMissingMetadataTags` into the `Dashboard.tsx` missing metadata tag breakdown to ensure the dashboard pie charts match the exported Excel and HTML report metrics identically.
+
 ## [1.4.4] - 2026-07-16
 ### Fixed
 - Fixed an issue where the Excel exporter calculated Quality Audit totals using duplicate, hardcoded logic instead of the centralized `evaluatePlexCompatibility` module, leading to '0 files' reported on the top level summary.
