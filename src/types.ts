@@ -60,7 +60,7 @@ export interface EvaluationResult {
 }
 
 export const APP_NAME = "BitScribe Digital Library Steward";
-export const APP_VERSION = `v${import.meta.env.APP_VERSION || "1.4.6"}`;
+export const APP_VERSION = `v${import.meta.env.APP_VERSION || "1.4.7"}`;
 export const APP_VERSION_DATE = "July 15, 2026";
 
 export function isMusicCategory(category: string | undefined): boolean {

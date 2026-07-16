@@ -443,7 +443,9 @@ export default memo(function Dashboard({
         const valB = cachedB?.val || '';
         
         if (typeof valA === 'string' && typeof valB === 'string') {
-          const comparison = valA.localeCompare(valB, undefined, { numeric: true, sensitivity: 'base' });
+          const normA = normalizeGroupTitle(valA);
+          const normB = normalizeGroupTitle(valB);
+          const comparison = normA.localeCompare(normB, undefined, { numeric: true, sensitivity: 'base' });
           if (comparison !== 0) {
             return sortDirection === 'asc' ? comparison : -comparison;
           }
@@ -458,7 +460,7 @@ export default memo(function Dashboard({
           if (activeSortCol === 'artist') {
             const albumA = cachedA?.secondaryData?.album || '';
             const albumB = cachedB?.secondaryData?.album || '';
-            const albumComp = albumA.localeCompare(albumB, undefined, { numeric: true, sensitivity: 'base' });
+            const albumComp = normalizeGroupTitle(albumA).localeCompare(normalizeGroupTitle(albumB), undefined, { numeric: true, sensitivity: 'base' });
             if (albumComp !== 0) return albumComp;
             
             const discA = cachedA?.secondaryData?.disc || 1;
@@ -471,12 +473,12 @@ export default memo(function Dashboard({
             
             const titleA = cachedA?.secondaryData?.title || '';
             const titleB = cachedB?.secondaryData?.title || '';
-            return titleA.localeCompare(titleB, undefined, { numeric: true, sensitivity: 'base' });
+            return normalizeGroupTitle(titleA).localeCompare(normalizeGroupTitle(titleB), undefined, { numeric: true, sensitivity: 'base' });
           }
           if (activeSortCol === 'album') {
             const artistA = cachedA?.secondaryData?.artist || '';
             const artistB = cachedB?.secondaryData?.artist || '';
-            const artistComp = artistA.localeCompare(artistB, undefined, { numeric: true, sensitivity: 'base' });
+            const artistComp = normalizeGroupTitle(artistA).localeCompare(normalizeGroupTitle(artistB), undefined, { numeric: true, sensitivity: 'base' });
             if (artistComp !== 0) return artistComp;
             
             const discA = cachedA?.secondaryData?.disc || 1;
@@ -489,7 +491,7 @@ export default memo(function Dashboard({
             
             const titleA = cachedA?.secondaryData?.title || '';
             const titleB = cachedB?.secondaryData?.title || '';
-            return titleA.localeCompare(titleB, undefined, { numeric: true, sensitivity: 'base' });
+            return normalizeGroupTitle(titleA).localeCompare(normalizeGroupTitle(titleB), undefined, { numeric: true, sensitivity: 'base' });
           }
           return 0;
         } else {

@@ -1,3 +1,8 @@
+## [1.4.7] - 2026-07-16
+
+### Fixed
+- Fixed an issue in the UI Dashboard's sorting system where minor variations in artist names (e.g. `"Weird Al" Yankovic` vs `Weird Al Yankovic`) caused songs from the same album to sort apart and fragment the UI grouping. The table sort function now strictly applies the same `normalizeGroupTitle` normalization as the grouping header generator, ensuring contiguous clustering of tracks.
+
 ## [1.4.6] - 2026-07-16
 
 ### Fixed
