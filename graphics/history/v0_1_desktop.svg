@@ -1,0 +1,119 @@
+<svg viewBox="0 0 1200 750" fill="none" xmlns="http://www.w3.org/2000/svg" width="1920" height="1200">
+  <!-- Definition of gradients and filters -->
+  <defs>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <!-- Canvas Background -->
+  <rect width="1200" height="750" fill="#F1F5F9" />
+
+  <!-- Grid Pattern Overlay for Depth -->
+  <path d="M0 50 H1200 M0 100 H1200 M0 150 H1200 M0 200 H1200 M0 250 H1200 M0 300 H1200 M0 350 H1200 M0 400 H1200 M0 450 H1200 M0 500 H1200 M0 550 H1200 M0 600 H1200 M0 650 H1200 M0 700 H1200" stroke="#E2E8F0" stroke-width="1" />
+  <path d="M100 0 V750 M200 0 V750 M300 0 V750 M400 0 V750 M500 0 V750 M600 0 V750 M700 0 V750 M800 0 V750 M900 0 V750 M1000 0 V750 M1100 0 V750" stroke="#E2E8F0" stroke-width="1" />
+
+  <!-- Desktop Browser Window Frame -->
+  <rect x="100" y="80" width="1000" height="580" rx="8" fill="#FFFFFF" filter="url(#shadow)" stroke="#CBD5E1" stroke-width="1" />
+
+  <!-- OS Browser Header Bar -->
+  <path d="M100 88 C100 83.58 103.58 80 108 80 H1092 C1096.42 80 1100 83.58 1100 88 V120 H100 V88 Z" fill="#E2E8F0" stroke-bottom="#CBD5E1" stroke-width="1" />
+  
+  <!-- macOS Window Circles -->
+  <circle cx="125" cy="100" r="6" fill="#EF4444" />
+  <circle cx="145" cy="100" r="6" fill="#F59E0B" />
+  <circle cx="165" cy="100" r="6" fill="#10B981" />
+
+  <!-- URL Address Bar -->
+  <rect x="220" y="90" width="760" height="20" rx="4" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1" />
+  <text x="230" y="104" font-family="'Inter', sans-serif" font-size="11" fill="#64748B">localhost:3000 (Local Media Reporter)</text>
+
+  <!-- App Header Section -->
+  <rect x="100" y="120" width="1000" height="70" fill="#F8FAFC" />
+  <line x1="100" y1="190" x2="1100" y2="190" stroke="#E2E8F0" stroke-width="1" />
+
+  <!-- App Title and Brand -->
+  <text x="130" y="162" font-family="'Inter', sans-serif" font-size="22" font-weight="800" fill="#0F172A">MediaReporter v0.1</text>
+  <text x="350" y="160" font-family="'Inter', sans-serif" font-size="12" fill="#64748B">Simple local storage scans &amp; CSV Exports</text>
+
+  <!-- Traditional Scan Button (Version 0.1 had just 1 action) -->
+  <rect x="850" y="138" width="120" height="34" rx="4" fill="#0F172A" />
+  <text x="874" y="159" font-family="'Inter', sans-serif" font-size="12" font-weight="600" fill="#FFFFFF">Export CSV</text>
+
+  <!-- Main Content Layout - Light Table Grid -->
+  <!-- Search/Input Row -->
+  <rect x="130" y="215" width="450" height="34" rx="4" fill="#FFFFFF" stroke="#CBD5E1" />
+  <text x="145" y="236" font-family="'Inter', sans-serif" font-size="12" fill="#94A3B8">Search files by path or title...</text>
+
+  <!-- Scanner Status indicator tag -->
+  <rect x="940" y="215" width="130" height="34" rx="4" fill="#F1F5F9" stroke="#E2E8F0" />
+  <circle cx="955" cy="232" r="4" fill="#10B981" />
+  <text x="965" y="236" font-family="'Inter', sans-serif" font-size="11" font-weight="600" fill="#475569">SYSTEM READY</text>
+
+  <!-- Table Core Headers -->
+  <rect x="130" y="270" width="940" height="36" fill="#F1F5F9" stroke="#E2E8F0" />
+  <text x="150" y="292" font-family="'Inter', sans-serif" font-size="11" font-weight="700" fill="#475569">FILE PATH &amp; NAME</text>
+  <text x="560" y="292" font-family="'Inter', sans-serif" font-size="11" font-weight="700" fill="#475569">FILE SIZE</text>
+  <text x="680" y="292" font-family="'Inter', sans-serif" font-size="11" font-weight="700" fill="#475569">CONTAINER</text>
+  <text x="820" y="292" font-family="'Inter', sans-serif" font-size="11" font-weight="700" fill="#475569">VIDEO STREAM</text>
+  <text x="960" y="292" font-family="'Inter', sans-serif" font-size="11" font-weight="700" fill="#475569">AUDIO LEVEL</text>
+
+  <!-- Row 1 -->
+  <rect x="130" y="306" width="940" height="42" fill="#FFFFFF" stroke="#E2E8F0" />
+  <text x="150" y="331" font-family="'Inter', sans-serif" font-size="12" font-weight="600" fill="#0F172A">Inception (2010).mp4</text>
+  <text x="150" y="343" font-family="'Inter', sans-serif" font-size="10" fill="#94A3B8">/volume1/media/movies/Inception (2010).mp4</text>
+  <text x="560" y="332" font-family="'Inter', sans-serif" font-size="12" fill="#334155">2.41 GB</text>
+  <text x="680" y="332" font-family="'Inter', sans-serif" font-size="12" fill="#334155">mp4</text>
+  <text x="820" y="332" font-family="'Inter', sans-serif" font-size="12" fill="#334155">h264 (720p)</text>
+  <text x="960" y="332" font-family="'Inter', sans-serif" font-size="12" fill="#334155">AAC stereo</text>
+
+  <!-- Row 2 -->
+  <rect x="130" y="348" width="940" height="42" fill="#F8FAFC" stroke="#E2E8F0" />
+  <text x="150" y="373" font-family="'Inter', sans-serif" font-size="12" font-weight="600" fill="#0F172A">The.Dark.Knight.mkv</text>
+  <text x="150" y="385" font-family="'Inter', sans-serif" font-size="10" fill="#94A3B8">/volume1/media/movies/The.Dark.Knight.mkv</text>
+  <text x="560" y="374" font-family="'Inter', sans-serif" font-size="12" fill="#334155">8.15 GB</text>
+  <text x="680" y="374" font-family="'Inter', sans-serif" font-size="12" fill="#334155">mkv</text>
+  <text x="820" y="374" font-family="'Inter', sans-serif" font-size="12" fill="#334155">h264 (1080p)</text>
+  <text x="960" y="374" font-family="'Inter', sans-serif" font-size="12" fill="#334155">AC3 5.1</text>
+
+  <!-- Row 3 -->
+  <rect x="130" y="390" width="940" height="42" fill="#FFFFFF" stroke="#E2E8F0" />
+  <text x="150" y="415" font-family="'Inter', sans-serif" font-size="12" font-weight="600" fill="#0F172A">Interstellar.avi</text>
+  <text x="150" y="427" font-family="'Inter', sans-serif" font-size="10" fill="#94A3B8">/volume1/media/movies/Interstellar.avi</text>
+  <text x="560" y="416" font-family="'Inter', sans-serif" font-size="12" fill="#334155">1.33 GB</text>
+  <text x="680" y="416" font-family="'Inter', sans-serif" font-size="12" fill="#E11D48" font-weight="600">avi (Unfriendly)</text>
+  <text x="820" y="416" font-family="'Inter', sans-serif" font-size="12" fill="#334155">mpeg4 (480p)</text>
+  <text x="960" y="416" font-family="'Inter', sans-serif" font-size="12" fill="#334155">mp3 stereo</text>
+
+  <!-- Row 4 -->
+  <rect x="130" y="432" width="940" height="42" fill="#F8FAFC" stroke="#E2E8F0" />
+  <text x="150" y="457" font-family="'Inter', sans-serif" font-size="12" font-weight="600" fill="#0F172A">Breaking Bad S01E01.mkv</text>
+  <text x="150" y="469" font-family="'Inter', sans-serif" font-size="10" fill="#94A3B8">/volume1/media/tv/Breaking Bad/S01E01.mkv</text>
+  <text x="560" y="458" font-family="'Inter', sans-serif" font-size="12" fill="#334155">1.10 GB</text>
+  <text x="680" y="458" font-family="'Inter', sans-serif" font-size="12" fill="#334155">mkv</text>
+  <text x="820" y="458" font-family="'Inter', sans-serif" font-size="12" fill="#334155">h264 (720p)</text>
+  <text x="960" y="458" font-family="'Inter', sans-serif" font-size="12" fill="#334155">AC3 stereo</text>
+
+  <!-- Row 5 -->
+  <rect x="130" y="474" width="940" height="42" fill="#FFFFFF" stroke="#E2E8F0" />
+  <text x="150" y="499" font-family="'Inter', sans-serif" font-size="12" font-weight="600" fill="#0F172A">01. Hotel California.mp3</text>
+  <text x="150" y="511" font-family="'Inter', sans-serif" font-size="10" fill="#94A3B8">/volume1/media/music/Eagles/Hotel California.mp3</text>
+  <text x="560" y="500" font-family="'Inter', sans-serif" font-size="12" fill="#334155">0.01 GB</text>
+  <text x="680" y="500" font-family="'Inter', sans-serif" font-size="12" fill="#334155">mp3</text>
+  <text x="820" y="500" font-family="'Inter', sans-serif" font-size="12" fill="#94A3B8">N/A</text>
+  <text x="960" y="500" font-family="'Inter', sans-serif" font-size="12" fill="#334155">mp3 (320kbps)</text>
+
+  <!-- Pagination / Summary Stats Footer in App -->
+  <line x1="130" y1="540" x2="1070" y2="540" stroke="#CBD5E1" stroke-dasharray="3 3" />
+  <text x="130" y="565" font-family="'Inter', sans-serif" font-size="12" fill="#64748B">Showing 5 of 5 scanned files | Total: 13.00 GB</text>
+  <text x="920" y="565" font-family="'Inter', sans-serif" font-size="12" fill="#64748B">Platform: Client Sandbox</text>
+
+  <!-- Browser Window Footer Bar -->
+  <path d="M100 600 V652 C100 656.42 103.58 660 108 660 H1092 C1096.42 660 1100 656.42 1100 652 V600 Z" fill="#F1F5F9" />
+  <line x1="100" y1="600" x2="1100" y2="600" stroke="#CBD5E1" stroke-width="1" />
+  
+  <!-- Back Status -->
+  <text x="130" y="632" font-family="'Inter', sans-serif" font-size="11" fill="#94A3B8">Status: Stable offline store (v0.1.3)</text>
+  <rect x="1005" y="618" width="65" height="24" rx="4" stroke="#CBD5E1" fill="#FFFFFF" />
+  <text x="1017" y="634" font-family="'Inter', sans-serif" font-size="11" font-weight="600" fill="#475569">Close</text>
+</svg>

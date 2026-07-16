@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Loading BitScribe Steward...</title>
+  <style>
+    body { font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; background: #0f172a; color: #fff; }
+    h1 { font-weight: 500; }
+  </style>
+  <script>
+    function check() {
+      fetch('http://localhost:3000')
+        .then(r => {
+          window.location.href = 'http://localhost:3000';
+        })
+        .catch(() => setTimeout(check, 500));
+    }
+    setTimeout(check, 200);
+  </script>
+</head>
+<body>
+  <h1>Starting Server...</h1>
+</body>
+</html>

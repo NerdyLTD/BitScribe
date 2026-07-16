@@ -1,0 +1,143 @@
+<svg viewBox="0 0 1200 750" fill="none" xmlns="http://www.w3.org/2000/svg" width="1920" height="1200">
+  <!-- Definition of gradients and filters -->
+  <defs>
+    <filter id="shadowV2" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
+    <linearGradient id="headerGradV2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+  </defs>
+
+  <!-- Canvas Background -->
+  <rect width="1200" height="750" fill="#E2E8F0" />
+
+  <!-- Grid Pattern Overlay for Depth (matching the theme) -->
+  <path d="M0 50 H1200 M0 100 H1200 M0 150 H1200 M0 200 H1200 M0 250 H1200 M0 300 H1200 M0 350 H1200 M0 400 H1200 M0 450 H1200 M0 500 H1200 M0 550 H1200 M0 600 H1200 M0 650 H1200 M0 700 H1200" stroke="#CBD5E1" stroke-width="0.8" opacity="0.5" />
+  <path d="M100 0 V750 M200 0 V750 M300 0 V750 M400 0 V750 M500 0 V750 M600 0 V750 M700 0 V750 M800 0 V750 M900 0 V750 M1000 0 V750 M1100 0 V750" stroke="#CBD5E1" stroke-width="0.8" opacity="0.5" />
+
+  <!-- Desktop Browser Window Frame - Dark Slate Theme -->
+  <rect x="80" y="60" width="1040" height="620" rx="12" fill="#0F172A" filter="url(#shadowV2)" stroke="#334155" stroke-width="1.5" />
+
+  <!-- OS Browser Header Bar -->
+  <path d="M80 72 C80 65.37 85.37 60 92 60 H1108 C1114.63 60 1120 65.37 1120 72 V102 H80 V72 Z" fill="#1E293B" />
+  <line x1="80" y1="102" x2="1120" y2="102" stroke="#334155" stroke-width="1" />
+
+  <!-- macOS Window Circles -->
+  <circle cx="105" cy="81" r="5.5" fill="#EF4444" />
+  <circle cx="123" cy="81" r="5.5" fill="#F59E0B" />
+  <circle cx="141" cy="81" r="5.5" fill="#10B981" />
+
+  <!-- URL Address Bar -->
+  <rect x="200" y="71" width="800" height="20" rx="4" fill="#0F172A" stroke="#334155" stroke-width="1" />
+  <text x="212" y="85" font-family="'Inter', sans-serif" font-size="11" fill="#94A3B8">localhost:3000/plex-reports (Plex Audit Draft)</text>
+
+  <!-- Navigation Sidebar (Left side, early layout) -->
+  <rect x="80" y="102" width="200" height="578" fill="#1E293B" />
+  <line x1="280" y1="102" x2="280" y2="680" stroke="#334155" stroke-width="1" />
+
+  <!-- Sidebar Brand Logo & Title -->
+  <rect x="96" y="121" width="24" height="24" rx="4" fill="#3B82F6" />
+  <text x="104" y="137" font-family="'Inter', sans-serif" font-size="14" font-weight="950" fill="#FFFFFF">P</text>
+  <text x="130" y="138" font-family="'Inter', sans-serif" font-size="15" font-weight="800" fill="#FFFFFF">PlexAuditor</text>
+  <text x="218" y="138" font-family="'Inter', sans-serif" font-size="9" font-weight="600" fill="#3B82F6" opacity="0.8">V0.2</text>
+
+  <!-- Sidebar Links -->
+  <!-- Menu 1 - Active -->
+  <rect x="90" y="170" width="180" height="32" rx="6" fill="#334155" />
+  <text x="110" y="190" font-family="'Inter', sans-serif" font-size="12" font-weight="600" fill="#FFFFFF">📊 Dashboard</text>
+  <!-- Menu 2 -->
+  <text x="110" y="232" font-family="'Inter', sans-serif" font-size="12" font-weight="500" fill="#94A3B8">📂 File Inspector</text>
+  <!-- Menu 3 -->
+  <text x="110" y="274" font-family="'Inter', sans-serif" font-size="12" font-weight="500" fill="#94A3B8">⚙️ Custom Rules</text>
+  <!-- Menu 4 -->
+  <text x="110" y="316" font-family="'Inter', sans-serif" font-size="12" font-weight="500" fill="#94A3B8">📥 Export Center</text>
+
+  <!-- Sidebar Footer Info -->
+  <rect x="90" y="605" width="180" height="50" rx="6" fill="#0F172A" stroke="#334155" />
+  <text x="105" y="625" font-family="'Inter', sans-serif" font-size="11" font-weight="600" fill="#E2E8F0">Connected: NAS-01</text>
+  <text x="105" y="642" font-family="'Inter', sans-serif" font-size="9" fill="#64748B">SQLite persistence active</text>
+
+  <!-- Main Workspace Area -->
+  <!-- Header Bar -->
+  <text x="310" y="145" font-family="'Inter', sans-serif" font-size="20" font-weight="800" fill="#FFFFFF">Library Compliance Audit</text>
+  <text x="310" y="165" font-family="'Inter', sans-serif" font-size="12" fill="#64748B">Analyzing codecs, multi-tracks, and subtitles compatibility</text>
+
+  <!-- Action button right aligned -->
+  <rect x="960" y="125" width="130" height="36" rx="6" fill="#2563EB" />
+  <text x="980" y="147" font-family="'Inter', sans-serif" font-size="12" font-weight="600" fill="#FFFFFF">📥 Export Excel</text>
+
+  <!-- Stats Grid (Early Bento prototype) -->
+  <!-- Stats Card 1 -->
+  <rect x="310" y="192" width="245" height="74" rx="8" fill="#1E293B" stroke="#334155" />
+  <text x="330" y="220" font-family="'Inter', sans-serif" font-size="11" font-weight="600" fill="#94A3B8">TOTAL INDEXED MEDIA</text>
+  <text x="330" y="248" font-family="'Inter', sans-serif" font-size="22" font-weight="800" fill="#3B82F6">148 items</text>
+
+  <!-- Stats Card 2 -->
+  <rect x="575" y="192" width="245" height="74" rx="8" fill="#1E293B" stroke="#334155" />
+  <text x="595" y="220" font-family="'Inter', sans-serif" font-size="11" font-weight="600" fill="#94A3B8">LIBRARY TOTAL SIZE</text>
+  <text x="595" y="248" font-family="'Inter', sans-serif" font-size="22" font-weight="800" fill="#10B981">684.22 GB</text>
+
+  <!-- Stats Card 3 -->
+  <rect x="840" y="192" width="250" height="74" rx="8" fill="#1E293B" stroke="#334155" />
+  <text x="860" y="220" font-family="'Inter', sans-serif" font-size="11" font-weight="600" fill="#94A3B8">UNFRIENDLY FILE ALERTS</text>
+  <text x="860" y="248" font-family="'Inter', sans-serif" font-size="22" font-weight="800" fill="#EF4444">18 anomalies</text>
+
+  <!-- Central Files Board -->
+  <!-- Tabs bar (Category Splitting) -->
+  <rect x="310" y="286" width="780" height="34" rx="6" fill="#1E293B" />
+  <!-- Tab 1: Active -->
+  <rect x="314" y="290" width="100" height="26" rx="4" fill="#3B82F6" />
+  <text x="340" y="307" font-family="'Inter', sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">Movies</text>
+  <!-- Tab 2 -->
+  <text x="445" y="307" font-family="'Inter', sans-serif" font-size="11" font-weight="600" fill="#94A3B8">TV Shows</text>
+  <!-- Tab 3 -->
+  <text x="555" y="307" font-family="'Inter', sans-serif" font-size="11" font-weight="600" fill="#94A3B8">Music Tracks</text>
+
+  <!-- Table headers -->
+  <text x="325" y="348" font-family="'Inter', sans-serif" font-size="10" font-weight="700" fill="#64748B">TITLE / FILENAME</text>
+  <text x="680" y="348" font-family="'Inter', sans-serif" font-size="10" font-weight="700" fill="#64748B">CODEC &amp; CONTAINER</text>
+  <text x="880" y="348" font-family="'Inter', sans-serif" font-size="10" font-weight="700" fill="#64748B">RESOLUTION</text>
+  <text x="990" y="348" font-family="'Inter', sans-serif" font-size="10" font-weight="700" fill="#64748B">COMPATIBILITY</text>
+  <line x1="310" y1="358" x2="1090" y2="358" stroke="#334155" stroke-width="1" />
+
+  <!-- Data Row 1 -->
+  <text x="325" y="382" font-family="'Inter', sans-serif" font-size="12" font-weight="600" fill="#FFFFFF">Blade Runner 2049 (2017)</text>
+  <text x="325" y="396" font-family="'Inter', sans-serif" font-size="10" fill="#64748B">/shared/Media/Movies/Blade.Runner.2049.mkv</text>
+  <text x="680" y="388" font-family="'Inter', sans-serif" font-size="12" fill="#E2E8F0">HEVC (mkv)</text>
+  <text x="880" y="388" font-family="'Inter', sans-serif" font-size="12" fill="#E2E8F0">4K UHD</text>
+  <rect x="990" y="374" width="80" height="20" rx="10" fill="#10B981" fill-opacity="0.2" stroke="#10B981" stroke-width="1" />
+  <text x="1003" y="388" font-family="'Inter', sans-serif" font-size="10" font-weight="700" fill="#10B981">MODERN</text>
+
+  <line x1="310" y1="410" x2="1090" y2="410" stroke="#1E293B" stroke-width="1" />
+
+  <!-- Data Row 2 -->
+  <text x="325" y="434" font-family="'Inter', sans-serif" font-size="12" font-weight="600" fill="#FFFFFF">Avatar (2009)</text>
+  <text x="325" y="448" font-family="'Inter', sans-serif" font-size="10" fill="#64748B">/shared/Media/Movies/Avatar.avi</text>
+  <text x="680" y="440" font-family="'Inter', sans-serif" font-size="12" fill="#F87171">mpeg4 (avi)</text>
+  <text x="880" y="440" font-family="'Inter', sans-serif" font-size="12" fill="#E2E8F0">1080p FD</text>
+  <rect x="990" y="426" width="80" height="20" rx="10" fill="#EF4444" fill-opacity="0.2" stroke="#EF4444" stroke-width="1" />
+  <text x="1005" y="440" font-family="'Inter', sans-serif" font-size="10" font-weight="700" fill="#EF4444">LEGACY</text>
+
+  <line x1="310" y1="462" x2="1090" y2="462" stroke="#1E293B" stroke-width="1" />
+
+  <!-- Data Row 3 -->
+  <text x="325" y="486" font-family="'Inter', sans-serif" font-size="12" font-weight="600" fill="#FFFFFF">The Matrix Reloaded (2003)</text>
+  <text x="325" y="500" font-family="'Inter', sans-serif" font-size="10" fill="#64748B">/shared/Media/Movies/The.Matrix.Reloaded.mp4</text>
+  <text x="680" y="492" font-family="'Inter', sans-serif" font-size="12" fill="#E2E8F0">h264 (mp4)</text>
+  <text x="880" y="492" font-family="'Inter', sans-serif" font-size="12" fill="#E2E8F0">1080p</text>
+  <rect x="990" y="478" width="80" height="20" rx="10" fill="#F59E0B" fill-opacity="0.2" stroke="#F59E0B" stroke-width="1" />
+  <text x="1006" y="492" font-family="'Inter', sans-serif" font-size="10" font-weight="700" fill="#F59E0B">LIMITED</text>
+
+  <line x1="310" y1="514" x2="1090" y2="514" stroke="#1E293B" stroke-width="1" />
+
+  <!-- Pre-configured Plex compatibility checker rules widget in sidebar style -->
+  <rect x="310" y="534" width="780" height="110" rx="8" fill="#1E293B" stroke="#334155" />
+  <text x="330" y="558" font-family="'Inter', sans-serif" font-size="11" font-weight="800" fill="#60A5FA">ACTIVE COMPATIBILITY CRITERIA</text>
+  <text x="330" y="582" font-family="'Inter', sans-serif" font-size="13" font-weight="600" fill="#FFFFFF">Target Player: Plex Web Access Client</text>
+  <text x="330" y="600" font-family="'Inter', sans-serif" font-size="11" fill="#94A3B8">Ruleset: Stream direct: HEVC / h264 with AAC/AC3. Enforce SRT subtitles. Transcode avi/divx and DTS-MA.</text>
+  
+  <rect x="970" y="570" width="100" height="30" rx="4" fill="#334155" stroke="#475569" />
+  <text x="988" y="589" font-family="'Inter', sans-serif" font-size="11" font-weight="600" fill="#FFFFFF">Edit Rules</text>
+</svg>
