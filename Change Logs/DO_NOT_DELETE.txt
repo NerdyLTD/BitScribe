@@ -1,0 +1,4 @@
+# Preserved Change Log Generation Scripts
+DO NOT DELETE THIS FOLDER.
+
+This folder contains the automated release script utilities utilized to incrementally compile, structure, and stitch our multi-stage App lineage, fixes, and release note contexts in CHANGELOG.md without losing historical parity.

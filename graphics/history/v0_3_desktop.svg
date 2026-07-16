@@ -1,0 +1,130 @@
+<svg viewBox="0 0 1200 750" fill="none" xmlns="http://www.w3.org/2000/svg" width="1920" height="1200">
+  <defs>
+    <filter id="shadowV3" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <!-- Canvas Background -->
+  <rect width="1200" height="750" fill="#F1F5F9" />
+
+  <!-- Grid Pattern Overlay for Depth -->
+  <path d="M0 50 H1200 M0 100 H1200 M0 150 H1200 M0 200 H1200 M0 250 H1200 M0 300 H1200 M0 350 H1200 M0 400 H1200 M0 450 H1200 M0 500 H1200 M0 550 H1200 M0 600 H1200 M0 650 H1200" stroke="#E2E8F0" stroke-width="1" />
+  <path d="M100 0 V750 M200 0 V750 M300 0 V750 M400 0 V750 M500 0 V750 M600 0 V750 M700 0 V750 M800 0 V750 M900 0 V750 M1000 0 V750 M1100 0 V750" stroke="#E2E8F0" stroke-width="1" />
+
+  <!-- Desktop Browser Window Frame -->
+  <rect x="80" y="60" width="1040" height="620" rx="10" fill="#FFFFFF" filter="url(#shadowV3)" stroke="#CBD5E1" stroke-width="1.5" />
+
+  <!-- OS Browser Header Bar -->
+  <path d="M80 70 C80 64.48 84.48 60 90 60 H1110 C1115.52 60 1120 64.48 1120 70 V100 H80 V70 Z" fill="#E2E8F0" />
+  <line x1="80" y1="100" x2="1120" y2="100" stroke="#CBD5E1" stroke-width="1" />
+  
+  <!-- macOS Controls -->
+  <circle cx="105" cy="80" r="5.5" fill="#EF4444" />
+  <circle cx="123" cy="80" r="5.5" fill="#F59E0B" />
+  <circle cx="141" cy="80" r="5.5" fill="#10B981" />
+
+  <!-- URL Address Bar -->
+  <rect x="190" y="70" width="820" height="20" rx="4" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1" />
+  <text x="202" y="84" font-family="'Inter', sans-serif" font-size="11" fill="#64748B">localhost:3000/v0.3-dashboard</text>
+
+  <!-- App Header -->
+  <rect x="80" y="100" width="1040" height="70" fill="#F8FAFC" />
+  <line x1="80" y1="170" x2="1120" y2="170" stroke="#E2E8F0" stroke-width="1.2" />
+
+  <text x="110" y="142" font-family="'Inter', sans-serif" font-size="20" font-weight="800" fill="#0F172A">MediaReporter v0.3</text>
+  <text x="330" y="140" font-family="'Inter', sans-serif" font-size="12" fill="#64748B">Introducing tabbed categorization, raw layout sorting and CSV file indicators</text>
+
+  <!-- Action button -->
+  <rect x="960" y="118" width="120" height="34" rx="4" fill="#0F172A" />
+  <text x="984" y="139" font-family="'Inter', sans-serif" font-size="12" font-weight="600" fill="#FFFFFF">Export CSV</text>
+
+  <!-- Side-by-side Layout introduced in v0.3 -->
+  <!-- Left Side: Basic Filters and Folder Scan -->
+  <rect x="110" y="190" width="220" height="380" rx="6" fill="#F8FAFC" stroke="#E2E8F0" />
+  <text x="125" y="220" font-family="'Inter', sans-serif" font-size="12" font-weight="700" fill="#334155">SCAN TARGET</text>
+  
+  <rect x="125" y="235" width="190" height="30" rx="4" fill="#FFFFFF" stroke="#CBD5E1" />
+  <text x="135" y="254" font-family="'Inter', sans-serif" font-size="11" fill="#0F172A">/volume1/video/movies</text>
+
+  <rect x="125" y="275" width="190" height="32" rx="4" fill="#2563EB" />
+  <text x="175" y="295" font-family="'Inter', sans-serif" font-size="12" font-weight="600" fill="#FFFFFF">Scan Directory</text>
+
+  <text x="125" y="340" font-family="'Inter', sans-serif" font-size="12" font-weight="700" fill="#334155">FILTERS</text>
+  <!-- Radio items -->
+  <circle cx="135" cy="365" r="5" stroke="#2563EB" stroke-width="2" fill="#FFFFFF" />
+  <circle cx="135" cy="365" r="2.5" fill="#2563EB" />
+  <text x="150" y="369" font-family="'Inter', sans-serif" font-size="12" fill="#334155">Show All Files</text>
+
+  <circle cx="135" cy="395" r="5" stroke="#CBD5E1" stroke-width="1.5" fill="#FFFFFF" />
+  <text x="150" y="399" font-family="'Inter', sans-serif" font-size="12" fill="#334155">Unfriendly Files Only</text>
+
+  <circle cx="135" cy="425" r="5" stroke="#CBD5E1" stroke-width="1.5" fill="#FFFFFF" />
+  <text x="150" y="429" font-family="'Inter', sans-serif" font-size="12" fill="#334155">Direct Play Ready</text>
+
+  <!-- Right Side: Unified Items Table with Tabs -->
+  <!-- Tab Menu -->
+  <rect x="350" y="190" width="730" height="34" rx="4" fill="#F1F5F9" />
+  <!-- Tab 1: Movies -->
+  <rect x="354" y="194" width="120" height="26" rx="3" fill="#FFFFFF" stroke="#E2E8F0" />
+  <text x="390" y="211" font-family="'Inter', sans-serif" font-size="11" font-weight="700" fill="#0F172A">Movies (12)</text>
+  <!-- Tab 2: TV Shows -->
+  <text x="500" y="211" font-family="'Inter', sans-serif" font-size="11" font-weight="600" fill="#64748B">TV Shows (6)</text>
+  
+  <!-- Search input -->
+  <rect x="800" y="193" width="270" height="28" rx="4" fill="#FFFFFF" stroke="#CBD5E1" />
+  <text x="812" y="211" font-family="'Inter', sans-serif" font-size="11" fill="#94A3B8">Quick Filter...</text>
+
+  <!-- Table header -->
+  <rect x="350" y="235" width="730" height="30" fill="#F8FAFC" stroke="#E2E8F0" />
+  <text x="365" y="254" font-family="'Inter', sans-serif" font-size="10" font-weight="700" fill="#475569">NAME</text>
+  <text x="650" y="254" font-family="'Inter', sans-serif" font-size="10" font-weight="700" fill="#475569">FORMAT</text>
+  <text x="750" y="254" font-family="'Inter', sans-serif" font-size="10" font-weight="700" fill="#475569">SIZE</text>
+  <text x="850" y="254" font-family="'Inter', sans-serif" font-size="10" font-weight="700" fill="#475569">VIDEO/AUDIO</text>
+  <text x="980" y="254" font-family="'Inter', sans-serif" font-size="10" font-weight="700" fill="#475569">COMPLIANT</text>
+
+  <!-- Row 1 -->
+  <rect x="350" y="265" width="730" height="38" fill="#FFFFFF" stroke="#E2E8F0" />
+  <text x="365" y="288" font-family="'Inter', sans-serif" font-size="11" font-weight="600" fill="#0F172A">Batman Begins (2005).mkv</text>
+  <text x="650" y="288" font-family="'Inter', sans-serif" font-size="11" fill="#334155">mkv</text>
+  <text x="750" y="288" font-family="'Inter', sans-serif" font-size="11" fill="#334155">4.2 GB</text>
+  <text x="850" y="288" font-family="'Inter', sans-serif" font-size="11" fill="#334155">h264 / AC3 5.1</text>
+  <rect x="980" y="274" width="80" height="18" rx="9" fill="#10B981" fill-opacity="0.1" />
+  <text x="1006" y="287" font-family="'Inter', sans-serif" font-size="9" font-weight="700" fill="#10B981">YES</text>
+
+  <!-- Row 2 -->
+  <rect x="350" y="303" width="730" height="38" fill="#F8FAFC" stroke="#E2E8F0" />
+  <text x="365" y="326" font-family="'Inter', sans-serif" font-size="11" font-weight="600" fill="#0F172A">Gladiator (2000).avi</text>
+  <text x="650" y="326" font-family="'Inter', sans-serif" font-size="11" fill="#EF4444">avi (Legacy)</text>
+  <text x="750" y="326" font-family="'Inter', sans-serif" font-size="11" fill="#334155">1.4 GB</text>
+  <text x="850" y="326" font-family="'Inter', sans-serif" font-size="11" fill="#334155">mpeg4 / mp3</text>
+  <rect x="980" y="312" width="80" height="18" rx="9" fill="#EF4444" fill-opacity="0.1" />
+  <text x="1008" y="325" font-family="'Inter', sans-serif" font-size="9" font-weight="700" fill="#EF4444">NO</text>
+
+  <!-- Row 3 -->
+  <rect x="350" y="341" width="730" height="38" fill="#FFFFFF" stroke="#E2E8F0" />
+  <text x="365" y="364" font-family="'Inter', sans-serif" font-size="11" font-weight="600" fill="#0F172A">Sherlock Holmes (2009).mp4</text>
+  <text x="650" y="364" font-family="'Inter', sans-serif" font-size="11" fill="#334155">mp4</text>
+  <text x="750" y="364" font-family="'Inter', sans-serif" font-size="11" fill="#334155">2.1 GB</text>
+  <text x="850" y="364" font-family="'Inter', sans-serif" font-size="11" fill="#334155">h264 / AAC stereo</text>
+  <rect x="980" y="350" width="80" height="18" rx="9" fill="#10B981" fill-opacity="0.1" />
+  <text x="1006" y="363" font-family="'Inter', sans-serif" font-size="9" font-weight="700" fill="#10B981">YES</text>
+
+  <!-- Row 4 -->
+  <rect x="350" y="379" width="730" height="38" fill="#F8FAFC" stroke="#E2E8F0" />
+  <text x="365" y="402" font-family="'Inter', sans-serif" font-size="11" font-weight="600" fill="#0F172A">The Prestige (2006).mkv</text>
+  <text x="650" y="402" font-family="'Inter', sans-serif" font-size="11" fill="#334155">mkv</text>
+  <text x="750" y="402" font-family="'Inter', sans-serif" font-size="11" fill="#334155">8.7 GB</text>
+  <text x="850" y="402" font-family="'Inter', sans-serif" font-size="11" fill="#F59E0B">h264 / DTS 5.1 (Alert)</text>
+  <rect x="980" y="388" width="80" height="18" rx="9" fill="#F59E0B" fill-opacity="0.1" />
+  <text x="1003" y="401" font-family="'Inter', sans-serif" font-size="9" font-weight="700" fill="#F59E0B">LIMITED</text>
+
+  <!-- Pagination / Bottom stats in v0.3 -->
+  <line x1="110" y1="590" x2="1080" y2="590" stroke="#CBD5E1" stroke-dasharray="2 2" />
+  <text x="110" y="612" font-family="'Inter', sans-serif" font-size="11" fill="#64748B">Library scanned target includes subdirectories | 18 media items total | 25.10 GB disk capacity</text>
+  
+  <!-- Browser Window Footer Bar -->
+  <path d="M80 630 V670 C80 675.52 84.48 680 90 680 H1110 C1115.52 680 1120 675.52 1120 670 V630 Z" fill="#F1F5F9" />
+  <line x1="80" y1="630" x2="1120" y2="630" stroke="#CBD5E1" stroke-width="1.2" />
+  <text x="110" y="656" font-family="'Inter', sans-serif" font-size="11" fill="#94A3B8">PlexAuditor CLI Engine active on server</text>
+</svg>

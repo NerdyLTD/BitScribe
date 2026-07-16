@@ -1,0 +1,127 @@
+================================================================================
+BitScribe RX - REMEDIATION APP WISHLIST & ARCHITECTURAL PLAN
+================================================================================
+Generated: June 15, 2026
+Updated by human nerd: June 26th, 2026
+Status: Draft Spec for Suite Companion App
+
+--------------------------------------------------------------------------------
+1. OVERVIEW & PRODUCT BOUNDARIES
+--------------------------------------------------------------------------------
+The Remediation App (tentatively "BitScribe RX")
+is designed as a direct companion utility to the BitScribe Steward scanning application. While 
+Steward acts as the "Audit & Report" eye, recognizing mismatches and cataloging metadata and file composition,
+the Remediation Tool acts as the "Hands" — running CPU-efficient operations, modifying 
+metadata containers, renaming folders, fetching external translations, etc.
+
+Both applications share a single, portable local database located within the portable
+application workspace directory ("./BitScribeDB/"). This allows transactions committed
+by the Remediation engine to automatically reflect in Steward scan reports on launch.
+
+--------------------------------------------------------------------------------
+2. COMPREHENSIVE WISHLIST FEATURES
+--------------------------------------------------------------------------------
+
+[FEATURE 1] Smart Metadata Database Update / Completion with Intercept / Approval Flow
+- Target: Movies, episodes or music with incomplete, corrupted, or faulty online scraper matches.
+- Strategy: Pull matched metadata from free online sources (e.g. TMDB, TVDB, etc). 
+- Compliance Control: Offer the user a clean toggle setting:
+  * "Auto-Trust & Apply": Seamless batch injection.
+  * "Interactive Approval (Review Mode)": Shows a side-by-side local VS online diff UI 
+    glowing with warnings before letting the user click "Approve" or "Skip" on individual files.
+- User experience: "Metadata Update" button that parses all the media in the database, or just a subset (user selectable with checkboxes for each type of media found in the database, except for still image formats). When the scan completes, but before the app writes to the database, the user is presented with the updated version of the data showing before & after, with newly populated fields in green, empty fields (both before and after) represented in red. The user is given an opportunity to select individually, by "chunks" of 10, 25, 50 or 100, or by series/season or Artist/Album, based on the context. Once the user approves, the data is written to the database.
+
+[FEATURE 2] Audio Container Remuxing (AC3 Stereo to AAC Stereo)
+- Target: Video files where stereo audio streams are wrapped inside the legacy AC3 codec,
+  flagged as unfriendly by Streaming Compatibility reports.
+- Strategy: Utilize a low-overhead FFmpeg stream copy (`-c:v copy`) to preserve 100% of the
+  video quality without time-consuming transcoding. Only stream-transcode the audio track 
+  to AAC stereo (`-c:a aac -ac 2`) and re-embed.
+
+[FEATURE 3] Mono-to-Stereo Audio Up-Transcoding
+- Target: Vintage video items or old TV recordings containing singular mono audio channels.
+- Strategy: Match mono audio tracks and run an audio remux. Demux the mono channel and map 
+  it to a clean dual-channel stereo AAC track (`-ac 2`) to ensure compatibility with modern 
+  TV/web sound-bars, leaving video untouched.
+
+
+[FEATURE 4] Standardized Dynamic Media Renamer (Depends on Feature 1)
+- Target: Arbitrarily named files requiring strict conforming patterns.
+- Rule Configurations (User Checkbox Presets):
+  * Movies: Title & Year parent folders [e.g., "Movies/H/Harry Potter and the Order of the Phoenix (2007)/Harry Potter and the Order of the Phoenix (2007).mkv"].
+  * TV Shows: Nested structures [e.g., "/TV/Daredevil/Season 01/Daredevil - S01E03 - Episode Title.mkv"].
+- Article Elimination Rule: Exclude leading articles ("The", "A", "An") from directory grouping
+  (e.g., "The Prestige" placed inside "Movies/P/") while preserving full literal names in the final file label.
+-User Experience: User selects a category or subset of a category (eg, TV Shows or a specific Series/Season); the app shows a side by side of the existing filename and the proposed file name. User can select individually, in groups of 10, 25, 50 or 100, or can choose "Total trust" (with a warning that errors are possible and recommending the user review all proposed changes first). For TV shows where episodes may have duplicate names (eg, DareDevil\Season1\S01E01.mkv and Angel\Season1\S01E01.mkv), rename options could include the show's initials (eg, DareDevil = DD, Buffy the Vampire Slayer = BtVS) or full name prepended, episode title and season/episode # included (eg, DareDevil\Season 1\DD Pilot S01E01.Mkv). Articles such as The, A, An, etc translate to lower case (Buffy the Vampire Slayer = BtVS). Some presets should be available and ideally a user-definable standard, if that's plausible.
+
+[Feature 5] Standardized Folder/Directory Organizer (Depends on Feature 1 and, to an extent, Feature 4)
+
+- Target: Media where files are not organized with a standardized structure.
+- Rule Configurations (BitScribeRX Presets or user-defined via checkboxes):
+	*Movies: FOLDER NAME\AMovie (1999).mkv; FOLDER NAME\Numerical or Alphabetical (eg, Movies\1,2,3\65.mkv and Movies\a\Alice In Wonderland (1964).mp4)
+	*TV Shows: FOLDER NAME\ShowName.S0E01.mp4; FOLDER NAME\SHOW NAME\EpisodeS01E01.mkv\; FOLDER NAME\SHOW NAME\SEASON #\EpisodeS02E07.mkv)
+	*Music: FOLDER NAME\Artist\Album\SongTitle.mp3; FOLDER NAME\Soundtracks\MOVIE, SHOW or GAME NAME\SongTitle.flac; FOLDER NAME\CONCERTS\ConcertName.Ext
+	*With User approval, after renaming has been completed, BitScribe RX can reorganize folders to its preferred structure.
+
+[FEATURE 6] Flat Folder Consolidated Restructuring (The Clean-up Engine)
+- Target: A single "dumping ground" folder packed with hundreds of mixed movies, TV files, 
+  SRT subtitles, and unorganized media assets.
+- Strategy: Parse the flat layout, query the database-matched content category (Movie vs. TV),
+  and automatically build nested physical structures, dragging assets and subtitles into their 
+  newly created home coordinates securely.
+
+[FEATURE 7] Hard Container Metadata Injector (Tag Writer) (Depends on Feature 1)
+- Target: Files missing internal tag metadata (artist, title, cover image, album, director, writer, actors/cast, studio, poster image).
+- Strategy: Rather than relying solely on database records, physically write tags into compatible
+  containers (such as MP4 atomic tags or MKV Ebml headers) so metadata persists even when 
+  files are copied or moved out of the system.
+
+[FEATURE 7] Missing Subtitles Downloader & Embedder
+- Target: Movies/shows lacking SRT subtitle translations for the user's preferred language.
+- Strategy: Scrape open-source providers (e.g., OpenSubtitles API), retrieve matching 
+  timing tracks, download raw .srt files, and offer a choice between:
+  * External Sidecar Placement: Saving `.en.srt` in the same directory.
+  * Mux Embedding: Remodeling the container to embed the subtitle as a soft text track.
+  * Remove unwanted subtitles
+  * Purge subtitle types that require transcoding
+
+[FEATURE 8] Embedded Poster Extraction & Embedding
+- Target: Media items lacking internal cover art (posters) or needing standardization.
+- Strategy: Use the `Embedded Poster` scan flag from Steward to identify missing covers.
+  During the same metadata pass, fetch high-quality poster graphics locally or from TMDB
+  and embed them directly into MP4 (atomic tags) or MKV (attachments) containers.
+
+[FEATURE 9] Bitrate Anomaly Re-encoding (Quality Conformance)
+- Target: Files flagged by Steward's Quality Audit as having "Bitrate Anomalies" (e.g., 1080p starved at <1.5 Mbps or bloated at >50 Mbps).
+- Strategy: Automatically queue these items for batch remediation:
+  * Bloated files: Transcode video streams down to efficient HEVC (H.265) target bitrates.
+  * Starved files: Report and recommend user replace the low-quality asset. We cannot actively engage in or help the user engage in piracy. BitScribe Steward and RX are here only to help users organize and catalog whatever digital media they (presumably) own.
+
+[FEATURE 10] Common Database Bi-Directional Synchronization
+- Target: Post-remediation registry reporting.
+- Strategy: When the cleanups, remuxes, or renames finish, write directly back to `./BitScribeDB`.
+  Steward will instant-read these coordinates on launch without needing a new heavy disk scan.
+
+[FEATURE 11] Chapter Restoration Wizard (Reserved for BitScribeRX)
+- Target: Movie and TV files cataloged by Steward as having `chapterCount: 0` (indicating missing or stripped chapter structures).
+- Strategy: Enable users to download and restore full chapter configurations:
+  * Pull standard scene timings or commercial transitions from online media databases (such as TMDB or specialized chapter registries).
+  * Calculate clean uniform interval markers (e.g., automated 5 or 10-minute division blocks) if specific matches are unavailable.
+  * Execute a swift, lossless metadata injection to remux chapter tables directly into the file container without video re-encoding.
+
+--------------------------------------------------------------------------------
+3. SHARED DATABASE REQUIREMENTS IN BitScribe STEWARD
+--------------------------------------------------------------------------------
+To support these features, our scanning database schema in Steward must preemptively
+capture and flag:
+1. "raw_audio_codec" & "physical_audio_channels" (essential for matching AC3 / Mono logs).
+2. "is_corrupted" (binary verification flag).
+3. "matched_online_id" (storing TMDB/IMDB references for reviewer matches).
+4. "has_external_subtitles" & "embedded_subtitle_languages" (for subtitle downloader logic).
+5. "file_uuid" or "file_hash" (ensuring database tracks files reliably even if names are altered).
+6. "has_embedded_poster" (boolean flag identifying structural container covers).
+7. "bitrate_anomaly" (boolean flag identifying suspicious bitrate-to-resolution ratio).
+8. "videoBitDepth" (string flag e.g., '8-bit', '10-bit', key to identifying premium cinematic layouts and guiding direct play).
+9. "audioSampleRate" (integer sample rate e.g., 44100, 48000, 96000, critical for sorting high-fidelity and audiophile tracks).
+10. "chapterCount" (integer chapter count, crucial for identifying and flagging files missing internal chapters).
+================================================================================
