@@ -1,3 +1,8 @@
+## [1.4.4] - 2026-07-16
+### Fixed
+- Fixed an issue where the Excel exporter calculated Quality Audit totals using duplicate, hardcoded logic instead of the centralized `evaluatePlexCompatibility` module, leading to '0 files' reported on the top level summary.
+- Fixed a short-circuit bug in `plexEvaluator.ts` that erroneously returned cached 'Streaming Scan' results for all scan types unless forcefully bypassed, which caused HTML/Excel reports to miss anomaly classifications.
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
