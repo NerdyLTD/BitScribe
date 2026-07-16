@@ -1,3 +1,4 @@
+import { stat } from '@tauri-apps/plugin-fs';
 import { invoke } from "@tauri-apps/api/core";
 const isTauri = () => typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__ !== undefined;
 
@@ -207,11 +208,15 @@ function getTopLevelFolder(filePath: string): string {
 export async function scanDirectories(paths: string[], rules: any, onStart: (total: number) => void, onLog: (msg: string) => void, onProgress: (prog: any) => void, isResume: boolean = false) {
     onLog("Initializing scan...");
     let existingPaths = new Set<string>();
+    let existingFilesMap = new Map<string, any>();
     if (isResume) {
         onLog("Loading existing database to determine resume point...");
         try {
             const dbFiles = await getDbFiles();
-            dbFiles.forEach(f => existingPaths.add(f.filePath || f.id));
+            dbFiles.forEach(f => {
+                existingPaths.add(f.filePath || f.id);
+                existingFilesMap.set(f.filePath || f.id, f);
+            });
             onLog(`Found ${existingPaths.size} already scanned files to skip.`);
         } catch (e) {
             onLog("Failed to load DB for resume. Starting fresh.");
@@ -379,7 +384,27 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
         while (currentIndex < allFiles.length) {
             const i = currentIndex++;
             const file = allFiles[i];
+            let skipFile = false;
             if (existingPaths.has(file)) {
+                if (isResume) {
+                    try {
+                        const fileInfo = await stat(file);
+                        const currentSizeGB = fileInfo.size / (1024 * 1024 * 1024);
+                        const storedSizeGB = existingFilesMap.get(file)?.sizeGB || 0;
+                        if (Math.abs(currentSizeGB - storedSizeGB) > 0.001) {
+                            skipFile = false;
+                        } else {
+                            skipFile = true;
+                        }
+                    } catch (err) {
+                        skipFile = true;
+                    }
+                } else {
+                    skipFile = true;
+                }
+            }
+
+            if (skipFile) {
                 onProgress({ current: i + 1, total: allFiles.length, item: null });
                 continue;
             }

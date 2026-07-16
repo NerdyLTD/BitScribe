@@ -2307,9 +2307,14 @@ export default function App() {
                   lastProgress = roundedPct;
               }
               if (prog.item) {
-                  if (prog.error) corruptItems.push(prog.item);
-                  else {
-                      finalItems.push(prog.item);
+                  if (prog.error) {
+                      const idx = corruptItems.findIndex(i => i.id === prog.item.id);
+                      if (idx >= 0) corruptItems[idx] = prog.item;
+                      else corruptItems.push(prog.item);
+                  } else {
+                      const idx = finalItems.findIndex(i => i.id === prog.item.id);
+                      if (idx >= 0) finalItems[idx] = prog.item;
+                      else finalItems.push(prog.item);
                       scannedCount++;
                   }
               }
