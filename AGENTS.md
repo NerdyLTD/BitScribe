@@ -25,3 +25,5 @@ To prevent regression and ensure a stable iterative process, all agents must adh
 
 
 9. **Safe File Modification:** NEVER use recursive `sed -i` or apply text-replacement scripts globally across the repository. Binary files (e.g., `.png`, `.ico`, `.icns`) will be destroyed if interpreted as text. Always target specific, known text files when using tools like `sed`.
+
+10. **Strict Graphics and Binary Protection (CRITICAL):** Agents are strictly forbidden from modifying, overwriting, recreating, or echoing string data into ANY existing graphics files (including but not limited to `.png`, `.svg`, `.ico`, `.icns`, `.jpg`). Graphics files must NEVER be treated or processed as text files under any circumstance. Do not use tools like `echo`, `sed`, `awk`, or text editors on them. If a graphics file exists, it is the user's authentic asset and must be left completely untouched.
