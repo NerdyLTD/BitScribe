@@ -6,6 +6,8 @@ import { MOCK_MEDIA_LIBRARY } from "../data/mockMediaData";
 import { evaluatePlexCompatibility, computeDuplicatesMap, getDuplicatePairRows, isMissingSubtitles } from "../utils/plexEvaluator";
 import { parseVideoMetadata } from "../utils/mediaParser";
 import { getDisplayArtist, getDisplayAlbum, getDisplaySongTitle } from "../utils/musicHelper";
+import { normalizeTitleForSort, getSectionHeaderForTitle, normalizeGroupTitle, getMusicGroupTitle } from "../utils/sortingHelper";
+
 import { getMissingMetadataTags } from "../utils/excelExporter";
 import DiagnosticPanel from "./DiagnosticPanel";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LabelList } from 'recharts';
@@ -33,23 +35,7 @@ import {
   ChevronDown
 } from "lucide-react";
 
-const normalizeTitleForSort = (title: string): string => {
-  if (!title) return "";
-  return title.trim().replace(/^(the|a|an)\s+/i, "").trim();
-};
 
-const getSectionHeaderForTitle = (title: string): string => {
-  const normalized = normalizeTitleForSort(title);
-  if (!normalized) return "#";
-  const firstChar = normalized[0].toUpperCase();
-  if (/[0-9]/.test(firstChar)) {
-    return "#";
-  } else if (/[A-Z]/.test(firstChar)) {
-    return firstChar;
-  } else {
-    return "#";
-  }
-};
 
 interface DashboardProps {
   isScanning: boolean;
@@ -2582,12 +2568,10 @@ const handleCategoryToggle = (cat: string) => {
               } else if (group === 'TV') {
                 section = parsed?.title || 'Ungrouped';
               } else if (group === 'Music') {
-                const artist = getDisplayArtist(item, customRules) || 'Unknown Artist';
-                const album = getDisplayAlbum(item, customRules) || 'Unknown Album';
-                section = `${artist} — ${album}`;
+                section = getMusicGroupTitle(item, customRules, item.category);
               }
 
-              const normSection = String(section).replace(/['"\[\]()]/g, "").replace(/\s+/g, " ").trim().toLowerCase();
+              const normSection = normalizeGroupTitle(section);
               if (normSection !== lastSectionNorm) {
                 lastSectionNorm = normSection;
                 if (group === 'Movies') {

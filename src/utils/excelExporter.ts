@@ -3,6 +3,8 @@ import { isMusicCategory, sortCategories, getCategoryGroup } from "../types";
 import ExcelJS from "exceljs";
 import { downloadOrSaveFile } from "./downloader";
 import { MediaItem, RuleCriteria } from "../types";
+import { normalizeTitleForSort, getSectionHeaderForTitle, normalizeGroupTitle, getMusicGroupTitle, getGroupTitleInit } from "./sortingHelper";
+
 import {
   evaluatePlexCompatibility,
   computeDuplicatesMap,
@@ -101,23 +103,7 @@ export const getFolderPath = (filepath: string, filename: string) => {
   return p.endsWith("/") || p.endsWith("\\") ? p.slice(0, -1) : p;
 };
 
-const normalizeTitleForSort = (title: string): string => {
-  if (!title) return "";
-  return title.trim().replace(/^(the|a|an)\s+/i, "").trim();
-};
 
-const getSectionHeaderForTitle = (title: string): string => {
-  const normalized = normalizeTitleForSort(title);
-  if (!normalized) return "#";
-  const firstChar = normalized[0].toUpperCase();
-  if (/[0-9]/.test(firstChar)) {
-    return "#";
-  } else if (/[A-Z]/.test(firstChar)) {
-    return firstChar;
-  } else {
-    return "#";
-  }
-};
 
 export async function exportMediaLibraryToExcel(
   items: MediaItem[],
@@ -147,20 +133,7 @@ export async function exportMediaLibraryToExcel(
     return "Transcode Required";
   };
 
-  const getGroupTitleInit = (
-    item: MediaItem,
-    isTv: boolean = false,
-  ): string => {
-    if (item.category === "Extras") {
-      return getExtrasGroupTitle(item);
-    }
-    const meta = parseVideoMetadata(item);
-    if (isTv && meta.season && meta.season !== "-") {
-      const p = parseInt(meta.season, 10);
-      return `${meta.title || "Unknown"} - ${isNaN(p) ? meta.season : "Season " + p}`;
-    }
-    return meta.title || "Ungrouped";
-  };
+
 
   // 1. Create Overview Summary Sheet
   const overviewWs = wb.addWorksheet("Overview", {
@@ -975,19 +948,11 @@ export async function exportMediaLibraryToExcel(
       const isMovie = getCategoryGroup(catType) === "Movies";
       const isMusic = isMusicCategory(catType);
 
-      const normCurrentGroup = String(currentGroup)
-        .replace(/['"\[\]()]/g, "")
-        .replace(/\s+/g, " ")
-        .trim()
-        .toLowerCase();
+      const normCurrentGroup = normalizeGroupTitle(currentGroup);
 
       if (isTv) {
         const groupTitle = getGroupTitleInit(item, isTv) || "Ungrouped";
-        const normGroupTitle = String(groupTitle)
-          .replace(/['"\[\]()]/g, "")
-          .replace(/\s+/g, " ")
-          .trim()
-          .toLowerCase();
+        const normGroupTitle = normalizeGroupTitle(groupTitle);
 
         if (normGroupTitle !== normCurrentGroup) {
           currentGroup = groupTitle;
@@ -1048,11 +1013,7 @@ export async function exportMediaLibraryToExcel(
         }
       } else if (catType === "Extras") {
         const groupTitle = getExtrasGroupTitle(item);
-        const normGroupTitle = String(groupTitle)
-          .replace(/['"\[\]()]/g, "")
-          .replace(/\s+/g, " ")
-          .trim()
-          .toLowerCase();
+        const normGroupTitle = normalizeGroupTitle(groupTitle);
 
         if (normGroupTitle !== normCurrentGroup) {
           currentGroup = groupTitle;
@@ -1083,15 +1044,8 @@ export async function exportMediaLibraryToExcel(
       } else if (isMusic) {
         const dArtist = getDisplayArtist(item, rules);
         const dAlbum = getDisplayAlbum(item, rules);
-        const groupTitle =
-          catType === "Soundtracks" || catType === "Music Compilations"
-            ? dAlbum
-            : `${dArtist} - ${dAlbum}`;
-        const normGroupTitle = String(groupTitle)
-          .replace(/['"\[\]()]/g, "")
-          .replace(/\s+/g, " ")
-          .trim()
-          .toLowerCase();
+        const groupTitle = getMusicGroupTitle(item, rules, catType);
+        const normGroupTitle = normalizeGroupTitle(groupTitle);
 
         if (normGroupTitle !== normCurrentGroup) {
           currentGroup = groupTitle;
@@ -1527,29 +1481,15 @@ export async function exportMediaLibraryToExcel(
           cat.toLowerCase().includes("show") ||
           cat.toLowerCase().includes("series") ||
           cat.toLowerCase().includes("anime"));
-        const titleA =
-          cat === "Soundtracks" || cat === "Music Compilations"
-            ? getDisplayAlbum(a, rules)
-            : (isMusicCategory(cat)
-                ? `${getDisplayArtist(a, rules)} - ${getDisplayAlbum(a, rules)}`
-                : getGroupTitleInit(a, isTvCat)) || "";
-        const titleB =
-          cat === "Soundtracks" || cat === "Music Compilations"
-            ? getDisplayAlbum(b, rules)
-            : (isMusicCategory(cat)
-                ? `${getDisplayArtist(b, rules)} - ${getDisplayAlbum(b, rules)}`
-                : getGroupTitleInit(b, isTvCat)) || "";
+        const titleA = isMusicCategory(cat) 
+            ? getMusicGroupTitle(a, rules, cat)
+            : getGroupTitleInit(a, isTvCat) || "";
+        const titleB = isMusicCategory(cat) 
+            ? getMusicGroupTitle(b, rules, cat)
+            : getGroupTitleInit(b, isTvCat) || "";
 
-        let normA = String(titleA)
-          .replace(/['"\[\]()]/g, "")
-          .replace(/\s+/g, " ")
-          .trim()
-          .toLowerCase();
-        let normB = String(titleB)
-          .replace(/['"\[\]()]/g, "")
-          .replace(/\s+/g, " ")
-          .trim()
-          .toLowerCase();
+        let normA = normalizeGroupTitle(titleA);
+        let normB = normalizeGroupTitle(titleB);
 
         const catLower = cat.toLowerCase();
         const isDocCat = ["documentaries", "education", "concerts"].includes(catLower) || catLower.includes("docu");
