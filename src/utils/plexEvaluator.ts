@@ -70,15 +70,14 @@ export function evaluatePlexCompatibility(item: MediaItem, customRules: RuleCrit
   );
 
   if (!forceEvaluate) {
-    if (item.streamFriendlyEvaluated && item.streamFriendlyEvaluated > 0 && item.streamFriendlyLevel) {
-      return {
-        level: item.streamFriendlyLevel as PlexFriendlyLevel,
-        reason: item.streamFriendlyReason || '',
-        suggestion: item.streamFriendlySuggestion || ''
-      };
-    }
-
     if (isStandardStreamingScan) {
+      if (item.streamFriendlyEvaluated && item.streamFriendlyEvaluated > 0 && item.streamFriendlyLevel) {
+        return {
+          level: item.streamFriendlyLevel as PlexFriendlyLevel,
+          reason: item.streamFriendlyReason || '',
+          suggestion: item.streamFriendlySuggestion || ''
+        };
+      }
       return {
         level: 'pending',
         reason: 'This file has not been evaluated by the Streaming compatibility scanner yet.',
