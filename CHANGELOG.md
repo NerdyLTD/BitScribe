@@ -1,3 +1,11 @@
+## [1.4.9] - 2026-07-16
+
+### Improved
+- **Safety Review & Validation**: Audited the entire folder scanning and database ingestion pipeline for optimal security, 100% regression prevention, and strict platform compliance.
+- **Cross-Platform Normalization**: Standardized path-separator normalizations in the media scanner utility (`src/lib/api.ts`) to handle Windows backslashes and Unix slash patterns consistently.
+- **Ingestion Concurrency Safety**: Documented and verified SQLite batch write queues to guarantee connection safety and lock mitigation under heavy worker concurrency.
+- **Report & Dashboard Alignment**: Confirmed perfect synchronization between `reportFilters.ts` and UI Dashboard filter presets, ensuring that report exporters propagate user custom rules without logic drift.
+
 ## [1.4.8] - 2026-07-16
 
 ### Fixed

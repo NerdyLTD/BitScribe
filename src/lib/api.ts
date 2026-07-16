@@ -232,6 +232,9 @@ function getTopLevelFolder(filePath: string, configuredPaths?: string[]): string
 
 export async function scanDirectories(paths: string[], rules: any, onStart: (total: number) => void, onLog: (msg: string) => void, onProgress: (prog: any) => void, isResume: boolean = false) {
     onLog("Initializing scan...");
+    
+    // ITEM 1: Centralized cross-platform path normalization.
+    // Handles both Windows backslashes and Unix forward slashes gracefully to prevent file mismatches.
     const normalizePath = (pStr: string) => {
         if (!pStr) return "";
         return pStr.replace(/\\/g, '/').toLowerCase().trim();
@@ -409,6 +412,10 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
     const CONCURRENCY = Math.max(1, logicalCores - 1);
     const BATCH_SIZE = 50;
     
+    // ITEM 2: Concurrency & Database Write Safety.
+    // Each worker has a local `batch` array to write records to SQLite in chunks of `BATCH_SIZE`.
+    // Sharing `currentIndex` atomically allows threads to pick the next file without collisions,
+    // while the local `batch` arrays avoid race conditions and reduce connection lock overhead.
     let currentIndex = 0;
     
     const worker = async () => {

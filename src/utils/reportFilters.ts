@@ -7,6 +7,9 @@ export function filterItemsForReport(
   items: MediaItem[],
   rules: RuleCriteria
 ): MediaItem[] {
+  // ITEM 3: Unified dashboard and exporter alignment.
+  // Consumes rules through getScanType and evaluates only on-the-fly where necessary (e.g. custom rule presets),
+  // otherwise utilizing cached database evaluations to keep filters lightweight and snappy.
   const scanType = getScanType(rules, items);
 
   return items.filter((item) => {
