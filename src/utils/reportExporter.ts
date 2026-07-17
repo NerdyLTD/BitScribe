@@ -974,8 +974,8 @@ export async function exportMediaLibraryToHTML(
 </div>
 
 <script>
-  const RAW_DATA = __DATA__;
   const ALL_DATA = __ALL_DATA__;
+  const RAW_DATA = ALL_DATA;
   const INITIAL_COLUMNS = __COLUMNS__;
   const ALL_POSSIBLE_HEADERS = __HEADERS__;
   const SCAN_TYPE = "__SCAN_TYPE__";
@@ -1353,7 +1353,7 @@ export async function exportMediaLibraryToHTML(
       const audioCounts = {};
       const musicCounts = {};
 
-      targetItems.forEach(i => {
+      ALL_DATA.forEach(i => {
         const cat = i.category || 'Other';
         const isMusic = isMusicCat(cat);
 
@@ -1399,7 +1399,7 @@ export async function exportMediaLibraryToHTML(
       container.className = "grid grid-cols-2 md:grid-cols-5 gap-4 mb-8 text-center";
 
       html = [
-        '<div class="glass-panel p-4 rounded-xl"><div class="text-3xl font-bold text-slate-100">'+total+'</div><div class="text-xs text-slate-400 uppercase tracking-wider mt-1">Total Files</div></div>',
+        '<div class="glass-panel p-4 rounded-xl"><div class="text-3xl font-bold text-slate-100">'+ALL_DATA.length+'</div><div class="text-xs text-slate-400 uppercase tracking-wider mt-1">Total Files</div></div>',
         '<div class="glass-panel p-4 rounded-xl text-indigo-400"><div class="text-3xl font-bold">'+distVideo+'</div><div class="text-xs text-slate-400 uppercase tracking-wider mt-1">Video Codecs</div></div>',
         '<div class="glass-panel p-4 rounded-xl text-emerald-400"><div class="text-3xl font-bold">'+distAudio+'</div><div class="text-xs text-slate-400 uppercase tracking-wider mt-1">Audio Codecs</div></div>',
         '<div class="glass-panel p-4 rounded-xl text-amber-400"><div class="text-3xl font-bold">'+distContainers+'</div><div class="text-xs text-slate-400 uppercase tracking-wider mt-1">Containers</div></div>',
@@ -1751,7 +1751,7 @@ export async function exportMediaLibraryToHTML(
 </html>`;
 
   const finalHtml = htmlTemplate
-    .replace('__DATA__', () => JSON.stringify(optimizedItems).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029'))
+    .replace('__DATA__', () => '[]')
     .replace('__ALL_DATA__', () => JSON.stringify(allOptimizedItems).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029'))
     .replace('__COLUMNS__', () => JSON.stringify(finalColumns).replace(/</g, '\\u003c'))
     .replace('__HEADERS__', () => JSON.stringify(allPossibleHeaders).replace(/</g, '\\u003c'))

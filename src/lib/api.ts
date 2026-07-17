@@ -488,9 +488,12 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 } else if (tags.date) {
                     const y = parseInt(tags.date.substring(0, 4));
                     if (!isNaN(y)) year = y;
-                } else if (tags.creation_time) {
-                    const y = parseInt(tags.creation_time.substring(0, 4));
-                    if (!isNaN(y)) year = y;
+                } else {
+                    const tagYear = tags.year || tags.YEAR || tags.original_year || tags.ORIGINAL_YEAR || tags.original_release_date;
+                    if (tagYear) {
+                        const y = parseInt(String(tagYear).substring(0, 4));
+                        if (!isNaN(y)) year = y;
+                    }
                 }
                 
                 const container = file.split('.').pop()?.toLowerCase() || "unknown";
@@ -590,11 +593,11 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 
             } catch (e: any) {
                 const corrupted: MediaItem = {
-                    id: file, filename: file.split('/').pop()!, filePath: file, category: 'Corrupted' as any,
+                    id: file, filename: file.split(/[\\\/]/).pop()!, filePath: file, category: 'Corrupted' as any,
                     container: 'unknown', sizeGB: 0, durationMins: 0, year: 0, videoCodec: '', videoResolution: '',
                     videoBitrateMbps: 0, audioTracks: [], subtitleTracks: [], tags: {}, audioBitrate: 0,
                     isCorrupted: true, errorMessage: e.message, hasEmbeddedPoster: false, bitrateAnomaly: false,
-                    bitrateAnomalyReason: '', topLevelFolder: '', streamFriendlyLevel: 'corrupted',
+                    bitrateAnomalyReason: '', topLevelFolder: getTopLevelFolder(file, paths), streamFriendlyLevel: 'corrupted',
                     streamFriendlyReason: '', streamFriendlySuggestion: '', streamFriendlyEvaluated: 0
                 };
                 onProgress({ current: i + 1, total: allFiles.length, error: true, item: corrupted });

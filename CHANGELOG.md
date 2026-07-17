@@ -1,3 +1,12 @@
+## [1.4.11] - 2026-07-16
+
+### Fixed
+- **HTML Report Size Halved**: Eliminated the redundant double serialization of the entire library dataset (`__DATA__` and `__ALL_DATA__` were previously serialized as independent identical arrays). Now the dataset is serialized exactly once, reducing HTML report size by exactly 50% (saving up to 24MB on large libraries).
+- **Global Metrics on Discovery Scan Cards**: Fixed the issue where Discovery Scan metric cards ("Video Codecs", "Audio Codecs", "Containers", and "Music Codecs") displayed category-filtered counts (e.g. showing 0 music codecs when TV category is active) rather than global library-wide stats. Now the cards display the correct global metrics consistently, matching the distribution lists below.
+- **Cross-Platform Corrupted File Paths**: Fixed Windows-specific folder path extraction issues on corrupted files by splitting on both forward slashes and backslashes dynamically.
+- **Corrupted File Hydration**: Ensuring `topLevelFolder` is dynamically resolved for damaged files using the standard `getTopLevelFolder` helper to prevent blank rows or grouping failures.
+- **2026 Year Fallback Defenses**: Cleared `tags.creation_time` fallback leakage from the directory scanner and file parser to guarantee file modification timestamps never corrupt release year values as 2026.
+
 ## [1.4.10] - 2026-07-16
 
 ### Fixed

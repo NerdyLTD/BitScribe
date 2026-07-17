@@ -264,8 +264,6 @@ export const parseVideoMetadata = (item: MediaItem) => {
     year = embeddedYearMatch[1];
   } else if (item.year && item.year > 0 && item.year !== 2026) {
     year = item.year.toString();
-  } else if (item.year && item.year > 0) {
-    year = item.year.toString();
   }
 
   const specialMatch = rawName.match(/\b(Special)s?\s*[\.\-]?\s*(\d{1,3})\b/i);
