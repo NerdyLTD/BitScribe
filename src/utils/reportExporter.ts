@@ -591,6 +591,7 @@ export async function exportMediaLibraryToHTML(
     }));
     allPossibleHeaders = ["File", "Path", "Duplicate File", "Duplicate Path", "Flag Reason"];
     finalColumns = { "File": true, "Path": true, "Duplicate File": true, "Duplicate Path": true, "Flag Reason": true };
+    allOptimizedItems = optimizedItems;
   } else {
     
     const mapItemRow = (item: MediaItem) => {
@@ -789,9 +790,8 @@ export async function exportMediaLibraryToHTML(
 
     };
 
-    allOptimizedItems = itemsForDups.map(item => mapItemRow(item));
-    const targetItemIds = new Set(targetItems.map(i => i.id));
-    optimizedItems = allOptimizedItems.filter((row, idx) => targetItemIds.has(itemsForDups[idx].id));
+    allOptimizedItems = targetItems.map(item => mapItemRow(item));
+    optimizedItems = allOptimizedItems;
 
   }
 
@@ -979,6 +979,11 @@ export async function exportMediaLibraryToHTML(
   const INITIAL_COLUMNS = __COLUMNS__;
   const ALL_POSSIBLE_HEADERS = __HEADERS__;
   const SCAN_TYPE = "__SCAN_TYPE__";
+
+  function formatCodecString(codec) {
+    if (codec == null) return "";
+    return String(codec).toUpperCase().trim();
+  }
 
   let items = RAW_DATA;
   let sortCol = SCAN_TYPE === "Duplication Scan" ? "File" : "File Name";
@@ -1202,7 +1207,8 @@ export async function exportMediaLibraryToHTML(
       const isMusic = isMusicCat(i.category);
       if (isMusic && (SCAN_TYPE === "Subtitle Scan" || SCAN_TYPE === "Stream Audit Scan" || SCAN_TYPE === "Video Metadata Scan" || SCAN_TYPE === "Quality Audit")) return false;
       if (!isMusic && SCAN_TYPE === "Music Metadata Scan") return false;
-      if (i.category === "Corrupted" || i.category === "Static") return false;
+      if (i.category === "Corrupted") return false;
+      if (i.category === "Static" && SCAN_TYPE !== "Discovery Scan") return false;
       return true;
     });
 
@@ -1341,6 +1347,65 @@ export async function exportMediaLibraryToHTML(
         '<div class="glass-panel p-4 rounded-xl text-blue-400"><div class="text-3xl font-bold">'+starved+'</div><div class="text-xs text-slate-400 uppercase tracking-wider mt-1 font-semibold">Starved Bitrates</div></div>'
       ].join('');
 
+    } else if (SCAN_TYPE === "Discovery Scan") {
+      const containerCounts = {};
+      const videoCounts = {};
+      const audioCounts = {};
+      const musicCounts = {};
+
+      targetItems.forEach(i => {
+        const cat = i.category || 'Other';
+        const isMusic = isMusicCat(cat);
+
+        const cont = i["Container"] || "";
+        if (cont) {
+          containerCounts[cont] = (containerCounts[cont] || 0) + 1;
+        }
+
+        if (!isMusic && cat !== 'Corrupted' && cat !== 'Static') {
+          const vCodec = i["Video Codec"] || "";
+          if (vCodec) {
+            const vc = formatCodecString(vCodec).trim();
+            videoCounts[vc] = (videoCounts[vc] || 0) + 1;
+          }
+        }
+
+        if (cat !== 'Corrupted' && cat !== 'Static') {
+          const aCodecs = i["Audio Codecs"] || "";
+          if (aCodecs) {
+            aCodecs.split(/\s*\|\s*/).forEach(part => {
+              const firstWord = part.trim().split(/[\s(]/)[0]?.toString()?.toUpperCase();
+              if (firstWord) {
+                audioCounts[firstWord] = (audioCounts[firstWord] || 0) + 1;
+              }
+            });
+          }
+        }
+
+        if (isMusic) {
+          const mCodec = i["File Format/Codec"] || "";
+          if (mCodec) {
+            const mc = formatCodecString(mCodec).trim();
+            musicCounts[mc] = (musicCounts[mc] || 0) + 1;
+          }
+        }
+      });
+
+      const distVideo = Object.keys(videoCounts).length;
+      const distAudio = Object.keys(audioCounts).length;
+      const distContainers = Object.keys(containerCounts).length;
+      const distMusic = Object.keys(musicCounts).length;
+
+      container.className = "grid grid-cols-2 md:grid-cols-5 gap-4 mb-8 text-center";
+
+      html = [
+        '<div class="glass-panel p-4 rounded-xl"><div class="text-3xl font-bold text-slate-100">'+total+'</div><div class="text-xs text-slate-400 uppercase tracking-wider mt-1">Total Files</div></div>',
+        '<div class="glass-panel p-4 rounded-xl text-indigo-400"><div class="text-3xl font-bold">'+distVideo+'</div><div class="text-xs text-slate-400 uppercase tracking-wider mt-1">Video Codecs</div></div>',
+        '<div class="glass-panel p-4 rounded-xl text-emerald-400"><div class="text-3xl font-bold">'+distAudio+'</div><div class="text-xs text-slate-400 uppercase tracking-wider mt-1">Audio Codecs</div></div>',
+        '<div class="glass-panel p-4 rounded-xl text-amber-400"><div class="text-3xl font-bold">'+distContainers+'</div><div class="text-xs text-slate-400 uppercase tracking-wider mt-1">Containers</div></div>',
+        '<div class="glass-panel p-4 rounded-xl text-pink-400"><div class="text-3xl font-bold">'+distMusic+'</div><div class="text-xs text-slate-400 uppercase tracking-wider mt-1 font-semibold">Music Codecs</div></div>'
+      ].join('');
+
     } else {
       let missingCount = 0;
       let completeCount = 0;
@@ -1374,7 +1439,7 @@ export async function exportMediaLibraryToHTML(
     const codecContainer = document.getElementById('codec-metrics-container');
     if (!codecContainer) return;
 
-    if (!showAllMetricsMode) {
+    if (!showAllMetricsMode && SCAN_TYPE !== "Discovery Scan") {
       codecContainer.classList.add('hidden');
       return;
     }

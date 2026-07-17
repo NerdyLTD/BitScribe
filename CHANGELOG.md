@@ -1,3 +1,11 @@
+## [1.4.10] - 2026-07-16
+
+### Fixed
+- **HTML Report File Size Optimization**: Resolved a major issue where HTML report exports ballooned in size (up to 104MB combined). Restricted the embedded JSON payload to only map and serialize target files relevant to each individual scan profile instead of embedding the entire media library.
+- **Discovery Audit Metric Cards Alignment**: Fixed the Discovery Audit dashboard block rendering, replacing unrequested metadata tag completeness cards ("Fully Tagged", "Missing Tags", "Tag Coverage") with basic library metrics displaying "Video Codecs", "Audio Codecs", "Containers", and "Music Codecs" counts.
+- **Browser Script Reference Errors**: Prevented potential client-side crashes in generated HTML reports by declaring and implementing a native `formatCodecString` utility directly in the browser-side script environment.
+- **Static Category Integration**: Adjusted the `baseItems` browser-side filter in generated HTML reports to properly retain "Static" files when reviewing "Discovery Audit" statistics, resolving a discrepancy where static files were excluded from Discovery dashboard metric cards.
+
 ## [1.4.9] - 2026-07-16
 
 ### Improved
