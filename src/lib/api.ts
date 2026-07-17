@@ -230,6 +230,27 @@ function getTopLevelFolder(filePath: string, configuredPaths?: string[]): string
     return "Unknown";
 }
 
+function safeParseInt(val: any, fallback: number = 0): number {
+    if (val === undefined || val === null) return fallback;
+    const parsed = parseInt(String(val));
+    return isNaN(parsed) ? fallback : parsed;
+}
+
+function safeParseFloat(val: any, fallback: number = 0): number {
+    if (val === undefined || val === null) return fallback;
+    const parsed = parseFloat(String(val));
+    return isNaN(parsed) ? fallback : parsed;
+}
+
+function getTrackLanguage(stream: any): string {
+    if (!stream || !stream.tags) return "und";
+    const keys = Object.keys(stream.tags);
+    const langKey = keys.find(k => k.toLowerCase() === 'language');
+    if (!langKey) return "und";
+    const lang = String(stream.tags[langKey]).toLowerCase().trim();
+    return lang ? lang.substring(0, 3) : "und";
+}
+
 export async function scanDirectories(paths: string[], rules: any, onStart: (total: number) => void, onLog: (msg: string) => void, onProgress: (prog: any) => void, isResume: boolean = false) {
     onLog("Initializing scan...");
     
@@ -454,16 +475,30 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
             onLog(`Probing (${i+1}/${allFiles.length}): ${file.substring(Math.max(0, file.length - 40))}`);
             
             try {
-                // we use our Tauri sidecar for ffprobe
-                const output = await Command.sidecar('bin/ffprobe', [
+                // Securely execute ffprobe sidecar with a strict 15-second timeout safeguard to prevent hangs
+                const probePromise = Command.sidecar('bin/ffprobe', [
                     '-v', 'quiet', '-print_format', 'json', '-show_format', '-show_streams', '-show_chapters', '-analyzeduration', '1000000', '-probesize', '1000000', file
                 ]).execute();
+
+                const timeoutPromise = new Promise<never>((_, reject) => {
+                    setTimeout(() => reject(new Error("ffprobe probe execution timed out after 15 seconds")), 15000);
+                });
+
+                const output = await Promise.race([probePromise, timeoutPromise]);
                 
                 if (output.code !== 0) {
                     throw new Error("ffprobe returned non-zero code");
                 }
                 
-                const metadata = JSON.parse(output.stdout);
+                // Clean stdout of any unexpected leading/trailing non-JSON warnings
+                let stdoutStr = (output.stdout || "").trim();
+                const firstBrace = stdoutStr.indexOf('{');
+                const lastBrace = stdoutStr.lastIndexOf('}');
+                if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+                    stdoutStr = stdoutStr.substring(firstBrace, lastBrace + 1);
+                }
+
+                const metadata = JSON.parse(stdoutStr);
                 const format = metadata.format || {};
                 const streams = metadata.streams || [];
                 
@@ -473,9 +508,9 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 
                 const hasEmbeddedPoster = streams.some((s: any) => s.codec_type === 'video' && (s.codec_name === 'mjpeg' || s.codec_name === 'png'));
                 
-                const sizeBytes = format.size ? parseInt(format.size) : 0;
+                const sizeBytes = format.size ? safeParseInt(format.size) : 0;
                 const sizeGB = sizeBytes / (1024 * 1024 * 1024);
-                const durationSec = format.duration ? parseFloat(format.duration) : 0;
+                const durationSec = format.duration ? safeParseFloat(format.duration) : 0;
                 const durationMins = durationSec / 60;
                 
                 const tags = format.tags || {};
@@ -484,49 +519,56 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 // Prioritize matching a 4-digit year (19xx or 20xx) in the filename first, as it is the most reliable source for movie/tv release years
                 const filenameYearMatch = file.split(/[\\/]/).pop()?.match(/(19|20)\d{2}/);
                 if (filenameYearMatch) {
-                    year = parseInt(filenameYearMatch[0]);
+                    year = safeParseInt(filenameYearMatch[0]);
                 } else if (tags.date) {
-                    const y = parseInt(tags.date.substring(0, 4));
-                    if (!isNaN(y)) year = y;
+                    const y = safeParseInt(tags.date.substring(0, 4));
+                    if (y > 0) year = y;
                 } else {
                     const tagYear = tags.year || tags.YEAR || tags.original_year || tags.ORIGINAL_YEAR || tags.original_release_date;
                     if (tagYear) {
-                        const y = parseInt(String(tagYear).substring(0, 4));
-                        if (!isNaN(y)) year = y;
+                        const y = safeParseInt(String(tagYear).substring(0, 4));
+                        if (y > 0) year = y;
                     }
                 }
                 
-                const container = file.split('.').pop()?.toLowerCase() || "unknown";
-                const videoCodec = videoStream ? videoStream.codec_name : "";
-                const videoResolution = videoStream ? `${videoStream.width}x${videoStream.height}` : "";
+                // Securely derive file extension mapping bypassing parent folders containing dots
+                const pathFilename = file.split(/[\\/]/).pop() || "";
+                const lastDot = pathFilename.lastIndexOf('.');
+                const container = lastDot !== -1 ? pathFilename.substring(lastDot + 1).toLowerCase() : "unknown";
+
+                const videoCodec = videoStream ? videoStream.codec_name || "unknown" : "";
+                
+                const vWidth = videoStream ? safeParseInt(videoStream.width) : 0;
+                const vHeight = videoStream ? safeParseInt(videoStream.height) : 0;
+                const videoResolution = vWidth > 0 && vHeight > 0 ? `${vWidth}x${vHeight}` : "";
                 
                 let videoBitrateMbps = 0;
-                if (videoStream && videoStream.bit_rate) {
-                    videoBitrateMbps = parseInt(videoStream.bit_rate) / 1000000;
-                } else if (format.bit_rate) {
-                    videoBitrateMbps = parseInt(format.bit_rate) / 1000000;
+                if (videoStream && videoStream.bit_rate && videoStream.bit_rate !== "N/A") {
+                    videoBitrateMbps = safeParseInt(videoStream.bit_rate) / 1000000;
+                } else if (format.bit_rate && format.bit_rate !== "N/A") {
+                    videoBitrateMbps = safeParseInt(format.bit_rate) / 1000000;
                 }
                 
                 let totalAudioBitrate = 0;
                 const parsedAudioTracks = audioStreams.map((s: any) => {
-                    const ab = s.bit_rate ? parseInt(s.bit_rate) : 0;
+                    const ab = s.bit_rate && s.bit_rate !== "N/A" ? safeParseInt(s.bit_rate) : 0;
                     totalAudioBitrate += ab;
                     return {
-                        codec: s.codec_name,
-                        channels: s.channels,
-                        language: (s.tags && s.tags.language) ? s.tags.language : "und"
+                        codec: s.codec_name || "unknown",
+                        channels: s.channels ? safeParseInt(s.channels) : 0,
+                        language: getTrackLanguage(s)
                     };
                 });
                 const parsedSubtitleTracks = subtitleStreams.map((s: any) => ({
-                    codec: s.codec_name,
-                    language: (s.tags && s.tags.language) ? s.tags.language : "und"
+                    codec: s.codec_name || "unknown",
+                    language: getTrackLanguage(s)
                 }));
 
                 let videoBitDepth = "";
                 if (videoStream) {
-                    if (videoStream.bits_per_raw_sample) {
+                    if (videoStream.bits_per_raw_sample && videoStream.bits_per_raw_sample !== "N/A" && !isNaN(parseInt(videoStream.bits_per_raw_sample))) {
                         videoBitDepth = `${videoStream.bits_per_raw_sample}-bit`;
-                    } else if (videoStream.pix_fmt) {
+                    } else if (videoStream.pix_fmt && videoStream.pix_fmt !== "N/A") {
                         if (videoStream.pix_fmt.includes("10")) {
                             videoBitDepth = "10-bit";
                         } else if (videoStream.pix_fmt.includes("12")) {
@@ -540,7 +582,8 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 }
 
                 const firstAudioStream = audioStreams[0];
-                const audioSampleRate = firstAudioStream && firstAudioStream.sample_rate ? parseInt(firstAudioStream.sample_rate) : undefined;
+                const parsedSampleRate = firstAudioStream && firstAudioStream.sample_rate ? safeParseInt(firstAudioStream.sample_rate) : 0;
+                const audioSampleRate = parsedSampleRate > 0 ? parsedSampleRate : undefined;
                 
                 const chapterCount = Array.isArray(metadata.chapters) ? metadata.chapters.length : 0;
                 

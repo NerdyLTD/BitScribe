@@ -1,3 +1,12 @@
+## [1.4.12] - 2026-07-17
+
+### Fixed
+- **Secure Probing Timeout**: Wrapped sidecar command executions in a strict 15-second Promise-race timer to ensure the media scanner never hangs on malformed assets or slow network drives.
+- **Robust Multi-bit & Non-JSON Stripping**: Integrated automatic regex/string cleaners to isolate the valid JSON block from `ffprobe` output, ensuring unexpected non-JSON warnings or trailing shell logs do not crash the parser or falsely report files as corrupted.
+- **Non-NaN Parsing Protection**: Standardized all conversions of sizes, bitrates, sample rates, channels, and release years via defensive, type-safe fallback parsers (`safeParseInt` and `safeParseFloat`), guaranteeing that `NaN` values never leak into persistent storage or trigger React component rendering crashes.
+- **Case-Insensitive Track Tags Matching**: Implemented case-insensitive key scanning for audio and subtitle language properties (e.g., mapping `Language` or `LANGUAGE` to standard ISO definitions), securing robust tag hydration across diverse media encoding profiles.
+- **Accurate Filename Extension Resolution**: Upgraded container mapping to isolate the actual filename before parsing the trailing extension, preventing dots in parent directory path folders (e.g. `Movies/Avatar.3D/Avatar.mkv`) from misidentifying file containers.
+
 ## [1.4.11] - 2026-07-16
 
 ### Fixed
