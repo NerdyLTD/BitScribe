@@ -1,3 +1,8 @@
+## [1.4.13] - 2026-07-17
+
+### Fixed
+- **Excel Report Corrupted Redirects**: Fixed a misleading label on the overview sheet of the "Streaming Audit" Excel report (and other reports) which pointed users to a non-existent "Corrupted" tab. The message is now dynamically aligned to suggest checking the dedicated "Bad Files Audit" report, while gracefully preserving the local tab reference when exporting a genuine "Bad Files Audit" report.
+
 ## [1.4.12] - 2026-07-17
 
 ### Fixed

@@ -294,7 +294,13 @@ export async function exportMediaLibraryToExcel(
   writeLeftCell(
     leftRowIdx++,
     "      Corrupted/Failed Files",
-    `${corruptedCount} files ${corruptedCount > 0 ? "(See 'Corrupted' tab)" : ""}`,
+    `${corruptedCount} files ${
+      corruptedCount > 0
+        ? (globalScanType === "Corrupted Audit"
+          ? "(See 'Corrupted' tab)"
+          : "(See the Bad Files Audit report.)")
+        : ""
+    }`,
   );
   writeLeftCell(leftRowIdx++, "      Library Size", formatSize(totalGB));
 
