@@ -120,6 +120,7 @@ export default memo(function Dashboard({
   const [metricsFilterMode, setMetricsFilterMode] = useState<"Default" | "Granular">("Default");
   const [colMenuOpen, setColMenuOpen] = useState(false);
   const colMenuRef = React.useRef<HTMLDivElement>(null);
+  const [dupFilter, setDupFilter] = useState<"All" | "Video" | "Music">("All");
 
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
@@ -233,6 +234,7 @@ export default memo(function Dashboard({
       setSelectedCategories([]);
       setSortColumn(null);
       setSortDirection("asc");
+      setDupFilter("All");
     }
   }, [activeDemo]);
 
@@ -606,6 +608,7 @@ export default memo(function Dashboard({
     const subtitleCodecCounts: Record<string, number> = {};
     const metadataFieldMissingCounts: Record<string, number> = {};
     const duplicateParsedMap = new Map<string, number>();
+    const duplicateTypeMap = new Map<string, "Video" | "Music">();
     const duplicateCountsByCategory: Record<string, number> = { "Video": 0, "Music": 0 };
     const duplicateSizeGBByCategory: Record<string, number> = { "Video": 0, "Music": 0 };
     const anomalyCounts: Record<string, number> = { "Bloated": 0, "Starved": 0 };
@@ -689,7 +692,8 @@ export default memo(function Dashboard({
 
       // Duplications
       if (isDup) {
-        if (isMusicCategory(item.category)) {
+        const isMusic = isMusicCategory(item.category);
+        if (isMusic) {
           duplicateCountsByCategory["Music"]++;
           duplicateSizeGBByCategory["Music"] += (item.sizeGB || 0);
         } else {
@@ -697,7 +701,7 @@ export default memo(function Dashboard({
           duplicateSizeGBByCategory["Video"] += (item.sizeGB || 0);
         }
         let canonicalLabel = "";
-        if (isMusicCategory(item.category)) {
+        if (isMusic) {
           const cleanTrack = (item.tags?.title || item.filename)
             .replace(/\.[a-zA-Z0-9]+$/, "")
             .replace(/^\d+[-_.\s]+/, "")
@@ -712,6 +716,7 @@ export default memo(function Dashboard({
             .trim();
         }
         duplicateParsedMap.set(canonicalLabel, (duplicateParsedMap.get(canonicalLabel) || 0) + 1);
+        duplicateTypeMap.set(canonicalLabel, isMusic ? "Music" : "Video");
       }
 
       // Anomalies using unified evaluator
@@ -751,11 +756,16 @@ export default memo(function Dashboard({
       }
     }
     const displayDuplicates = Object.entries(duplicationCounts)
-      .map(([name, count]) => ({ 
-        name: name.length > 60 ? name.slice(0, 58) + "..." : name, 
-        fullName: name,
-        count 
-      }))
+      .map(([name, count]) => {
+        const type = duplicateTypeMap.get(name) || "Video";
+        return { 
+          name: name.length > 60 ? name.slice(0, 58) + "..." : name, 
+          fullName: name,
+          count,
+          type
+        };
+      })
+      .filter(dup => dupFilter === "All" ? true : dup.type === dupFilter)
       .sort((a, b) => b.count - a.count)
       .slice(0, 10);
 
@@ -868,7 +878,7 @@ export default memo(function Dashboard({
       displayMusic: sortedMusic,
       displayContainer: sortedContainer,
     };
-  }, [metricsFilteredFiles, stats.fileCount]);
+  }, [metricsFilteredFiles, stats.fileCount, dupFilter]);
 
   const {
     displayMissingSubtitles,
@@ -925,17 +935,20 @@ export default memo(function Dashboard({
     const visiblePairs = allPairs.filter(pair => filteredItemIds.has(pair.dupId) || filteredItemIds.has(pair.id));
     
     visiblePairs.forEach(pair => {
-      if (isMusicCategory(pair.category)) {
-        mDup++;
-      } else {
-        vDup++;
+      const isMusic = isMusicCategory(pair.category);
+      if (dupFilter === "All" || (dupFilter === "Music" && isMusic) || (dupFilter === "Video" && !isMusic)) {
+        if (isMusic) {
+          mDup++;
+        } else {
+          vDup++;
+        }
+        totalSizeGB += pair.dupSizeGB || 0;
       }
-      totalSizeGB += pair.dupSizeGB || 0;
     });
 
     const total = vDup + mDup;
     return { vDup, mDup, total, totalSizeGB };
-  }, [allCurrentFiles, metricsFilteredFiles, customRules, isCustomBlocksActive, visibleBlocks, isTourActive]);
+  }, [allCurrentFiles, metricsFilteredFiles, customRules, isCustomBlocksActive, visibleBlocks, isTourActive, dupFilter]);
 
   const anomalySummary = useMemo(() => {
     let vBloated = 0;
@@ -2283,20 +2296,56 @@ const handleCategoryToggle = (cat: string) => {
                   </ResponsiveContainer>
                 </div>
 
-                <div className="h-[140px] mt-1 border-l sm:border-t-0 border-t border-[#1e232e]/30 sm:pl-4 sm:pt-0 pt-3 overflow-y-auto pr-1 custom-scrollbar">
-                  <div className="text-[10px] text-slate-400 mb-1.5 uppercase tracking-wider font-bold sticky top-0 bg-[#14171F] z-10 pb-1">Top Duplicates</div>
-                  {displayDuplicates.length > 0 ? (
-                    <div className="space-y-1.5">
-                      {displayDuplicates.map((dup, idx) => (
-                        <div key={idx} className="flex items-center justify-between group hover:bg-[#1e232e]/50 px-1.5 py-0.5 rounded transition-colors">
-                          <span className="text-[10px] text-slate-300 truncate pr-2 font-medium" title={dup.fullName}>{dup.name}</span>
-                          <span className="text-[10px] font-mono text-orange-400 bg-orange-500/10 px-1.5 py-0.5 rounded flex-shrink-0 border border-orange-500/20">{dup.count}</span>
-                        </div>
-                      ))}
+                <div className="h-[140px] mt-1 border-l sm:border-t-0 border-t border-[#1e232e]/30 sm:pl-4 sm:pt-0 pt-3 flex flex-col justify-start min-h-0">
+                  <div className="flex items-center justify-between mb-1.5 sticky top-0 bg-[#14171F] z-10 pb-1 flex-shrink-0 select-none">
+                    <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Top Duplicates</span>
+                    <div className="flex items-center gap-1 border border-slate-800/80 p-0.5 rounded-md bg-slate-900/40">
+                      <button
+                        onClick={() => setDupFilter("All")}
+                        className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase transition-all duration-200 cursor-pointer ${
+                          dupFilter === "All"
+                            ? "bg-slate-700 text-white shadow-sm"
+                            : "text-slate-500 hover:text-slate-300 bg-transparent"
+                        }`}
+                      >
+                        All
+                      </button>
+                      <button
+                        onClick={() => setDupFilter("Video")}
+                        className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase transition-all duration-200 cursor-pointer ${
+                          dupFilter === "Video"
+                            ? "bg-blue-600 text-white shadow-sm"
+                            : "text-slate-500 hover:text-slate-300 bg-transparent"
+                        }`}
+                      >
+                        Video
+                      </button>
+                      <button
+                        onClick={() => setDupFilter("Music")}
+                        className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase transition-all duration-200 cursor-pointer ${
+                          dupFilter === "Music"
+                            ? "bg-emerald-600 text-white shadow-sm"
+                            : "text-slate-500 hover:text-slate-300 bg-transparent"
+                        }`}
+                      >
+                        Audio
+                      </button>
                     </div>
-                  ) : (
-                    <div className="text-[10px] text-slate-500 italic flex items-center h-full pb-4">No duplicates found</div>
-                  )}
+                  </div>
+                  <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar min-h-0">
+                    {displayDuplicates.length > 0 ? (
+                      <div className="space-y-1.5">
+                        {displayDuplicates.map((dup, idx) => (
+                          <div key={idx} className="flex items-center justify-between group hover:bg-[#1e232e]/50 px-1.5 py-0.5 rounded transition-colors">
+                            <span className="text-[10px] text-slate-300 truncate pr-2 font-medium" title={dup.fullName}>{dup.name}</span>
+                            <span className="text-[10px] font-mono text-orange-400 bg-orange-500/10 px-1.5 py-0.5 rounded flex-shrink-0 border border-orange-500/20">{dup.count}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-[10px] text-slate-500 italic flex items-center h-full pb-4">No duplicates found</div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

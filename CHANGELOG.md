@@ -1,3 +1,10 @@
+## [1.4.14] - 2026-07-17
+
+### Added
+- **Duplicates Audit Media Filter**: Added elegant, high-contrast toggle buttons ("All", "Video", "Audio") inside the "Media Duplicates" dashboard card's "Top Duplicates" column. This allows users to filter duplicate file list rows on-the-fly, preventing jumbled listings of video and music/audio files.
+- **Cohesive Metric Syncing**: Standardized the duplication scan summary calculations (`dupSummary` and `displayDuplicates` lists) so they automatically and dynamically filter "Total Copies", "Wasted Space", and "Top Duplicates" side-by-side to match the user's active media filter state.
+- **HTML Report Duplication Filters**: Integrated interactive client-side Media Filter toggles ("All Duplicates", "Video Only", "Audio Only") directly into the exported Duplication HTML report. This filters rows instantly and dynamically updates report totals, space savings calculations, and visual highlight cards client-side.
+
 ## [1.4.13] - 2026-07-17
 
 ### Added
