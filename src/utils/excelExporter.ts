@@ -115,6 +115,16 @@ export async function exportMediaLibraryToExcel(
   const globalScanType = getScanType(rules, items);
   const itemsForDups = allItems && allItems.length > 0 ? allItems : items;
   
+  const metadataCache = new Map<string, any>();
+  const getParsedMeta = (item: MediaItem) => {
+    let cached = metadataCache.get(item.id);
+    if (!cached) {
+      cached = parseVideoMetadata(item);
+      metadataCache.set(item.id, cached);
+    }
+    return cached;
+  };
+  
   // Get all pairs globally, then filter to only those visible in the current exported items list
   const globalDupRows = globalScanType === "Duplication Scan" ? getDuplicatePairRows(itemsForDups, rules) : [];
   const filteredItemIds = new Set(items.map(i => i.id));
@@ -953,7 +963,7 @@ export async function exportMediaLibraryToExcel(
           : "None";
       const subStr = formatSubtitleSummary(item);
       const folderPath = getFolderPath(item.filePath, item.filename);
-      const parsedMeta = parseVideoMetadata(item);
+      const parsedMeta = getParsedMeta(item);
 
       const catLower = catType.toLowerCase();
       const isTv = getCategoryGroup(catType) === "TV";

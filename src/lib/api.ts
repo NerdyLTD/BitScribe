@@ -263,19 +263,17 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
 
     let existingPaths = new Set<string>();
     let existingFilesMap = new Map<string, any>();
-    if (isResume || isQuickRefresh) {
-        onLog(isResume ? "Loading existing database to determine resume point..." : "Loading existing database to determine quick refresh point...");
-        try {
-            const dbFiles = await getDbFiles();
-            dbFiles.forEach(f => {
-                const normPath = normalizePath(f.filePath || f.id);
-                existingPaths.add(normPath);
-                existingFilesMap.set(normPath, f);
-            });
-            onLog(`Found ${existingPaths.size} already scanned files to skip.`);
-        } catch (e) {
-            onLog(isResume ? "Failed to load DB for resume. Starting fresh." : "Failed to load DB for quick refresh. Starting fresh.");
-        }
+    onLog("Loading existing database files to enable incremental scanning...");
+    try {
+        const dbFiles = await getDbFiles();
+        dbFiles.forEach(f => {
+            const normPath = normalizePath(f.filePath || f.id);
+            existingPaths.add(normPath);
+            existingFilesMap.set(normPath, f);
+        });
+        onLog(`Found ${existingPaths.size} already scanned files for change detection.`);
+    } catch (e) {
+        onLog("Failed to load existing database. Performing fresh scans.");
     }
     const allowedExtensions = ['.mkv', '.mp4', '.avi', '.mov', '.wmv', '.flv', '.webm', '.m4v', '.mpg', '.mpeg', '.m2ts', '.ts', '.vob', '.mxf', '.mp3', '.flac', '.m4a', '.wav', '.aac', '.ogg', '.wma', '.alac', '.m4b', '.ape', '.opus', '.mka'];
     
@@ -457,7 +455,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
     // Use all but one core to prevent system freezing, fallback to 1 if needed
     const logicalCores = typeof navigator !== 'undefined' && navigator.hardwareConcurrency ? navigator.hardwareConcurrency : 4;
     const CONCURRENCY = Math.max(1, logicalCores - 1);
-    const BATCH_SIZE = 50;
+    const BATCH_SIZE = 500;
     
     // ITEM 2: Concurrency & Database Write Safety.
     // Each worker has a local `batch` array to write records to SQLite in chunks of `BATCH_SIZE`.
@@ -473,32 +471,43 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
             }
             const i = currentIndex++;
             const file = allFiles[i];
-            let skipFile = false;
+            let skipFfprobe = false;
+            let existingItem: MediaItem | undefined = undefined;
             const normPath = normalizePath(file);
+            
             if (existingPaths.has(normPath)) {
-                if (isResume || isQuickRefresh) {
-                    try {
-                        const physicalSize = existingFilesMap.get(normPath + "_physical_size");
-                        const currentSizeGB = (physicalSize || 0) / (1024 * 1024 * 1024);
-                        const storedSizeGB = existingFilesMap.get(normPath)?.sizeGB || 0;
-                        
-                        // We check difference up to 1MB
-                        if (Math.abs(currentSizeGB - storedSizeGB) > 0.001) {
-                            skipFile = false;
-                            onLog(`Change detected for ${file}: Size changed from ${storedSizeGB.toFixed(3)}GB to ${currentSizeGB.toFixed(3)}GB.`);
-                        } else {
-                            skipFile = true;
-                        }
-                    } catch (err) {
-                        skipFile = true;
+                existingItem = existingFilesMap.get(normPath);
+                try {
+                    const physicalSize = existingFilesMap.get(normPath + "_physical_size");
+                    const currentSizeGB = (physicalSize || 0) / (1024 * 1024 * 1024);
+                    const storedSizeGB = existingItem?.sizeGB || 0;
+                    
+                    // If file size matches within 1MB, skip ffprobe
+                    if (Math.abs(currentSizeGB - storedSizeGB) <= 0.001) {
+                        skipFfprobe = true;
+                    } else {
+                        onLog(`Change detected for ${file}: Size changed from ${storedSizeGB.toFixed(3)}GB to ${currentSizeGB.toFixed(3)}GB. Re-probing.`);
                     }
-                } else {
-                    skipFile = true;
+                } catch (err) {
+                    skipFfprobe = false;
                 }
             }
 
-            if (skipFile) {
-                onProgress({ current: i + 1, total: allFiles.length, item: null });
+            if (skipFfprobe && existingItem) {
+                // Skip ffprobe but still re-evaluate streaming compatibility with active rules
+                const evalResult = evaluatePlexCompatibility(existingItem, rules, false, true);
+                existingItem.streamFriendlyLevel = evalResult.level as any;
+                existingItem.streamFriendlyReason = evalResult.reason;
+                existingItem.streamFriendlySuggestion = evalResult.suggestion;
+                existingItem.streamFriendlyEvaluated = Date.now();
+                
+                onProgress({ current: i + 1, total: allFiles.length, item: existingItem });
+                batch.push(existingItem);
+                
+                if (batch.length >= BATCH_SIZE) {
+                    const toSave = batch.splice(0, BATCH_SIZE);
+                    await saveDbFiles(toSave);
+                }
                 continue;
             }
             onLog(`Probing (${i+1}/${allFiles.length}): ${file.substring(Math.max(0, file.length - 40))}`);

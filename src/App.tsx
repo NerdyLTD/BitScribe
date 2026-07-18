@@ -2249,16 +2249,16 @@ export default function App() {
     }
     try {
       const activePaths = scanPaths.filter((p) => p.enabled).map(p => p.path);
-      const finalItems: MediaItem[] = [];
-      const corruptItems: MediaItem[] = [];
+      const finalItemsMap = new Map<string, MediaItem>();
+      const corruptItemsMap = new Map<string, MediaItem>();
       if (localStorage.getItem("bitscribe_scan_in_progress") === "true") {
           try {
               const existingFiles = await getDbFiles();
               existingFiles.forEach(f => {
                   if (f.category === "Corrupted" || (f.category && f.category.toLowerCase().includes("corrupt"))) {
-                      corruptItems.push(f);
+                      corruptItemsMap.set(f.id, f);
                   } else {
-                      finalItems.push(f);
+                      finalItemsMap.set(f.id, f);
                   }
               });
           } catch (e) {
@@ -2308,13 +2308,9 @@ export default function App() {
               }
               if (prog.item) {
                   if (prog.error) {
-                      const idx = corruptItems.findIndex(i => i.id === prog.item.id);
-                      if (idx >= 0) corruptItems[idx] = prog.item;
-                      else corruptItems.push(prog.item);
+                      corruptItemsMap.set(prog.item.id, prog.item);
                   } else {
-                      const idx = finalItems.findIndex(i => i.id === prog.item.id);
-                      if (idx >= 0) finalItems[idx] = prog.item;
-                      else finalItems.push(prog.item);
+                      finalItemsMap.set(prog.item.id, prog.item);
                       scannedCount++;
                   }
               }
