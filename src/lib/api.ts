@@ -251,7 +251,7 @@ function getTrackLanguage(stream: any): string {
     return lang ? lang.substring(0, 3) : "und";
 }
 
-export async function scanDirectories(paths: string[], rules: any, onStart: (total: number) => void, onLog: (msg: string) => void, onProgress: (prog: any) => void, isResume: boolean = false) {
+export async function scanDirectories(paths: string[], rules: any, onStart: (total: number) => void, onLog: (msg: string) => void, onProgress: (prog: any) => void, isResume: boolean = false, isQuickRefresh: boolean = false) {
     onLog("Initializing scan...");
     
     // ITEM 1: Centralized cross-platform path normalization.
@@ -263,8 +263,8 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
 
     let existingPaths = new Set<string>();
     let existingFilesMap = new Map<string, any>();
-    if (isResume) {
-        onLog("Loading existing database to determine resume point...");
+    if (isResume || isQuickRefresh) {
+        onLog(isResume ? "Loading existing database to determine resume point..." : "Loading existing database to determine quick refresh point...");
         try {
             const dbFiles = await getDbFiles();
             dbFiles.forEach(f => {
@@ -274,7 +274,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
             });
             onLog(`Found ${existingPaths.size} already scanned files to skip.`);
         } catch (e) {
-            onLog("Failed to load DB for resume. Starting fresh.");
+            onLog(isResume ? "Failed to load DB for resume. Starting fresh." : "Failed to load DB for quick refresh. Starting fresh.");
         }
     }
     const allowedExtensions = ['.mkv', '.mp4', '.avi', '.mov', '.wmv', '.flv', '.webm', '.m4v', '.mpg', '.mpeg', '.m2ts', '.ts', '.vob', '.mxf', '.mp3', '.flac', '.m4a', '.wav', '.aac', '.ogg', '.wma', '.alac', '.m4b', '.ape', '.opus', '.mka'];
@@ -447,7 +447,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
             let skipFile = false;
             const normPath = normalizePath(file);
             if (existingPaths.has(normPath)) {
-                if (isResume) {
+                if (isResume || isQuickRefresh) {
                     try {
                         const physicalSize = existingFilesMap.get(normPath + "_physical_size");
                         const currentSizeGB = (physicalSize || 0) / (1024 * 1024 * 1024);

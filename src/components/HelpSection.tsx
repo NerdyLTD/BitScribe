@@ -363,187 +363,6 @@ export default function HelpSection({ highlightId, isTourActive, tourStepIndex, 
         </p>
       </div>
 
-      {/* HandBrake Presets Section */}
-      <div className="py-4 px-5 bg-[#14171F] border border-[#1e232e] rounded-xl shadow-2xl space-y-4 animate-slideDown" id="handbrake-presets-section">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800/80 pb-3.5">
-          <div>
-            <h3 className="text-xs font-extrabold text-blue-400 flex items-center gap-2 uppercase tracking-wider">
-              <Sliders className="w-4 h-4 text-blue-400" />
-              BitScribe HandBrake Transcoding Presets
-            </h3>
-            <p className="text-[11px] text-slate-400 mt-1 leading-relaxed font-sans">
-              Optimize your media library using HandBrake. These 24 presets establish robust standards for Modern+ and Legacy+ encodings across SD, HD, Full HD, and 4K resolutions.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2 shrink-0">
-            <button
-              onClick={downloadUnifiedPresets}
-              className="px-3.5 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-lg text-[10px] font-bold flex items-center gap-1.5 shadow-md transition-all duration-300 cursor-pointer"
-              title="Downloads a single JSON file that imports all folders and presets into HandBrake in 1 click"
-            >
-              <FileJson className="w-3.5 h-3.5" />
-              <span>Download 1-Click Import (.json)</span>
-            </button>
-            <button
-              onClick={downloadPresetsZip}
-              className="px-3.5 py-1.5 bg-[#1f2937] hover:bg-[#374151] border border-[#374151] text-slate-200 rounded-lg text-[10px] font-bold flex items-center gap-1.5 shadow transition-all duration-300 cursor-pointer"
-              title="Downloads a ZIP file containing the 24 individual JSON preset files in categorized folders"
-            >
-              <Download className="w-3.5 h-3.5 text-blue-400" />
-              <span>Download ZIP Package (.zip)</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Dynamic Presets Explorer */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          {/* Left Panel: Tabs & Controls */}
-          <div className="lg:col-span-4 space-y-3">
-            <div className="p-3 bg-[#0d0e12]/80 border border-[#1e232e]/50 rounded-lg space-y-2">
-              <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Select Standard Baseline</span>
-              <div className="grid grid-cols-2 gap-1.5">
-                <button
-                  onClick={() => setActiveStandard('Modern+')}
-                  className={`py-1.5 rounded-md text-[10px] font-bold tracking-wide transition-all ${
-                    activeStandard === 'Modern+'
-                      ? 'bg-blue-500/10 border border-blue-500/40 text-blue-400 font-extrabold shadow-sm'
-                      : 'bg-[#14171F] border border-transparent text-slate-400 hover:text-slate-300'
-                  }`}
-                >
-                  Modern+ (HEVC 10-bit)
-                </button>
-                <button
-                  onClick={() => setActiveStandard('Legacy+')}
-                  className={`py-1.5 rounded-md text-[10px] font-bold tracking-wide transition-all ${
-                    activeStandard === 'Legacy+'
-                      ? 'bg-amber-500/10 border border-amber-500/40 text-amber-400 font-extrabold shadow-sm'
-                      : 'bg-[#14171F] border border-transparent text-slate-400 hover:text-slate-300'
-                  }`}
-                >
-                  Legacy+ (H.264 8-bit)
-                </button>
-              </div>
-            </div>
-
-            <div className="p-3 bg-[#0d0e12]/80 border border-[#1e232e]/50 rounded-lg space-y-2">
-              <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Select Quality Target</span>
-              <div className="space-y-1.5">
-                {[
-                  { name: 'Space Saver', desc: 'Baseline minimum space-saving compression', color: 'text-emerald-400' },
-                  { name: 'Balanced', desc: 'Optimal sweet spot for quality and file size', color: 'text-blue-400' },
-                  { name: 'Kinda Silly', desc: 'Extremely high quality (border of logic)', color: 'text-purple-400' }
-                ].map((q) => (
-                  <button
-                    key={q.name}
-                    onClick={() => setActiveQuality(q.name as any)}
-                    className={`w-full text-left p-2 rounded-md border text-[10px] transition-all flex flex-col ${
-                      activeQuality === q.name
-                        ? 'bg-slate-800/40 border-slate-700 text-white font-semibold'
-                        : 'bg-transparent border-transparent text-slate-400 hover:bg-slate-800/10'
-                    }`}
-                  >
-                    <span className={`font-bold ${q.color}`}>{q.name}</span>
-                    <span className="text-[9px] text-slate-500 leading-tight mt-0.5">{q.desc}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Right Panel: Resolution Card Grid */}
-          <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {PRESET_BLUEPRINTS.filter(p => p.standard === activeStandard && p.quality === activeQuality).map((p) => (
-              <div 
-                key={p.name}
-                className="p-3 bg-[#0d0e12] border border-[#1e232e] rounded-xl flex flex-col justify-between hover:border-slate-700/60 transition-all duration-300"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[11px] font-extrabold text-white flex items-center gap-1.5">
-                      <Monitor className="w-3.5 h-3.5 text-blue-400" />
-                      {p.resolution}
-                    </span>
-                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono font-bold">
-                      {p.width}x{p.height}
-                    </span>
-                  </div>
-                  <p className="text-[10px] text-slate-400 font-sans leading-relaxed">
-                    Designed to transcode source content to <strong className="text-slate-300">{p.resolution} ({p.height}p)</strong>.
-                  </p>
-                  
-                  <div className="mt-3 space-y-1.5 border-t border-slate-800/40 pt-2.5 text-[10px] font-mono">
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-500">Video Encoder:</span>
-                      <span className="text-slate-300 font-bold">{p.encoder === 'x265_10bit' ? 'H.265 10-bit' : 'H.264 8-bit'}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-500">Constant Quality:</span>
-                      <span className="text-emerald-400 font-bold">RF {p.rf}</span>
-                    </div>
-                    <div className="flex flex-col gap-0.5 mt-1 border-t border-slate-800/20 pt-1.5">
-                      <span className="text-slate-500 text-[9px] uppercase font-bold tracking-wider mb-0.5">Audio Configuration:</span>
-                      {p.audio.map((a, idx) => (
-                        <div key={idx} className="flex items-center justify-between text-slate-400 text-[9px]">
-                          <span>Track {idx+1}: {a.codec.toUpperCase()} {a.mixdown === '5point1' ? '5.1 Surround' : 'Stereo'}</span>
-                          <span className="text-slate-300 font-semibold">{a.bitrate} kbps</span>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="flex items-center justify-between border-t border-slate-800/20 pt-1.5">
-                      <span className="text-slate-500">Subtitles:</span>
-                      <span className="text-purple-400 font-bold">SRT (Soft Pass)</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* HandBrake Setup Instructions Accordion */}
-        <div className="border-t border-slate-800/50 pt-2.5">
-          <button
-            onClick={() => setIsInstructionsOpen(!isInstructionsOpen)}
-            className="w-full flex items-center justify-between text-[11px] font-bold text-slate-300 hover:text-white select-none cursor-pointer"
-          >
-            <span className="flex items-center gap-1.5">
-              <Zap className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-              How do I import and use these presets inside HandBrake?
-            </span>
-            <span className="text-slate-500">
-              {isInstructionsOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-            </span>
-          </button>
-          {isInstructionsOpen && (
-            <div className="mt-2.5 pl-5 text-[11px] text-slate-400 space-y-2 leading-relaxed font-sans animate-slideDown">
-              <p>
-                Follow these simple, one-time steps to import our robust encoding standard baselines:
-              </p>
-              <ol className="list-decimal list-inside space-y-1.5 pl-1.5 text-slate-300">
-                <li>
-                  Click the <strong className="text-blue-400">Download 1-Click Import (.json)</strong> button above to download the unified collection file.
-                </li>
-                <li>
-                  Open <strong className="text-white">HandBrake</strong> on your computer.
-                </li>
-                <li>
-                  In the top menu bar, click <strong className="text-white">Presets</strong> &rarr; <strong className="text-white">Import from file...</strong>.
-                </li>
-                <li>
-                  Select the downloaded <code className="text-blue-300 font-mono text-[10px]">BitScribe_HandBrake_Presets.json</code> file and click Open.
-                </li>
-                <li>
-                  The presets will appear nested in an organized folder structure: <code className="text-emerald-400 font-mono text-[10px]">BitScribe DMLS Presets</code> &rarr; <code className="text-blue-400 font-mono text-[10px]">Modern+ Standards</code> / <code className="text-amber-400 font-mono text-[10px]">Legacy+ Standards</code> under your Presets drawer (usually on the right sidebar or menu bar).
-                </li>
-                <li>
-                  Drag and drop your raw media files, select the appropriate preset matching your desired baseline resolution, and hit <strong className="text-emerald-400 font-semibold">Start Encode</strong>!
-                </li>
-              </ol>
-            </div>
-          )}
-        </div>
-      </div>
-
       {/* Side-by-side Tutorials and FAQs row under header */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full" id="help-accordions-row">
           {/* Step-by-Step Tutorials Section */}
@@ -1009,6 +828,214 @@ export default function HelpSection({ highlightId, isTourActive, tourStepIndex, 
                 </div>
               </div>
             </FaqItem>
+          </div>
+        </div>
+      </div>
+
+      {/* HandBrake Presets Section (Collapsible & Expandable) */}
+      <div className="space-y-3 w-full animate-slideDown" id="handbrake-presets-container">
+        <div 
+          id="handbrake-presets-header"
+          className={`py-2.5 px-4 bg-[#14171F] border rounded-xl shadow-md cursor-pointer select-none transition-all duration-300 ${
+            openPanels['handbrake-presets-main'] === true 
+              ? 'border-indigo-500 ring-2 ring-indigo-500/30 shadow-[0_0_25px_rgba(99,102,241,0.4)] bg-indigo-500/5' 
+              : 'border-[#1e232e] hover:border-indigo-500/30'
+          }`}
+          onClick={() => togglePanel('handbrake-presets-main')}
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xs font-bold text-slate-100 flex items-center gap-2 uppercase tracking-wide">
+                <Sliders className="w-4 h-4 text-indigo-400 font-bold" />
+                BitScribe HandBrake Transcoding Presets
+              </h3>
+              <p className="text-[11px] text-slate-400 mt-1 leading-relaxed font-sans">
+                Optimize your media library using HandBrake. Select baselines, download individual or unified JSON collections of 24 custom presets.
+              </p>
+            </div>
+            <div className="text-slate-500 hover:text-slate-300 transition-colors">
+              {openPanels['handbrake-presets-main'] === true ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+            </div>
+          </div>
+        </div>
+
+        <div className={`py-4 px-5 bg-[#14171F] border border-[#1e232e] rounded-xl shadow-2xl space-y-4 transition-all duration-300 ${openPanels['handbrake-presets-main'] === true ? 'block animate-slideDown' : 'hidden'}`} id="handbrake-presets-section">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800/80 pb-3.5">
+            <div>
+              <h3 className="text-xs font-extrabold text-blue-400 flex items-center gap-2 uppercase tracking-wider">
+                <Sliders className="w-4 h-4 text-blue-400" />
+                BitScribe HandBrake Transcoding Presets
+              </h3>
+              <p className="text-[11px] text-slate-400 mt-1 leading-relaxed font-sans">
+                Optimize your media library using HandBrake. These 24 presets establish robust standards for Modern+ and Legacy+ encodings across SD, HD, Full HD, and 4K resolutions.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2 shrink-0">
+              <button
+                onClick={downloadUnifiedPresets}
+                className="px-3.5 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-lg text-[10px] font-bold flex items-center gap-1.5 shadow-md transition-all duration-300 cursor-pointer"
+                title="Downloads a single JSON file that imports all folders and presets into HandBrake in 1 click"
+              >
+                <FileJson className="w-3.5 h-3.5" />
+                <span>Download 1-Click Import (.json)</span>
+              </button>
+              <button
+                onClick={downloadPresetsZip}
+                className="px-3.5 py-1.5 bg-[#1f2937] hover:bg-[#374151] border border-[#374151] text-slate-200 rounded-lg text-[10px] font-bold flex items-center gap-1.5 shadow transition-all duration-300 cursor-pointer"
+                title="Downloads a ZIP file containing the 24 individual JSON preset files in categorized folders"
+              >
+                <Download className="w-3.5 h-3.5 text-blue-400" />
+                <span>Download ZIP Package (.zip)</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Dynamic Presets Explorer */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            {/* Left Panel: Tabs & Controls */}
+            <div className="lg:col-span-4 space-y-3">
+              <div className="p-3 bg-[#0d0e12]/80 border border-[#1e232e]/50 rounded-lg space-y-2">
+                <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Select Standard Baseline</span>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button
+                    onClick={() => setActiveStandard('Modern+')}
+                    className={`py-1.5 rounded-md text-[10px] font-bold tracking-wide transition-all ${
+                      activeStandard === 'Modern+'
+                        ? 'bg-blue-500/10 border border-blue-500/40 text-blue-400 font-extrabold shadow-sm'
+                        : 'bg-[#14171F] border border-transparent text-slate-400 hover:text-slate-300'
+                    }`}
+                  >
+                    Modern+ (HEVC 10-bit)
+                  </button>
+                  <button
+                    onClick={() => setActiveStandard('Legacy+')}
+                    className={`py-1.5 rounded-md text-[10px] font-bold tracking-wide transition-all ${
+                      activeStandard === 'Legacy+'
+                        ? 'bg-amber-500/10 border border-amber-500/40 text-amber-400 font-extrabold shadow-sm'
+                        : 'bg-[#14171F] border border-transparent text-slate-400 hover:text-slate-300'
+                    }`}
+                  >
+                    Legacy+ (H.264 8-bit)
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-3 bg-[#0d0e12]/80 border border-[#1e232e]/50 rounded-lg space-y-2">
+                <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Select Quality Target</span>
+                <div className="space-y-1.5">
+                  {[
+                    { name: 'Space Saver', desc: 'Baseline minimum space-saving compression', color: 'text-emerald-400' },
+                    { name: 'Balanced', desc: 'Optimal sweet spot for quality and file size', color: 'text-blue-400' },
+                    { name: 'Kinda Silly', desc: 'Extremely high quality (border of logic)', color: 'text-purple-400' }
+                  ].map((q) => (
+                    <button
+                      key={q.name}
+                      onClick={() => setActiveQuality(q.name as any)}
+                      className={`w-full text-left p-2 rounded-md border text-[10px] transition-all flex flex-col ${
+                        activeQuality === q.name
+                          ? 'bg-slate-800/40 border-slate-700 text-white font-semibold'
+                          : 'bg-transparent border-transparent text-slate-400 hover:bg-slate-800/10'
+                      }`}
+                    >
+                      <span className={`font-bold ${q.color}`}>{q.name}</span>
+                      <span className="text-[9px] text-slate-500 leading-tight mt-0.5">{q.desc}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Panel: Resolution Card Grid */}
+            <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {PRESET_BLUEPRINTS.filter(p => p.standard === activeStandard && p.quality === activeQuality).map((p) => (
+                <div 
+                  key={p.name}
+                  className="p-3 bg-[#0d0e12] border border-[#1e232e] rounded-xl flex flex-col justify-between hover:border-slate-700/60 transition-all duration-300"
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[11px] font-extrabold text-white flex items-center gap-1.5">
+                        <Monitor className="w-3.5 h-3.5 text-blue-400" />
+                        {p.resolution}
+                      </span>
+                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono font-bold">
+                        {p.width}x{p.height}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 font-sans leading-relaxed">
+                      Designed to transcode source content to <strong className="text-slate-300">{p.resolution} ({p.height}p)</strong>.
+                    </p>
+                    
+                    <div className="mt-3 space-y-1.5 border-t border-slate-800/40 pt-2.5 text-[10px] font-mono">
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-500">Video Encoder:</span>
+                        <span className="text-slate-300 font-bold">{p.encoder === 'x265_10bit' ? 'H.265 10-bit' : 'H.264 8-bit'}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-500">Constant Quality:</span>
+                        <span className="text-emerald-400 font-bold">RF {p.rf}</span>
+                      </div>
+                      <div className="flex flex-col gap-0.5 mt-1 border-t border-slate-800/20 pt-1.5">
+                        <span className="text-slate-500 text-[9px] uppercase font-bold tracking-wider mb-0.5">Audio Configuration:</span>
+                        {p.audio.map((a, idx) => (
+                          <div key={idx} className="flex items-center justify-between text-slate-400 text-[9px]">
+                            <span>Track {idx+1}: {a.codec.toUpperCase()} {a.mixdown === '5point1' ? '5.1 Surround' : 'Stereo'}</span>
+                            <span className="text-slate-300 font-semibold">{a.bitrate} kbps</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex items-center justify-between border-t border-slate-800/20 pt-1.5">
+                        <span className="text-slate-500">Subtitles:</span>
+                        <span className="text-purple-400 font-bold">SRT (Soft Pass)</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* HandBrake Setup Instructions Accordion */}
+          <div className="border-t border-slate-800/50 pt-2.5">
+            <button
+              onClick={() => setIsInstructionsOpen(!isInstructionsOpen)}
+              className="w-full flex items-center justify-between text-[11px] font-bold text-slate-300 hover:text-white select-none cursor-pointer"
+            >
+              <span className="flex items-center gap-1.5">
+                <Zap className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+                How do I import and use these presets inside HandBrake?
+              </span>
+              <span className="text-slate-500">
+                {isInstructionsOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+              </span>
+            </button>
+            {isInstructionsOpen && (
+              <div className="mt-2.5 pl-5 text-[11px] text-slate-400 space-y-2 leading-relaxed font-sans animate-slideDown">
+                <p>
+                  Follow these simple, one-time steps to import our robust encoding standard baselines:
+                </p>
+                <ol className="list-decimal list-inside space-y-1.5 pl-1.5 text-slate-300">
+                  <li>
+                    Click the <strong className="text-blue-400">Download 1-Click Import (.json)</strong> button above to download the unified collection file.
+                  </li>
+                  <li>
+                    Open <strong className="text-white">HandBrake</strong> on your computer.
+                  </li>
+                  <li>
+                    In the top menu bar, click <strong className="text-white">Presets</strong> &rarr; <strong className="text-white">Import from file...</strong>.
+                  </li>
+                  <li>
+                    Select the downloaded <code className="text-blue-300 font-mono text-[10px]">BitScribe_HandBrake_Presets.json</code> file and click Open.
+                  </li>
+                  <li>
+                    The presets will appear nested in an organized folder structure: <code className="text-emerald-400 font-mono text-[10px]">BitScribe DMLS Presets</code> &rarr; <code className="text-blue-400 font-mono text-[10px]">Modern+ Standards</code> / <code className="text-amber-400 font-mono text-[10px]">Legacy+ Standards</code> under your Presets drawer (usually on the right sidebar or menu bar).
+                  </li>
+                  <li>
+                    Drag and drop your raw media files, select the appropriate preset matching your desired baseline resolution, and hit <strong className="text-emerald-400 font-semibold">Start Encode</strong>!
+                  </li>
+                </ol>
+              </div>
+            )}
           </div>
         </div>
       </div>

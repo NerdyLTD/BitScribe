@@ -1,3 +1,13 @@
+## [1.4.16] - 2026-07-17
+
+### Changed
+- **Help Center HandBrake Presets Accordion**: Refactored the HandBrake Presets block on the Help Center page to be an expandable and collapsible section, matching the elegant accordions of the step-by-step Tutorials and FAQ blocks.
+- **Improved Help Page Flow**: Repositioned the HandBrake Presets accordion container below the side-by-side Tutorials & FAQs block, but above the lower details rows (About, Open Source, and Support cards) to improve page readability and user flow.
+
+### Fixed
+- **HandBrake Presets Downloads in Tauri**: Replaced the standard browser `file-saver`'s `saveAs` function calls with our Tauri-native `downloadOrSaveFile` helper. This allows preset JSONs and the ZIP package to download successfully through native OS save file dialogs in Tauri, and safely fallback to standard browser downloads when running on web previews.
+- **Quick Refresh Database Pruning**: Fixed a scanning logic issue where a Quick Refresh scan would fail to prune deleted "ghost files" (files that are present in the DB but deleted from the physical disk). Decoupled the change-detection loading and worker skipping logic from the `isResume` flag, allowing Quick Refresh scans (`isQ`) to leverage stored file sizes for skips and correctly execute database pruning for deleted albums and files.
+
 ## [1.4.15] - 2026-07-17
 
 ### Fixed

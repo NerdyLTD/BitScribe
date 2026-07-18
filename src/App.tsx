@@ -2289,7 +2289,7 @@ export default function App() {
         }
       };
 
-      const isResumingScan = localStorage.getItem("bitscribe_scan_in_progress") === "true";
+      const isResumingScan = isResuming;
       await scanDirectories(activePaths, customRules, 
           (total) => {
               logsBuffer.unshift(`Found ${total} files. Probing started...`);
@@ -2319,7 +2319,7 @@ export default function App() {
                   }
               }
           }
-      , isResumingScan);
+      , isResumingScan, isQ);
       
       flushUiUpdates(true);
       setIsScanning(false);

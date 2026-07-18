@@ -1,5 +1,5 @@
 import JSZip from 'jszip';
-import { saveAs } from 'file-saver';
+import { downloadOrSaveFile } from './downloader';
 
 export interface HandbrakePreset {
   PresetName: string;
@@ -475,10 +475,10 @@ export function buildUnifiedPresetsJson(): string {
   return JSON.stringify(fullStructure, null, 2);
 }
 
-export function downloadUnifiedPresets() {
+export async function downloadUnifiedPresets() {
   const jsonContent = buildUnifiedPresetsJson();
   const blob = new Blob([jsonContent], { type: 'application/json;charset=utf-8' });
-  saveAs(blob, 'BitScribe_HandBrake_Presets.json');
+  await downloadOrSaveFile('BitScribe_HandBrake_Presets.json', blob);
 }
 
 export async function downloadPresetsZip() {
@@ -501,5 +501,5 @@ export async function downloadPresetsZip() {
   });
 
   const content = await zip.generateAsync({ type: 'blob' });
-  saveAs(content, 'BitScribe_HandBrake_Presets_Collection.zip');
+  await downloadOrSaveFile('BitScribe_HandBrake_Presets_Collection.zip', content);
 }
