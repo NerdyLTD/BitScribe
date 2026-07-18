@@ -1,3 +1,13 @@
+## [1.4.22] - 2026-07-18
+
+### Fixed
+- **Handbrake Presets Format & Import Compatibility**: Restructured the exported Handbrake JSON presets to strictly align with Handbrake's official format, preventing .NET parser/deserialization crashes (`NullReferenceException`):
+  - **Flat-Attribute Property Layout**: Replaced nested objects (`Picture: { ... }`, `Video: { ... }`) with prefix-grouped flat properties (e.g., `PictureWidth`, `VideoEncoder`, `VideoQualitySlider`) expected by Handbrake's Windows/WPF JSON preset factories.
+  - **ChildrenArray Collection Mapping**: Updated nested child structure keys from `Children` to `ChildrenArray` to avoid serialization misses.
+  - **Correct Object Typings**: Wired folder object attributes with `Type: 0` and leaf presets with `Type: 1` as standard.
+  - **Audio Encoder Mapping**: Added automatic mapping of standard blueprint codecs (e.g. `aac` -> `av_aac`).
+  - **Layout Version Alignment**: Upgraded standard layout metadata signature to `VersionMajor: 72` to resolve schema verification errors.
+
 ## [1.4.21] - 2026-07-18
 
 ### Optimized
