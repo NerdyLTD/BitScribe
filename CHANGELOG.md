@@ -1,3 +1,8 @@
+## [1.4.17] - 2026-07-18
+
+### Fixed
+- **HandBrake Preset C# Deserialization Crash**: Refactored the generated HandBrake preset JSON schema from a flat key structure to the official nested object layout (`Picture`, `Video`, `Audio`, and `Subtitle` groupings). This provides the exact C# model representation expected by HandBrake's .NET deserializer (`HBPreset`), resolving the `NullReferenceException` that crashed the HandBrake WPF client during preset imports.
+
 ## [1.4.16] - 2026-07-17
 
 ### Changed

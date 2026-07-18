@@ -6,31 +6,40 @@ export interface HandbrakePreset {
   Folder: boolean;
   Type?: number;
   PresetDescription?: string;
-  PictureWidth?: number;
-  PictureHeight?: number;
-  PictureKeepRatio?: boolean;
-  PictureAutoAnamorphic?: boolean;
-  PictureDeinterlaceFilter?: string;
-  VideoEncoder?: string;
-  VideoQualityType?: number;
-  VideoQualityRF?: number;
-  VideoFramerate?: string;
-  VideoFramerateMode?: string;
-  VideoProfile?: string;
-  VideoLevel?: string;
-  AudioList?: Array<{
-    AudioCodec: string;
-    AudioBitrate: number;
-    AudioMixdown: string;
-    AudioTrackQuality: number;
-    AudioTrackGainSlider: number;
-  }>;
-  SubtitleList?: Array<{
-    SubtitleCodec: string;
-    SubtitleBurn: boolean;
-    SubtitleDefault: boolean;
-    SubtitleForce: boolean;
-  }>;
+  Picture?: {
+    Width?: number;
+    Height?: number;
+    KeepRatio?: boolean;
+    AutoAnamorphic?: boolean;
+    DeinterlaceFilter?: string;
+  };
+  Video?: {
+    Encoder?: string;
+    QualityType?: number;
+    Quality?: number;
+    QualityRF?: number;
+    Framerate?: string;
+    FramerateMode?: string;
+    Profile?: string;
+    Level?: string;
+  };
+  Audio?: {
+    AudioList?: Array<{
+      AudioCodec: string;
+      AudioBitrate: number;
+      AudioMixdown: string;
+      AudioTrackQuality: number;
+      AudioTrackGainSlider: number;
+    }>;
+  };
+  Subtitle?: {
+    SubtitleList?: Array<{
+      SubtitleCodec: string;
+      SubtitleBurn: boolean;
+      SubtitleDefault: boolean;
+      SubtitleForce: boolean;
+    }>;
+  };
   Children?: HandbrakePreset[];
 }
 
@@ -408,33 +417,42 @@ export function createHandbrakePresetObject(def: PresetDef): HandbrakePreset {
     Folder: false,
     Type: 1,
     PresetDescription: desc,
-    PictureWidth: def.width,
-    PictureHeight: def.height,
-    PictureKeepRatio: true,
-    PictureAutoAnamorphic: true,
-    PictureDeinterlaceFilter: "decomb",
-    VideoEncoder: def.encoder,
-    VideoQualityType: 2,
-    VideoQualityRF: def.rf,
-    VideoFramerate: "auto",
-    VideoFramerateMode: "vfr",
-    VideoProfile: "auto",
-    VideoLevel: "auto",
-    AudioList: def.audio.map(a => ({
-      AudioCodec: a.codec,
-      AudioBitrate: a.bitrate,
-      AudioMixdown: a.mixdown,
-      AudioTrackQuality: -1,
-      AudioTrackGainSlider: 0
-    })),
-    SubtitleList: [
-      {
-        SubtitleCodec: "srt",
-        SubtitleBurn: false,
-        SubtitleDefault: false,
-        SubtitleForce: false
-      }
-    ]
+    Picture: {
+      Width: def.width,
+      Height: def.height,
+      KeepRatio: true,
+      AutoAnamorphic: true,
+      DeinterlaceFilter: "decomb"
+    },
+    Video: {
+      Encoder: def.encoder,
+      QualityType: 2,
+      Quality: def.rf,
+      QualityRF: def.rf,
+      Framerate: "auto",
+      FramerateMode: "vfr",
+      Profile: "auto",
+      Level: "auto"
+    },
+    Audio: {
+      AudioList: def.audio.map(a => ({
+        AudioCodec: a.codec,
+        AudioBitrate: a.bitrate,
+        AudioMixdown: a.mixdown,
+        AudioTrackQuality: -1,
+        AudioTrackGainSlider: 0
+      }))
+    },
+    Subtitle: {
+      SubtitleList: [
+        {
+          SubtitleCodec: "srt",
+          SubtitleBurn: false,
+          SubtitleDefault: false,
+          SubtitleForce: false
+        }
+      ]
+    }
   };
 }
 
