@@ -452,7 +452,8 @@ export function createHandbrakePresetObject(def: PresetDef): HandbrakePreset {
           SubtitleForce: false
         }
       ]
-    }
+    },
+    Children: []
   };
 }
 
@@ -465,12 +466,14 @@ export function buildUnifiedPresetsJson(): string {
     return {
       PresetName: `${catName} Standards`,
       Folder: true,
+      Type: 1,
       Children: qualities.map(qName => {
         // Find matching presets for this category and quality tier
         const matchingDefs = PRESET_BLUEPRINTS.filter(p => p.standard === catName && p.quality === qName);
         return {
           PresetName: qName,
           Folder: true,
+          Type: 1,
           Children: matchingDefs.map(def => createHandbrakePresetObject(def))
         };
       })
@@ -482,6 +485,7 @@ export function buildUnifiedPresetsJson(): string {
       {
         PresetName: "BitScribe DMLS Presets",
         Folder: true,
+        Type: 1,
         Children: rootChildren
       }
     ],

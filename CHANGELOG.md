@@ -1,3 +1,8 @@
+## [1.4.18] - 2026-07-18
+
+### Fixed
+- **HandBrake Preset Import NullReferenceException**: Resolved a persistent `NullReferenceException` when importing generated presets into HandBrake's WPF application. Added empty `Children: []` lists to all individual leaf preset nodes, and populated the default `Type: 1` property across all custom folder containers. This guarantees the .NET deserializer can safely process the recursive import tree without encountering null-dereference errors when checking for child folders.
+
 ## [1.4.17] - 2026-07-18
 
 ### Fixed
