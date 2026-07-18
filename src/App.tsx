@@ -2321,20 +2321,32 @@ export default function App() {
           }
       , isResumingScan, isQ);
       
+      // Reload final lists from persistent database to guarantee pruned/deleted ghost files are correctly omitted in React state
+      const reloadedDbFiles = await getDbFiles();
+      const finalItemsLoaded: MediaItem[] = [];
+      const corruptItemsLoaded: MediaItem[] = [];
+      reloadedDbFiles.forEach(f => {
+          if (f.category === "Corrupted" || (f.category && f.category.toLowerCase().includes("corrupt"))) {
+              corruptItemsLoaded.push(f);
+          } else {
+              finalItemsLoaded.push(f);
+          }
+      });
+
       flushUiUpdates(true);
       setIsScanning(false);
       setCurrentScanFile("");
       setScanProgress(100);
-      setScannedFilesList(finalItems);
-      setScannedFiles(finalItems);
-      setCorruptFiles(corruptItems);
+      setScannedFilesList(finalItemsLoaded);
+      setScannedFiles(finalItemsLoaded);
+      setCorruptFiles(corruptItemsLoaded);
       if (startTimeRef.current) {
         setLastScanDuration(Date.now() - startTimeRef.current);
       }
       setScanLogs([
         isQ 
           ? `Scan complete. ${scannedCount} changed/new files were checked and updated.`
-          : `Scanning operations finished! ${finalItems.length} files parsed.`,
+          : `Scanning operations finished! ${finalItemsLoaded.length} files parsed.`,
         ...logsBuffer.slice(0, 5000),
       ]);
       setNotification({ type: 'success', message: isQ ? `Scan complete: ${scannedCount} new or changed files were updated in the database.` : `Successfully completed media library scan from ${activePaths.length} active paths!` });

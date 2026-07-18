@@ -1,3 +1,8 @@
+## [1.4.19] - 2026-07-18
+
+### Fixed
+- **Media Library Scan and Quick Refresh Syncing**: Fixed a critical synchronization issue where newly added or deleted/pruned files were not correctly updated in the UI or exported reports. Added automatic directory walking and metadata probe simulation for the web environment, and enabled database pruning across both web and Tauri modes. Re-fetched and synchronized the entire media library dataset from the persistent database immediately upon scan completion to ensure any pruned ghost files are properly eliminated from React state.
+
 ## [1.4.18] - 2026-07-18
 
 ### Fixed

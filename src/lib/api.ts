@@ -282,7 +282,14 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
     let allFiles: string[] = [];
     for (const p of paths) {
         onLog(`Walking directory: ${p}`);
-        const files = isTauri() ? await invoke<{path: string, size: number}[]>("walk_dir", { path: p }) : [];
+        const files = isTauri() 
+            ? await invoke<{path: string, size: number}[]>("walk_dir", { path: p }) 
+            : MOCK_MEDIA_LIBRARY.filter(m => {
+                const normFile = m.filePath.replace(/\\/g, '/').toLowerCase();
+                const normPath = p.replace(/\\/g, '/').toLowerCase();
+                const pathWithSlash = normPath.endsWith('/') ? normPath : normPath + '/';
+                return normFile.startsWith(pathWithSlash) || normFile === normPath;
+              }).map(m => ({ path: m.filePath, size: Math.round((m.sizeGB || 0) * 1024 * 1024 * 1024) }));
         let validCount = 0;
         for (const fileObj of files) {
             const file = fileObj.path;
@@ -298,7 +305,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
         onLog(`Found ${validCount} valid media files in ${p}`);
     }
 
-    if (!isResume && isTauri()) {
+    if (!isResume) {
         onLog("Pruning database and detecting file moves/deletions...");
         try {
             const existingDbFiles = await getDbFiles();
@@ -474,6 +481,78 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
             }
             onLog(`Probing (${i+1}/${allFiles.length}): ${file.substring(Math.max(0, file.length - 40))}`);
             
+            if (!isTauri()) {
+                const mockItem = MOCK_MEDIA_LIBRARY.find(m => normalizePath(m.filePath) === normPath);
+                if (mockItem) {
+                    const isMusic = mockItem.category === 'Music' || mockItem.category === 'Music Albums' || mockItem.category === 'Soundtracks' || mockItem.category === 'Music Compilations';
+                    const isAudiobook = mockItem.category === 'Audiobooks';
+                    const isPodcast = mockItem.category === 'Podcasts';
+                    const isAudioOnly = isMusic || isAudiobook || isPodcast;
+
+                    let vBitDepth: string | undefined = undefined;
+                    let aSampleRate = 48000;
+                    let cCount = 0;
+
+                    if (!isAudioOnly) {
+                      const resolution = (mockItem.videoResolution || "").toUpperCase();
+                      const filename = (mockItem.filename || "").toUpperCase();
+                      const hasHDR = !!mockItem.hdrFormat && mockItem.hdrFormat !== 'SDR';
+                      if (resolution.includes('4K') || resolution.includes('2160') || filename.includes('2160P') || filename.includes('4K') || hasHDR) {
+                        vBitDepth = "10-bit";
+                      } else {
+                        if (filename.includes('10BIT') || mockItem.category === 'Anime' || mockItem.category === 'Anime Movies' || mockItem.category === 'Anime TV Shows') {
+                          vBitDepth = "10-bit";
+                        } else {
+                          vBitDepth = "8-bit";
+                        }
+                      }
+                      aSampleRate = 48000;
+                      if (mockItem.category === 'Movie' || mockItem.category === 'Movies' || mockItem.category === 'Movies (4K)' || mockItem.category === 'Movies (1080p)') {
+                        const hash = mockItem.filename.length;
+                        cCount = hash % 2 === 0 ? (12 + (hash % 17)) : 0;
+                      } else if (mockItem.category === 'TV' || mockItem.category === 'TV Shows' || mockItem.category === 'TV Shows (4K)' || mockItem.category === 'TV Shows (1080p)') {
+                        const hash = mockItem.filename.length;
+                        cCount = hash % 3 === 0 ? (4 + (hash % 5)) : 0;
+                      }
+                    } else {
+                      const isFlac = (mockItem.container || "").toLowerCase() === 'flac';
+                      const hash = mockItem.filename.length;
+                      if (isFlac) {
+                        aSampleRate = hash % 2 === 0 ? 96000 : 44100;
+                      } else {
+                        aSampleRate = 44100;
+                      }
+                    }
+
+                    const hydratedItem: MediaItem = {
+                        ...mockItem,
+                        durationMins: mockItem.durationMins || 116,
+                        year: mockItem.year || 2010,
+                        videoBitrateMbps: mockItem.videoBitrateMbps || ((mockItem as any).videoBitrate ? (mockItem as any).videoBitrate / 1000 : 12.5),
+                        topLevelFolder: mockItem.topLevelFolder || getTopLevelFolder(mockItem.filePath, paths),
+                        videoBitDepth: mockItem.videoBitDepth || vBitDepth,
+                        audioSampleRate: mockItem.audioSampleRate || aSampleRate,
+                        chapterCount: mockItem.chapterCount !== undefined ? mockItem.chapterCount : cCount,
+                        streamFriendlyLevel: "unknown",
+                        streamFriendlyReason: "",
+                        streamFriendlySuggestion: "",
+                        streamFriendlyEvaluated: rules.useDiscoveryPreset ? 0 : 1
+                    };
+                    
+                    const evalResult = evaluatePlexCompatibility(hydratedItem, rules, false, true);
+                    hydratedItem.streamFriendlyLevel = evalResult.level as any;
+                    hydratedItem.streamFriendlyReason = evalResult.reason;
+                    hydratedItem.streamFriendlySuggestion = evalResult.suggestion;
+                    hydratedItem.streamFriendlyEvaluated = Date.now();
+                    
+                    onProgress({ current: i + 1, total: allFiles.length, item: hydratedItem });
+                    batch.push(hydratedItem);
+                    continue;
+                } else {
+                    throw new Error("Simulated mock file metadata not found");
+                }
+            }
+
             try {
                 // Securely execute ffprobe sidecar with a strict 15-second timeout safeguard to prevent hangs
                 const probePromise = Command.sidecar('bin/ffprobe', [
