@@ -251,7 +251,7 @@ function getTrackLanguage(stream: any): string {
     return lang ? lang.substring(0, 3) : "und";
 }
 
-export async function scanDirectories(paths: string[], rules: any, onStart: (total: number) => void, onLog: (msg: string) => void, onProgress: (prog: any) => void, isResume: boolean = false, isQuickRefresh: boolean = false) {
+export async function scanDirectories(paths: string[], rules: any, onStart: (total: number) => void, onLog: (msg: string) => void, onProgress: (prog: any) => void, isResume: boolean = false, isQuickRefresh: boolean = false, signal?: AbortSignal) {
     onLog("Initializing scan...");
     
     // ITEM 1: Centralized cross-platform path normalization.
@@ -281,28 +281,47 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
     
     let allFiles: string[] = [];
     for (const p of paths) {
-        onLog(`Walking directory: ${p}`);
-        const files = isTauri() 
-            ? await invoke<{path: string, size: number}[]>("walk_dir", { path: p }) 
-            : MOCK_MEDIA_LIBRARY.filter(m => {
-                const normFile = m.filePath.replace(/\\/g, '/').toLowerCase();
-                const normPath = p.replace(/\\/g, '/').toLowerCase();
-                const pathWithSlash = normPath.endsWith('/') ? normPath : normPath + '/';
-                return normFile.startsWith(pathWithSlash) || normFile === normPath;
-              }).map(m => ({ path: m.filePath, size: Math.round((m.sizeGB || 0) * 1024 * 1024 * 1024) }));
-        let validCount = 0;
-        for (const fileObj of files) {
-            const file = fileObj.path;
-            const lower = file.toLowerCase();
-            if (allowedExtensions.some(ext => lower.endsWith(ext))) {
-                allFiles.push(file);
-                const normPath = normalizePath(file);
-                // Temporarily store the physical size in the map so we can use it later
-                existingFilesMap.set(normPath + "_physical_size", fileObj.size);
-                validCount++;
-            }
+        if (signal?.aborted) {
+            onLog("Scan aborted by user during directory walk.");
+            return;
         }
-        onLog(`Found ${validCount} valid media files in ${p}`);
+        onLog(`Walking directory: ${p}`);
+        try {
+            const files = isTauri() 
+                ? await invoke<{path: string, size: number}[]>("walk_dir", { path: p }) 
+                : MOCK_MEDIA_LIBRARY.filter(m => {
+                    const normFile = m.filePath.replace(/\\/g, '/').toLowerCase();
+                    const normPath = p.replace(/\\/g, '/').toLowerCase();
+                    const pathWithSlash = normPath.endsWith('/') ? normPath : normPath + '/';
+                    return normFile.startsWith(pathWithSlash) || normFile === normPath;
+                  }).map(m => ({ path: m.filePath, size: Math.round((m.sizeGB || 0) * 1024 * 1024 * 1024) }));
+            let validCount = 0;
+            for (const fileObj of files) {
+                const file = fileObj.path;
+                const lower = file.toLowerCase();
+                if (allowedExtensions.some(ext => lower.endsWith(ext))) {
+                    allFiles.push(file);
+                    const normPath = normalizePath(file);
+                    // Temporarily store the physical size in the map so we can use it later
+                    existingFilesMap.set(normPath + "_physical_size", fileObj.size);
+                    validCount++;
+                }
+            }
+            onLog(`Found ${validCount} valid media files in ${p}`);
+        } catch (err: any) {
+            let errorMsg = err.message || String(err);
+            onLog(`ERROR walking directory "${p}": ${errorMsg}`);
+            
+            // Translate technical file errors to descriptive user-readable ones
+            if (errorMsg.includes("does not exist") || errorMsg.includes("No such file")) {
+                errorMsg = `The directory "${p}" does not exist. Please double-check the path configuration.`;
+            } else if (errorMsg.includes("Permission denied") || errorMsg.includes("access") || errorMsg.includes("inaccessible")) {
+                errorMsg = `Permission denied accessing directory "${p}". Please check read permissions.`;
+            } else {
+                errorMsg = `Failed to access folder "${p}": ${errorMsg}`;
+            }
+            throw new Error(errorMsg);
+        }
     }
 
     if (!isResume) {
@@ -449,6 +468,9 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
     const worker = async () => {
         let batch: MediaItem[] = [];
         while (currentIndex < allFiles.length) {
+            if (signal?.aborted) {
+                break;
+            }
             const i = currentIndex++;
             const file = allFiles[i];
             let skipFile = false;

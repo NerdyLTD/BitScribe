@@ -2319,7 +2319,28 @@ export default function App() {
                   }
               }
           }
-      , isResumingScan, isQ);
+      , isResumingScan, isQ, abortControllerRef.current?.signal || undefined);
+      
+      if (abortControllerRef.current?.signal.aborted) {
+          // Scan was paused or cancelled. Load whatever was scanned so far without completing the scan sequence or clearing resume state
+          const reloadedDbFiles = await getDbFiles();
+          const finalItemsLoaded: MediaItem[] = [];
+          const corruptItemsLoaded: MediaItem[] = [];
+          reloadedDbFiles.forEach(f => {
+              if (f.category === "Corrupted" || (f.category && f.category.toLowerCase().includes("corrupt"))) {
+                  corruptItemsLoaded.push(f);
+              } else {
+                  finalItemsLoaded.push(f);
+              }
+          });
+          flushUiUpdates(true);
+          setIsScanning(false);
+          setCurrentScanFile("");
+          setScannedFilesList(finalItemsLoaded);
+          setScannedFiles(finalItemsLoaded);
+          setCorruptFiles(corruptItemsLoaded);
+          return;
+      }
       
       // Reload final lists from persistent database to guarantee pruned/deleted ghost files are correctly omitted in React state
       const reloadedDbFiles = await getDbFiles();

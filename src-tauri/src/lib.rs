@@ -98,15 +98,36 @@ struct FileEntry {
 
 #[tauri::command]
 fn walk_dir(path: String) -> Result<Vec<FileEntry>, String> {
+    let path_obj = std::path::Path::new(&path);
+    if !path_obj.exists() {
+        return Err(format!("The folder directory '{}' does not exist.", path));
+    }
+    if !path_obj.is_dir() {
+        return Err(format!("The specified path '{}' is not a valid directory.", path));
+    }
+    if let Err(e) = std::fs::read_dir(&path) {
+        return Err(format!("Permission denied or directory inaccessible for '{}': {}", path, e));
+    }
+
     let mut files = Vec::new();
-    for entry in WalkDir::new(&path).into_iter().filter_map(|e| e.ok()) {
-        if entry.file_type().is_file() {
-            if let Some(path_str) = entry.path().to_str() {
-                let size = entry.metadata().map(|m| m.len()).unwrap_or(0);
-                files.push(FileEntry {
-                    path: path_str.to_string(),
-                    size,
-                });
+    for entry_res in WalkDir::new(&path).follow_links(true).into_iter() {
+        match entry_res {
+            Ok(entry) => {
+                if entry.file_type().is_file() {
+                    let path_str = if let Some(p_str) = entry.path().to_str() {
+                        p_str.to_string()
+                    } else {
+                        entry.path().to_string_lossy().into_owned()
+                    };
+                    let size = entry.metadata().map(|m| m.len()).unwrap_or(0);
+                    files.push(FileEntry {
+                        path: path_str,
+                        size,
+                    });
+                }
+            }
+            Err(e) => {
+                eprintln!("Warning: WalkDir item skipped in '{}': {}", path, e);
             }
         }
     }

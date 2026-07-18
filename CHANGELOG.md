@@ -1,3 +1,13 @@
+## [1.4.20] - 2026-07-18
+
+### Fixed
+- **Robust Error Handling & Edge-Case Protection**: Implemented a comprehensive error translation and edge-case management system:
+  - Added strict, actionable validation of directories before scanning (missing folders, permission errors) in Tauri C++ bridge, preventing silent failures.
+  - Implemented symbolic link traversal (`.follow_links(true)`) while bypassing circular directory loop errors and broken link skips.
+  - Gracefully supported non-UTF-8 lossy conversion in filenames to prevent scanning aborts.
+  - Wired `AbortSignal` all the way down to `scanDirectories` and worker threads, enabling instant responsive cancellation/pausing while retaining partially scanned items in the persistent DB.
+  - Translated technical directory/file write errors (permission denied, missing folder, write protection) during report export into helpful, descriptive user-facing warnings with clear troubleshooting steps.
+
 ## [1.4.19] - 2026-07-18
 
 ### Fixed
