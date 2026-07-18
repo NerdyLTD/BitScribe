@@ -1,3 +1,9 @@
+## [1.4.23] - 2026-07-18
+
+### Fixed
+- **Handbrake Presets Flat Folder Restructuring**: Restructured the 1-click unified Handbrake presets JSON to contain a single flat parent category folder `"BitScribe DMLS Presets"` containing all 24 presets in a single 1-level deep list. This precisely matches the official Handbrake export model, preventing the .NET/WPF importer from failing or crashing due to multi-level nested folders (which Handbrake's WPF deserializer does not support).
+- **Exact Layout Matching**: Fixed the outer layout signature to use the exact field sequence `PresetList`, `VersionMajor`, `VersionMicro`, and `VersionMinor` to be 100% compliant with standard imports.
+
 ## [1.4.22] - 2026-07-18
 
 ### Fixed

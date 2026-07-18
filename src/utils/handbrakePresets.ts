@@ -600,40 +600,22 @@ export function createHandbrakePresetObject(def: PresetDef): HandbrakePreset {
 }
 
 export function buildUnifiedPresetsJson(): string {
-  // We'll organize them into folders for a super clean import inside HandBrake
-  const categories = ['Modern+', 'Legacy+'];
-  const qualities = ['Space Saver', 'Balanced', 'Kinda Silly'];
-
-  const rootChildren: HandbrakePreset[] = categories.map(catName => {
-    return {
-      PresetName: `${catName} Standards`,
-      Folder: true,
-      Type: 0, // Folders are Type 0 in standard Handbrake presets
-      ChildrenArray: qualities.map(qName => {
-        // Find matching presets for this category and quality tier
-        const matchingDefs = PRESET_BLUEPRINTS.filter(p => p.standard === catName && p.quality === qName);
-        return {
-          PresetName: qName,
-          Folder: true,
-          Type: 0, // Folders are Type 0
-          ChildrenArray: matchingDefs.map(def => createHandbrakePresetObject(def))
-        };
-      })
-    };
-  });
+  // Map all 24 blueprints directly to leaf preset objects inside a single root folder
+  const flatPresets = PRESET_BLUEPRINTS.map(def => createHandbrakePresetObject(def));
 
   const fullStructure = {
     PresetList: [
       {
-        PresetName: "BitScribe DMLS Presets",
+        ChildrenArray: flatPresets,
         Folder: true,
-        Type: 0, // Root folder is Type 0
-        ChildrenArray: rootChildren
+        PresetName: "BitScribe DMLS Presets",
+        PresetDescription: "Official BitScribe direct-play friendly transcoding presets.",
+        Type: 0
       }
     ],
-    VersionMajor: 72, // Matches Handbrake's modern .NET layout version to prevent import parser crashes
-    VersionMinor: 0,
-    VersionMicro: 0
+    VersionMajor: 72,
+    VersionMicro: 0,
+    VersionMinor: 0
   };
 
   return JSON.stringify(fullStructure, null, 2);
