@@ -1,3 +1,8 @@
+## [1.4.15] - 2026-07-17
+
+### Fixed
+- **Song Version Duplicate Protection**: Added a robust metadata and file-name tracking algorithm to extract special version descriptors (e.g. "Acoustic", "Live", "Remix", "Demo", "Instrumental", "Radio Edit") from both audio tags and filenames. This prevents unique performances/versions of the same track from being falsely flagged as duplicate files, ensuring high-fidelity results.
+
 ## [1.4.14] - 2026-07-17
 
 ### Added
