@@ -1,5 +1,12 @@
 ## [1.4.13] - 2026-07-17
 
+### Added
+- **BitScribe HandBrake Presets Explorer**: Introduced an interactive encoding and transcoding presets explorer inside the Help Center tab. Users can learn about, inspect, and download 24 custom presets structured for Modern+ and Legacy+ standards across SD, HD, Full HD, and 4K resolutions:
+  - **1-Click Import JSON**: Generates and downloads a single, nested JSON preset list file that populates HandBrake's preset list with organized categories (Modern+ vs Legacy+ with Space Saver, Balanced, and Kinda Silly folders) in one click.
+  - **ZIP Package Download**: Bundles all 24 individual JSON preset files into a structured directory inside a standard ZIP download using client-side ZIP packaging.
+  - **Interactive Presets Panel**: Shows standard tiers and quality profiles side-by-side to review exact constant quality RF limits, encoders, multi-track audio stream bitrates, and SRT subtitle configurations.
+  - **HandBrake Integration Guide**: Includes an accordion instructions block detailing how to easily import and run files through HandBrake.
+
 ### Fixed
 - **Excel Report Corrupted Redirects**: Fixed a misleading label on the overview sheet of the "Streaming Audit" Excel report (and other reports) which pointed users to a non-existent "Corrupted" tab. The message is now dynamically aligned to suggest checking the dedicated "Bad Files Audit" report, while gracefully preserving the local tab reference when exporting a genuine "Bad Files Audit" report.
 - **Excel & CSV Formula Injection Protection**: Implemented a defense in both `excelExporter.ts` and `reportExporter.ts` by checking and prepending a single quote `'` to any string cell starting with `=`, `+`, `-`, or `@` to neutralize formula injection during import or execution in external spreadsheet applications.
