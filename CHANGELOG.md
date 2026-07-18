@@ -2,6 +2,9 @@
 
 ### Fixed
 - **Excel Report Corrupted Redirects**: Fixed a misleading label on the overview sheet of the "Streaming Audit" Excel report (and other reports) which pointed users to a non-existent "Corrupted" tab. The message is now dynamically aligned to suggest checking the dedicated "Bad Files Audit" report, while gracefully preserving the local tab reference when exporting a genuine "Bad Files Audit" report.
+- **Excel & CSV Formula Injection Protection**: Implemented a defense in both `excelExporter.ts` and `reportExporter.ts` by checking and prepending a single quote `'` to any string cell starting with `=`, `+`, `-`, or `@` to neutralize formula injection during import or execution in external spreadsheet applications.
+- **TV Series Title Column in Excel**: Fixed a bug where the TV show "Series Title" was hardcoded as an empty string in the Excel Discovery Scan report tab. It now correctly maps to the parsed series title to perfectly match CSV and HTML reports and prevent empty columns.
+- **Corrupted Count in HTML Reports**: Fixed an issue where the HTML report metrics card showed 0 total corrupted files when exporting a Corrupted Files Audit due to over-aggressive filtering of the `baseItems` dataset.
 
 ## [1.4.12] - 2026-07-17
 

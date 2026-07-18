@@ -199,6 +199,10 @@ export async function exportMediaLibraryToCSV(
       return headers
         .map((h) => {
           let val = String(data[h] ?? "");
+          // Prevent Excel Formula Injection
+          if (val.startsWith("=") || val.startsWith("+") || val.startsWith("-") || val.startsWith("@")) {
+            val = `'${val}`;
+          }
           if (val.includes(",") || val.includes('"') || val.includes("\n")) {
             return `"${val.replace(/"/g, '""')}"`;
           }
@@ -409,6 +413,10 @@ export async function exportMediaLibraryToCSV(
       return headers
         .map((h) => {
           let val = String(data[h] ?? "");
+          // Prevent Excel Formula Injection
+          if (val.startsWith("=") || val.startsWith("+") || val.startsWith("-") || val.startsWith("@")) {
+            val = `'${val}`;
+          }
           if (val.includes(",") || val.includes('"') || val.includes("\n")) {
             return `"${val.replace(/"/g, '""')}"`;
           }
@@ -492,7 +500,7 @@ export async function exportMediaLibraryToHTML(
 
   const duplicatesMap = computeDuplicatesMap(itemsForDups, rules);
 
-  const isCorrupted = scanType === "Corrupted Files Scan";
+  const isCorrupted = scanType === "Corrupted Audit";
   const isDuplication = scanType === "Duplication Scan";
   const isMetadata = scanType === "Metadata Scan" || scanType === "Video Metadata Scan" || scanType === "Music Metadata Scan";
   const isQuality = scanType === "Quality Audit";
@@ -1207,7 +1215,7 @@ export async function exportMediaLibraryToHTML(
       const isMusic = isMusicCat(i.category);
       if (isMusic && (SCAN_TYPE === "Subtitle Scan" || SCAN_TYPE === "Stream Audit Scan" || SCAN_TYPE === "Video Metadata Scan" || SCAN_TYPE === "Quality Audit")) return false;
       if (!isMusic && SCAN_TYPE === "Music Metadata Scan") return false;
-      if (i.category === "Corrupted") return false;
+      if (i.category === "Corrupted" && SCAN_TYPE !== "Corrupted Audit") return false;
       if (i.category === "Static" && SCAN_TYPE !== "Discovery Scan") return false;
       return true;
     });

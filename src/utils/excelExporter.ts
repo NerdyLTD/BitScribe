@@ -924,12 +924,19 @@ export async function exportMediaLibraryToExcel(
     if (scanType === "Duplication Scan") {
       const rows = dupRows || getDuplicatePairRows(dataItems, rules);
       rows.forEach((row) => {
+        const sanitize = (val: string | undefined | null) => {
+          if (!val) return "";
+          if (val.startsWith("=") || val.startsWith("+") || val.startsWith("-") || val.startsWith("@")) {
+            return `'${val}`;
+          }
+          return val;
+        };
         ws.addRow([
-          row.fileName,
-          row.filePath,
-          row.dupFileName,
-          row.dupFilePath,
-          row.flagReason || ""
+          sanitize(row.fileName),
+          sanitize(row.filePath),
+          sanitize(row.dupFileName),
+          sanitize(row.dupFilePath),
+          sanitize(row.flagReason)
         ]);
       });
     } else {
@@ -1278,7 +1285,7 @@ export async function exportMediaLibraryToExcel(
             });
           } else if (isTv) {
             Object.assign(rowValues, baseValues, {
-              "Series Title": "",
+              "Series Title": parsedMeta.title || item.tags?.show || item.tags?.SHOW || item.tags?.series || item.tags?.SERIES || "",
               Season: parsedMeta.season,
               Episode: parsedMeta.episode,
               "Episode Title": parsedMeta.epTitle,
@@ -1308,7 +1315,16 @@ export async function exportMediaLibraryToExcel(
         }
       }
 
-      const orderedValues = visibleHeaders.map((h) => rowValues[h] || "");
+      const orderedValues = visibleHeaders.map((h) => {
+        let val = rowValues[h];
+        if (typeof val === "string") {
+          // Prevent Excel Formula Injection
+          if (val.startsWith("=") || val.startsWith("+") || val.startsWith("-") || val.startsWith("@")) {
+            val = `'${val}`;
+          }
+        }
+        return val ?? "";
+      });
       const addedRow = ws.addRow(orderedValues);
 
       if (isMetadata) {
