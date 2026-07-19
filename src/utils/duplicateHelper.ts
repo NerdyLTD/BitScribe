@@ -174,8 +174,50 @@ export function getDuplicatePairRows(items: MediaItem[], rules: RuleCriteria): D
     return artist.replace(/[^a-zA-Z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
   };
 
+  const getVersionSuffix = (title: string, filename: string): string => {
+    const combined = `${title} ${filename}`.toLowerCase();
+    const markers: string[] = [];
+
+    if (/\b(acoustic|unplugged)\b/.test(combined)) {
+      markers.push("acoustic");
+    }
+    if (/\b(live)\b/.test(combined)) {
+      markers.push("live");
+    }
+    if (/\b(remix|rmx|re-mix)\b/.test(combined)) {
+      markers.push("remix");
+    }
+    if (/\b(demo)\b/.test(combined)) {
+      markers.push("demo");
+    }
+    if (/\b(instrumental|inst|karaoke)\b/.test(combined)) {
+      markers.push("instrumental");
+    }
+    if (/\b(radio|radio-edit)\b/.test(combined) || /\bradio\s+edit\b/.test(combined)) {
+      markers.push("radio-edit");
+    } else if (/\bedit\b/.test(combined) && !/\b(video\s*edit|audio\s*edit)\b/.test(combined)) {
+      markers.push("edit");
+    }
+    if (/\b(cover)\b/.test(combined)) {
+      markers.push("cover");
+    }
+    if (/\b(extended|club|dub|vocal|synth|piano|orchestral|bonus)\b/.test(combined)) {
+      const match = combined.match(/\b(extended|club|dub|vocal|synth|piano|orchestral|bonus)\b/);
+      if (match) {
+        markers.push(match[1]);
+      }
+    }
+    if (/\b(alt|alternate|alternative)\b/.test(combined)) {
+      markers.push("alternate");
+    }
+
+    return markers.join("-");
+  };
+
   const getMusicProperties = (item: MediaItem) => {
-    const title = cleanMusicTrack(item.tags?.title || item.filename);
+    const titleTag = item.tags?.title || '';
+    const filename = item.filename;
+    const title = cleanMusicTrack(titleTag || filename);
     let artist = cleanArtist(item.tags?.artist || '');
     
     if (!artist && item.filePath) {
@@ -192,7 +234,9 @@ export function getDuplicatePairRows(items: MediaItem[], rules: RuleCriteria): D
     if (!artist) {
       artist = 'unknown';
     }
-    return { title, artist };
+
+    const versionSuffix = getVersionSuffix(titleTag, filename);
+    return { title, artist, versionSuffix };
   };
 
   if (isVideoActive) {
@@ -316,10 +360,11 @@ export function getDuplicatePairRows(items: MediaItem[], rules: RuleCriteria): D
     const musicGroups = new Map<string, MediaItem[]>();
 
     musicItems.forEach(item => {
-      const { title, artist } = getMusicProperties(item);
+      const { title, artist, versionSuffix } = getMusicProperties(item);
       const parts = (item.filePath || "").split(/[\\/]/).filter(Boolean);
       const parentDir = parts.length > 1 ? parts[parts.length - 2].toLowerCase() : "unknown_dir";
-      const key = artist === 'unknown' ? `unknown_${parentDir}_${title}` : `${artist} - ${title}`;
+      const baseKey = artist === 'unknown' ? `unknown_${parentDir}_${title}` : `${artist} - ${title}`;
+      const key = versionSuffix ? `${baseKey}___${versionSuffix}` : baseKey;
       if (!musicGroups.has(key)) {
         musicGroups.set(key, []);
       }

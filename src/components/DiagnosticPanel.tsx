@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { getDiagnostic } from "../lib/api";
-import { Cpu, Server, HardDrive, AlertCircle, CheckCircle2, ServerCog, Activity, Database } from "lucide-react";
+import { Cpu, Server, HardDrive, AlertCircle, CheckCircle2, ServerCog, Activity, Database, FileJson } from "lucide-react";
+import { downloadOrSaveFile } from "../utils/downloader";
 
 interface DiagnosticInfo {
   status: string;
@@ -84,6 +85,33 @@ export default function DiagnosticPanel() {
     return parts.join(" ");
   };
 
+  const handleExportJSON = async () => {
+    try {
+      const diagnosticReport = {
+        timestamp: new Date().toISOString(),
+        appName: "BitScribe",
+        appVersion: info.appVersion,
+        platform: info.os.platform,
+        arch: info.os.type,
+        cpus: info.os.cpus,
+        ffprobePath: info.ffprobeStatus,
+        databaseStatus: info.databaseStatus,
+        nodeVersion: info.nodeVersion,
+        localStorageKeys: {
+          scanPaths: localStorage.getItem("bitscribe_scan_paths"),
+          customRules: localStorage.getItem("bitscribe_custom_rules"),
+          completedScan: localStorage.getItem("bitscribe_has_completed_scan"),
+        }
+      };
+      
+      const jsonStr = JSON.stringify(diagnosticReport, null, 2);
+      const blob = new Blob([jsonStr], { type: "application/json" });
+      await downloadOrSaveFile("bitscribe_diagnostics.json", blob);
+    } catch (err: any) {
+      alert(`Failed to export diagnostics: ${err.message}`);
+    }
+  };
+
   return (
     <div className="p-4 bg-[#14171F] border border-blue-500/20 rounded-xl shadow-lg shadow-blue-500/5 transition-all">
       <div className="flex justify-between items-center mb-4 border-b border-[#1e232e] pb-3">
@@ -92,6 +120,14 @@ export default function DiagnosticPanel() {
           System Diagnostics
         </h3>
         <div className="flex items-center gap-2">
+          <button 
+            onClick={handleExportJSON}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-semibold text-xs border border-slate-700 transition-colors shadow-inner cursor-pointer"
+            title="Export Diagnostic Report as JSON"
+          >
+            <FileJson className="w-3.5 h-3.5 text-blue-400" />
+            <span>Export JSON</span>
+          </button>
           <span className="px-2.5 py-1 rounded bg-blue-500/10 text-blue-400 font-mono text-xs font-semibold border border-blue-500/20 shadow-inner">
             v{info.appVersion} | Node {info.nodeVersion}
           </span>

@@ -1,3 +1,17 @@
+## [1.4.14] - 2026-07-19
+
+### Added
+- **Diagnostic Report JSON Export**: Added a dedicated "Export JSON" button to the System Diagnostics panel, allowing users to save and download comprehensive, formatted diagnostic JSON files.
+- **Enhanced Song Version Duplicate Protection**: Improved the duplicate detection engine (`duplicateHelper.ts`) to recognize special version descriptors (e.g. "Acoustic", "Live", "Remix", etc.), avoiding false positive duplicate flags on legitimate unique song recordings.
+
+### Fixed
+- **Excised HandBrake Presets**: Completely removed the failed HandBrake Presets explorer experiment from the codebase and help panels, restoring a clean help tab environment.
+- **Robust Cross-Platform Directory Walking**: Updated Tauri WalkDir commands (`src-tauri/src/lib.rs`) with symlink following support (`follow_links(true)`) and defensive error/permission handling to prevent scanning crashes on inaccessible directories.
+- **Interactive Duplicates Report Filtering**: Implemented "All", "Video", and "Music" interactive filter buttons directly inside the exported Media Duplicates HTML report and synchronized it with the underlying data table rendering.
+- **Scan Cancellation & Abort Signals**: Integrated robust `AbortSignal` cancellation propagation across the React scanning thread and backend probe workers, enabling immediate user-triggered scan cancellation.
+- **Web-Preview Scanning & Pruning Simulation**: Enabled fully functional simulated directory walks, database pruning, and file probing inside the web preview sandbox using `MOCK_MEDIA_LIBRARY` data.
+- **Tauri Native Export Error Mapping**: Improved native dialog file saving in `downloader.ts` to translate OS-level writing errors into readable, actionable user warnings (e.g. Write Permission Denied, Directory Not Found).
+
 ## [1.4.13] - 2026-07-17
 
 ### Added
