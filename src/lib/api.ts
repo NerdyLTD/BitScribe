@@ -50,7 +50,7 @@ export async function getDiagnostic() {
         return {
             platform: "web",
             arch: "unknown",
-            appVersion: import.meta.env.APP_VERSION || "1.4.24",
+            appVersion: import.meta.env.APP_VERSION || "1.4.26",
             ffprobePath: "simulated"
         };
     }
@@ -353,7 +353,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 return !existingDbFilesSet.has(normalizePath(file));
             });
 
-            if (ghostFiles.length > 0 || newFilesOnDisk.length > 0) {
+            if (existingDbFiles.length > 0 && (ghostFiles.length > 0 || newFilesOnDisk.length > 0)) {
                 const changes: any[] = [];
                 const today = new Date();
                 const formatDateMMDDYY = (date: Date) => {

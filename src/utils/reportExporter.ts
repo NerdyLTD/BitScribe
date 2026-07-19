@@ -1012,10 +1012,12 @@ export async function exportMediaLibraryToHTML(
   const isQuality = SCAN_TYPE === "Anomaly Scan";
   const isSubtitle = SCAN_TYPE === "Subtitle Scan";
 
+  const isMusicCat = (cat) => ["Music Albums", "Soundtracks", "Music Compilations", "Music", "audio"].includes(cat || "");
+
   const getCategoryGroupInBrowser = (category) => {
     if (!category) return 'Other';
-    const isMusicCat = ["Music Albums", "Soundtracks", "Music Compilations", "Music"].includes(category);
-    if (isMusicCat) return 'Music';
+    const isMusic = ["Music Albums", "Soundtracks", "Music Compilations", "Music"].includes(category);
+    if (isMusic) return 'Music';
     const lower = category.toLowerCase();
     
     if (lower.includes('movie') || lower.includes('documentar') || lower.includes('docuseries') || lower.includes('shorts') || lower === 'plays' || lower === 'specials' || lower.includes('music video')) {
@@ -1211,7 +1213,6 @@ export async function exportMediaLibraryToHTML(
     const container = document.getElementById('metrics-container');
     if (!container) return;
 
-    const isMusicCat = (cat) => ["Music Albums", "Soundtracks", "Music Compilations", "Music", "audio"].includes(cat || "");
     const baseItems = ALL_DATA.filter(i => {
       const isMusic = isMusicCat(i.category);
       if (isMusic && (SCAN_TYPE === "Subtitle Scan" || SCAN_TYPE === "Stream Audit Scan" || SCAN_TYPE === "Video Metadata Scan" || SCAN_TYPE === "Quality Audit")) return false;
@@ -1450,8 +1451,6 @@ export async function exportMediaLibraryToHTML(
     renderCodecDistribution();
   }
 
-  const isMusicCat = (cat) => ["Music Albums", "Soundtracks", "Music Compilations", "Music", "audio"].includes(cat || "");
-
   function renderCodecDistribution() {
     const codecContainer = document.getElementById('codec-metrics-container');
     if (!codecContainer) return;
@@ -1558,14 +1557,14 @@ export async function exportMediaLibraryToHTML(
       container.innerHTML = filters.map(f => {
         const isAct = activeDupFilter === f.id;
         const cls = isAct ? f.activeClass : f.normalClass;
-        return '<button onclick="setDupFilter(\''+f.id+'\')" class="px-4 py-1.5 rounded-full text-sm font-medium transition-all '+cls+'">'+f.label+'</button>';
+        return '<button data-filter="'+f.id+'" onclick="setDupFilter(this.getAttribute(\'data-filter\'))" class="px-4 py-1.5 rounded-full text-sm font-medium transition-all '+cls+'">'+f.label+'</button>';
       }).join('');
       return;
     }
     container.innerHTML = orderedCats.map(c => {
       const isAct = activeCategory === c;
       const cls = isAct ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700';
-      return '<button onclick="setCategory(&quot;'+c.replace(/"/g, '&quot;')+'&quot;)" class="px-4 py-1.5 rounded-full text-sm font-medium transition-all '+cls+'">'+c+'</button>';
+      return '<button data-category="'+c.replace(/"/g, '&quot;')+'" onclick="setCategory(this.getAttribute(\'data-category\'))" class="px-4 py-1.5 rounded-full text-sm font-medium transition-all '+cls+'">'+c+'</button>';
     }).join('');
   }
 
@@ -1595,7 +1594,7 @@ export async function exportMediaLibraryToHTML(
     container.innerHTML = ALL_POSSIBLE_HEADERS.map(col => {
       const chk = visibleColumns[col] !== false ? 'checked' : '';
       return '<label class="flex items-center gap-2 p-2 hover:bg-slate-700/50 rounded cursor-pointer text-sm text-slate-200">' +
-        '<input type="checkbox" '+chk+' onchange="toggleColumn(&quot;'+col.replace(/"/g, '&quot;')+'&quot;, this.checked)" class="rounded border-slate-600 bg-slate-900 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-slate-800">' +
+        '<input type="checkbox" '+chk+' data-column="'+col.replace(/"/g, '&quot;')+'" onchange="toggleColumn(this.getAttribute(\'data-column\'), this.checked)" class="rounded border-slate-600 bg-slate-900 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-slate-800">' +
         (col === 'Duplicate Path' ? 'Path' : col) + '</label>';
     }).join('');
   }
@@ -1727,7 +1726,7 @@ export async function exportMediaLibraryToHTML(
           thClass += ' bg-slate-900/60 text-slate-400 border-slate-700';
         }
 
-        return '<th onclick="setSort(&quot;'+h.replace(/"/g, '&quot;')+'&quot;)" data-col="'+h.replace(/"/g, '&quot;')+'" '+widthStyle+' class="'+thClass+'">'+displayLabel+'</th>';
+        return '<th onclick="setSort(this.getAttribute(\'data-col\'))" data-col="'+h.replace(/"/g, '&quot;')+'" '+widthStyle+' class="'+thClass+'">'+displayLabel+'</th>';
       }).join('') + '</tr>';
 
     const totalPages = Math.ceil(filtered.length / pageSize) || 1;

@@ -1,3 +1,22 @@
+## [1.4.26] - 2026-07-19
+
+### Fixed
+- **HTML Report Rendering & Decoding Robustness**: Corrected a fundamental browser HTML rendering bug in all exported HTML reports where filters, toggle controls, and metrics were visible but the media data tables rendered blank. This was caused by HTML entity decoding where double quotes (`&quot;`) inside event attributes (e.g., `onclick="setSort(&quot;Title&quot;)"`) were decoded into literal quotes by the DOM parser, malforming the attributes. All event attributes now safely read state dynamically using custom HTML5 data attributes (e.g. `onclick="setSort(this.getAttribute('data-col'))"`), preventing parsing truncation.
+- **Unified Helper Scope resolution**: Consolidated duplicate helper function definitions (`isMusicCat`) into a single top-level outer closure scope to eliminate variable shadowing and temporal dead zone (TDZ) bugs.
+
+### Changed
+- **Changes Page Report Filtering**: Restricted the generation of the "Changes" tab inside report outputs solely to the "Discovery Report" to prevent needless bloat on all other audit formats (Streaming, Subtitle, Metadata, Duplication, and Quality scans).
+- **First-Scan No-Changes Logic**: Configured the change-tracking algorithm to suppress writing any file addition, move, or deletion entries into the changes list on the very first initial library scan (when the database is completely empty), ensuring a clean initial baseline state.
+
+## [1.4.25] - 2026-07-19
+
+### Fixed
+- **Startup & Post-Scan UI Freeze Resolution**: Identified and eliminated a critical $O(N^2)$ algorithmic bottleneck in duplicate detection (`getDuplicatePairRows`) that caused the application window to freeze during initial database load on launch and after completing library scans:
+  - **$O(N)$ Theme Song Identification**: Refactored the `isPlexThemeMusic` logic to precompute a hash set of directories containing non-music files. This transformed the nested inner linear loop lookup into a highly performant $O(1)$ set membership test.
+  - **Memory-Safe Metadata Parsing Caching**: Integrated a module-scope `WeakMap` cache within `parseVideoMetadata` to memoize the regex parsing of file naming conventions per `MediaItem` reference. This completely eliminates redundant CPU-heavy text extraction passes during subsequent component re-renders.
+  - **Empty-Name Collision Protection**: Implemented a fallback unique key generator for items with missing or empty filenames, preventing unparseable entries from merging into massive grouping blocks that trigger exponential calculation spikes.
+  - **Robust Nil-Pointer Guarding**: Added strict defensive checks against null, undefined, or malformed filenames across all duplicate matching helpers (`cleanVideoName`, `cleanMusicTrack`, `cleanArtist`, `getVersionSuffix`, `getMusicProperties`) to completely insulate the React renderer from runtime crashes.
+
 ## [1.4.24] - 2026-07-19
 
 ### Removed

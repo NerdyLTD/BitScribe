@@ -65,23 +65,16 @@ const isGenericVideoName = (filename: string): boolean => {
   return false;
 };
 
-const isPlexThemeMusic = (item: MediaItem, allItems: MediaItem[]) => {
+const isPlexThemeMusic = (item: MediaItem, nonMusicDirs: Set<string>) => {
+  if (!item || !item.filename) return false;
   if (item.filename.toLowerCase() !== "theme.mp3") return false;
+  if (!item.filePath) return false;
   
   const lastSlashIdx = Math.max(item.filePath.lastIndexOf("/"), item.filePath.lastIndexOf("\\"));
   if (lastSlashIdx === -1) return false;
   const itemDir = item.filePath.substring(0, lastSlashIdx);
 
-  return allItems.some(other => {
-    if (other.id === item.id) return false;
-    if (isMusicCategory(other.category) || other.category === "Corrupted" || other.category === "Static") return false;
-    
-    const otherLastSlashIdx = Math.max(other.filePath.lastIndexOf("/"), other.filePath.lastIndexOf("\\"));
-    if (otherLastSlashIdx === -1) return false;
-    const otherDir = other.filePath.substring(0, otherLastSlashIdx);
-    
-    return otherDir === itemDir;
-  });
+  return nonMusicDirs.has(itemDir);
 };
 
 export function getDuplicatePairRows(items: MediaItem[], rules: RuleCriteria): DuplicatePairRow[] {
@@ -94,6 +87,7 @@ export function getDuplicatePairRows(items: MediaItem[], rules: RuleCriteria): D
   }
 
   const cleanVideoName = (filename: string, item?: MediaItem) => {
+    if (!filename) return "";
     let cleaned = filename
       .replace(/\.[a-zA-Z0-9]+$/, '') // strip extension
       .replace(/[-_.(](1080p|720p|4k|2160p|x264|x265|hevc|h264|h265|av1|bluray|web-?dl|webrip|dd5\.1|dts|aac|truehd|hdr|dovi|remux)[-_.)]*/gi, '') // strip codecs/res/ratings
@@ -102,6 +96,10 @@ export function getDuplicatePairRows(items: MediaItem[], rules: RuleCriteria): D
       .trim()
       .toLowerCase();
       
+    if (!cleaned) {
+      return `unique_video_empty_${item ? item.id : Math.random()}`;
+    }
+
     if (item) {
       const parts = (item.filePath || "").split(/[\\\/]/).filter(Boolean);
       const getParentMediaNameLocal = () => {
@@ -161,6 +159,7 @@ export function getDuplicatePairRows(items: MediaItem[], rules: RuleCriteria): D
   };
 
   const cleanMusicTrack = (title: string) => {
+    if (!title) return "";
     return title
       .replace(/\.[a-zA-Z0-9]+$/, '')
       .replace(/^\d+[-_.\s]+/, '')
@@ -171,11 +170,12 @@ export function getDuplicatePairRows(items: MediaItem[], rules: RuleCriteria): D
   };
 
   const cleanArtist = (artist: string) => {
+    if (!artist) return "";
     return artist.replace(/[^a-zA-Z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
   };
 
   const getVersionSuffix = (title: string, filename: string): string => {
-    const combined = `${title} ${filename}`.toLowerCase();
+    const combined = `${title || ""} ${filename || ""}`.toLowerCase();
     const markers: string[] = [];
 
     if (/\b(acoustic|unplugged)\b/.test(combined)) {
@@ -356,11 +356,26 @@ export function getDuplicatePairRows(items: MediaItem[], rules: RuleCriteria): D
   }
 
   if (isMusicActive) {
-    const musicItems = items.filter(it => isMusicCategory(it.category) && !isPlexThemeMusic(it, items));
+    const nonMusicDirs = new Set<string>();
+    items.forEach(other => {
+      if (isMusicCategory(other.category) || other.category === "Corrupted" || other.category === "Static") return;
+      if (!other.filePath) return;
+      const otherLastSlashIdx = Math.max(other.filePath.lastIndexOf("/"), other.filePath.lastIndexOf("\\"));
+      if (otherLastSlashIdx !== -1) {
+        nonMusicDirs.add(other.filePath.substring(0, otherLastSlashIdx));
+      }
+    });
+
+    const musicItems = items.filter(it => isMusicCategory(it.category) && !isPlexThemeMusic(it, nonMusicDirs));
     const musicGroups = new Map<string, MediaItem[]>();
 
     musicItems.forEach(item => {
       const { title, artist, versionSuffix } = getMusicProperties(item);
+      if (!title) {
+        const uniqueKey = `unique_music_empty_${item.id}`;
+        musicGroups.set(uniqueKey, [item]);
+        return;
+      }
       const parts = (item.filePath || "").split(/[\\/]/).filter(Boolean);
       const parentDir = parts.length > 1 ? parts[parts.length - 2].toLowerCase() : "unknown_dir";
       const baseKey = artist === 'unknown' ? `unknown_${parentDir}_${title}` : `${artist} - ${title}`;
