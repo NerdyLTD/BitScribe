@@ -1390,8 +1390,8 @@ export async function exportMediaLibraryToHTML(
         if (cat !== 'Corrupted' && cat !== 'Static') {
           const aCodecs = i["Audio Codecs"] || "";
           if (aCodecs) {
-            aCodecs.split(/\s*\|\s*/).forEach(part => {
-              const firstWord = part.trim().split(/[\s(]/)[0]?.toString()?.toUpperCase();
+            aCodecs.split(/\\s*\\|\\s*/).forEach(part => {
+              const firstWord = part.trim().split(/[\\s(]/)[0]?.toString()?.toUpperCase();
               if (firstWord) {
                 audioCounts[firstWord] = (audioCounts[firstWord] || 0) + 1;
               }
@@ -1482,8 +1482,8 @@ export async function exportMediaLibraryToHTML(
       if (cat !== 'Corrupted' && cat !== 'Static') {
         const aCodecs = i["Audio Codecs"] || "";
         if (aCodecs) {
-          aCodecs.split(/\s*\|\s*/).forEach(part => {
-            const firstWord = part.trim().split(/[\s(]/)[0]?.toString()?.toUpperCase();
+          aCodecs.split(/\\s*\\|\\s*/).forEach(part => {
+            const firstWord = part.trim().split(/[\\s(]/)[0]?.toString()?.toUpperCase();
             if (firstWord) {
               audioCounts[firstWord] = (audioCounts[firstWord] || 0) + 1;
             }

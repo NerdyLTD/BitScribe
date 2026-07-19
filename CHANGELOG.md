@@ -5,6 +5,7 @@
 - **Enhanced Song Version Duplicate Protection**: Improved the duplicate detection engine (`duplicateHelper.ts`) to recognize special version descriptors (e.g. "Acoustic", "Live", "Remix", etc.), avoiding false positive duplicate flags on legitimate unique song recordings.
 
 ### Fixed
+- **HTML Report Regex Backslash Escaping**: Resolved an issue where backslashes inside regexes (`\s` and `\|`) in the HTML generator's template were stripped during output formatting. Double-escaping the regex parameters ensures that codec splits and whitespace filters execute correctly on the static report load.
 - **Excised HandBrake Presets**: Completely removed the failed HandBrake Presets explorer experiment from the codebase and help panels, restoring a clean help tab environment.
 - **Robust Cross-Platform Directory Walking**: Updated Tauri WalkDir commands (`src-tauri/src/lib.rs`) with symlink following support (`follow_links(true)`) and defensive error/permission handling to prevent scanning crashes on inaccessible directories.
 - **Interactive Duplicates Report Filtering**: Implemented "All", "Video", and "Music" interactive filter buttons directly inside the exported Media Duplicates HTML report and synchronized it with the underlying data table rendering.
