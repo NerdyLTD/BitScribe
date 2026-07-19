@@ -50,7 +50,7 @@ export async function getDiagnostic() {
         return {
             platform: "web",
             arch: "unknown",
-            appVersion: import.meta.env.APP_VERSION || "1.4.3",
+            appVersion: import.meta.env.APP_VERSION || "1.4.24",
             ffprobePath: "simulated"
         };
     }

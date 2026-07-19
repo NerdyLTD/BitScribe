@@ -1,3 +1,8 @@
+## [1.4.24] - 2026-07-19
+
+### Removed
+- **HandBrake Presets Feature**: Completely removed the HandBrake Transcoding Presets panel, instructions, states, and the underlying preset generation utility (`src/utils/handbrakePresets.ts`) from the application.
+
 ## [1.4.23] - 2026-07-18
 
 ### Fixed
