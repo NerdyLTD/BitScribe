@@ -998,7 +998,6 @@ export async function exportMediaLibraryToHTML(
   let sortDesc = false;
   let currentPage = 1;
   let pageSize = 50;
-  let activeDupFilter = "All";
   let visibleColumns = { ...INITIAL_COLUMNS };
   let colWidths = {};
 
@@ -1012,12 +1011,10 @@ export async function exportMediaLibraryToHTML(
   const isQuality = SCAN_TYPE === "Anomaly Scan";
   const isSubtitle = SCAN_TYPE === "Subtitle Scan";
 
-  const isMusicCat = (cat) => ["Music Albums", "Soundtracks", "Music Compilations", "Music", "audio"].includes(cat || "");
-
   const getCategoryGroupInBrowser = (category) => {
     if (!category) return 'Other';
-    const isMusic = ["Music Albums", "Soundtracks", "Music Compilations", "Music"].includes(category);
-    if (isMusic) return 'Music';
+    const isMusicCat = ["Music Albums", "Soundtracks", "Music Compilations", "Music"].includes(category);
+    if (isMusicCat) return 'Music';
     const lower = category.toLowerCase();
     
     if (lower.includes('movie') || lower.includes('documentar') || lower.includes('docuseries') || lower.includes('shorts') || lower === 'plays' || lower === 'specials' || lower.includes('music video')) {
@@ -1213,6 +1210,7 @@ export async function exportMediaLibraryToHTML(
     const container = document.getElementById('metrics-container');
     if (!container) return;
 
+    const isMusicCat = (cat) => ["Music Albums", "Soundtracks", "Music Compilations", "Music", "audio"].includes(cat || "");
     const baseItems = ALL_DATA.filter(i => {
       const isMusic = isMusicCat(i.category);
       if (isMusic && (SCAN_TYPE === "Subtitle Scan" || SCAN_TYPE === "Stream Audit Scan" || SCAN_TYPE === "Video Metadata Scan" || SCAN_TYPE === "Quality Audit")) return false;
@@ -1230,20 +1228,12 @@ export async function exportMediaLibraryToHTML(
     let html = '';
 
     if (SCAN_TYPE === "Duplication Scan") {
-      const filteredItems = targetItems.filter(i => {
-        if (activeDupFilter === "All") return true;
-        const isMusic = isMusicCat(i.category);
-        if (activeDupFilter === "Music") return isMusic;
-        if (activeDupFilter === "Video") return !isMusic;
-        return true;
-      });
-
-      const totalPairs = filteredItems.length;
+      const totalPairs = targetItems.length;
       let videoPairs = 0;
       let musicPairs = 0;
       let totalSavedGB = 0;
 
-      filteredItems.forEach(i => {
+      targetItems.forEach(i => {
         const cat = i.category || '';
         const isMusic = ["Music", "Music Albums", "Soundtracks", "Music Compilations"].includes(cat);
         if (isMusic) {
@@ -1263,9 +1253,9 @@ export async function exportMediaLibraryToHTML(
       }
 
       html = [
-        '<div class="glass-panel p-4 rounded-xl transition-all duration-300 ' + (activeDupFilter === "All" ? "border-indigo-500/40 bg-indigo-950/20 shadow-md shadow-indigo-500/5" : "") + '"><div class="text-3xl font-bold text-slate-100">'+totalPairs+'</div><div class="text-xs text-slate-400 uppercase tracking-wider mt-1">Total Duplicates</div></div>',
-        '<div class="glass-panel p-4 rounded-xl transition-all duration-300 ' + (activeDupFilter === "Video" ? "border-blue-500/40 bg-blue-950/20 shadow-md shadow-blue-500/5" : "") + '"><div class="text-3xl font-bold text-slate-100">'+videoPairs+'</div><div class="text-xs text-slate-400 uppercase tracking-wider mt-1">Video Duplicates</div></div>',
-        '<div class="glass-panel p-4 rounded-xl transition-all duration-300 ' + (activeDupFilter === "Music" ? "border-emerald-500/40 bg-emerald-950/20 shadow-md shadow-emerald-500/5" : "") + '"><div class="text-3xl font-bold text-slate-100">'+musicPairs+'</div><div class="text-xs text-slate-400 uppercase tracking-wider mt-1">Audio Duplicates</div></div>',
+        '<div class="glass-panel p-4 rounded-xl"><div class="text-3xl font-bold text-slate-100">'+totalPairs+'</div><div class="text-xs text-slate-400 uppercase tracking-wider mt-1">Total Duplicates</div></div>',
+        '<div class="glass-panel p-4 rounded-xl"><div class="text-3xl font-bold text-slate-100">'+videoPairs+'</div><div class="text-xs text-slate-400 uppercase tracking-wider mt-1">Video Duplicates</div></div>',
+        '<div class="glass-panel p-4 rounded-xl"><div class="text-3xl font-bold text-slate-100">'+musicPairs+'</div><div class="text-xs text-slate-400 uppercase tracking-wider mt-1">Music Duplicates</div></div>',
         '<div class="glass-panel p-4 rounded-xl border-emerald-900/50"><div class="text-3xl font-bold text-emerald-400">'+formatSize(totalSavedGB)+'</div><div class="text-xs text-slate-400 uppercase tracking-wider mt-1">Potential Space Savings</div></div>'
       ].join('');
 
@@ -1451,6 +1441,8 @@ export async function exportMediaLibraryToHTML(
     renderCodecDistribution();
   }
 
+  const isMusicCat = (cat) => ["Music Albums", "Soundtracks", "Music Compilations", "Music", "audio"].includes(cat || "");
+
   function renderCodecDistribution() {
     const codecContainer = document.getElementById('codec-metrics-container');
     if (!codecContainer) return;
@@ -1549,22 +1541,13 @@ export async function exportMediaLibraryToHTML(
     const container = document.getElementById('category-filters');
     if (!container) return;
     if (SCAN_TYPE === "Duplication Scan") {
-      const filters = [
-        { id: "All", label: "All Duplicates", activeClass: "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30", normalClass: "bg-slate-800 text-slate-300 hover:bg-slate-700" },
-        { id: "Video", label: "Video Only", activeClass: "bg-blue-600 text-white shadow-lg shadow-blue-500/30", normalClass: "bg-slate-800 text-slate-300 hover:bg-slate-700" },
-        { id: "Music", label: "Audio Only", activeClass: "bg-emerald-600 text-white shadow-lg shadow-emerald-500/30", normalClass: "bg-slate-800 text-slate-300 hover:bg-slate-700" }
-      ];
-      container.innerHTML = filters.map(f => {
-        const isAct = activeDupFilter === f.id;
-        const cls = isAct ? f.activeClass : f.normalClass;
-        return '<button data-filter="'+f.id+'" onclick="setDupFilter(this.getAttribute(\'data-filter\'))" class="px-4 py-1.5 rounded-full text-sm font-medium transition-all '+cls+'">'+f.label+'</button>';
-      }).join('');
+      container.innerHTML = '';
       return;
     }
     container.innerHTML = orderedCats.map(c => {
       const isAct = activeCategory === c;
       const cls = isAct ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700';
-      return '<button data-category="'+c.replace(/"/g, '&quot;')+'" onclick="setCategory(this.getAttribute(\'data-category\'))" class="px-4 py-1.5 rounded-full text-sm font-medium transition-all '+cls+'">'+c+'</button>';
+      return '<button onclick="setCategory(&quot;'+c.replace(/"/g, '&quot;')+'&quot;)" class="px-4 py-1.5 rounded-full text-sm font-medium transition-all '+cls+'">'+c+'</button>';
     }).join('');
   }
 
@@ -1580,21 +1563,13 @@ export async function exportMediaLibraryToHTML(
     renderTable();
   };
 
-  window.setDupFilter = function(filter) {
-    activeDupFilter = filter;
-    currentPage = 1;
-    renderFilters();
-    renderMetrics();
-    renderTable();
-  };
-
   function renderColumnToggles() {
     const container = document.getElementById('column-toggles');
     if (!container) return;
     container.innerHTML = ALL_POSSIBLE_HEADERS.map(col => {
       const chk = visibleColumns[col] !== false ? 'checked' : '';
       return '<label class="flex items-center gap-2 p-2 hover:bg-slate-700/50 rounded cursor-pointer text-sm text-slate-200">' +
-        '<input type="checkbox" '+chk+' data-column="'+col.replace(/"/g, '&quot;')+'" onchange="toggleColumn(this.getAttribute(\'data-column\'), this.checked)" class="rounded border-slate-600 bg-slate-900 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-slate-800">' +
+        '<input type="checkbox" '+chk+' onchange="toggleColumn(&quot;'+col.replace(/"/g, '&quot;')+'&quot;, this.checked)" class="rounded border-slate-600 bg-slate-900 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-slate-800">' +
         (col === 'Duplicate Path' ? 'Path' : col) + '</label>';
     }).join('');
   }
@@ -1673,13 +1648,7 @@ export async function exportMediaLibraryToHTML(
 
   function renderTable() {
     let filtered = SCAN_TYPE === "Duplication Scan" 
-      ? items.filter(i => {
-          if (activeDupFilter === "All") return true;
-          const isMusic = isMusicCat(i.category);
-          if (activeDupFilter === "Music") return isMusic;
-          if (activeDupFilter === "Video") return !isMusic;
-          return true;
-        })
+      ? items 
       : items.filter(i => (i.category || "Other") === activeCategory);
 
     filtered.sort((a, b) => {
@@ -1726,7 +1695,7 @@ export async function exportMediaLibraryToHTML(
           thClass += ' bg-slate-900/60 text-slate-400 border-slate-700';
         }
 
-        return '<th onclick="setSort(this.getAttribute(\'data-col\'))" data-col="'+h.replace(/"/g, '&quot;')+'" '+widthStyle+' class="'+thClass+'">'+displayLabel+'</th>';
+        return '<th onclick="setSort(&quot;'+h.replace(/"/g, '&quot;')+'&quot;)" data-col="'+h.replace(/"/g, '&quot;')+'" '+widthStyle+' class="'+thClass+'">'+displayLabel+'</th>';
       }).join('') + '</tr>';
 
     const totalPages = Math.ceil(filtered.length / pageSize) || 1;

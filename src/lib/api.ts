@@ -50,7 +50,7 @@ export async function getDiagnostic() {
         return {
             platform: "web",
             arch: "unknown",
-            appVersion: import.meta.env.APP_VERSION || "1.4.27",
+            appVersion: import.meta.env.APP_VERSION || "1.4.3",
             ffprobePath: "simulated"
         };
     }
@@ -251,7 +251,7 @@ function getTrackLanguage(stream: any): string {
     return lang ? lang.substring(0, 3) : "und";
 }
 
-export async function scanDirectories(paths: string[], rules: any, onStart: (total: number) => void, onLog: (msg: string) => void, onProgress: (prog: any) => void, isResume: boolean = false, isQuickRefresh: boolean = false, signal?: AbortSignal) {
+export async function scanDirectories(paths: string[], rules: any, onStart: (total: number) => void, onLog: (msg: string) => void, onProgress: (prog: any) => void, isResume: boolean = false) {
     onLog("Initializing scan...");
     
     // ITEM 1: Centralized cross-platform path normalization.
@@ -263,66 +263,42 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
 
     let existingPaths = new Set<string>();
     let existingFilesMap = new Map<string, any>();
-    onLog("Loading existing database files to enable incremental scanning...");
-    try {
-        const dbFiles = await getDbFiles();
-        dbFiles.forEach(f => {
-            const normPath = normalizePath(f.filePath || f.id);
-            existingPaths.add(normPath);
-            existingFilesMap.set(normPath, f);
-        });
-        onLog(`Found ${existingPaths.size} already scanned files for change detection.`);
-    } catch (e) {
-        onLog("Failed to load existing database. Performing fresh scans.");
+    if (isResume) {
+        onLog("Loading existing database to determine resume point...");
+        try {
+            const dbFiles = await getDbFiles();
+            dbFiles.forEach(f => {
+                const normPath = normalizePath(f.filePath || f.id);
+                existingPaths.add(normPath);
+                existingFilesMap.set(normPath, f);
+            });
+            onLog(`Found ${existingPaths.size} already scanned files to skip.`);
+        } catch (e) {
+            onLog("Failed to load DB for resume. Starting fresh.");
+        }
     }
     const allowedExtensions = ['.mkv', '.mp4', '.avi', '.mov', '.wmv', '.flv', '.webm', '.m4v', '.mpg', '.mpeg', '.m2ts', '.ts', '.vob', '.mxf', '.mp3', '.flac', '.m4a', '.wav', '.aac', '.ogg', '.wma', '.alac', '.m4b', '.ape', '.opus', '.mka'];
     
     let allFiles: string[] = [];
     for (const p of paths) {
-        if (signal?.aborted) {
-            onLog("Scan aborted by user during directory walk.");
-            return;
-        }
         onLog(`Walking directory: ${p}`);
-        try {
-            const files = isTauri() 
-                ? await invoke<{path: string, size: number}[]>("walk_dir", { path: p }) 
-                : MOCK_MEDIA_LIBRARY.filter(m => {
-                    const normFile = m.filePath.replace(/\\/g, '/').toLowerCase();
-                    const normPath = p.replace(/\\/g, '/').toLowerCase();
-                    const pathWithSlash = normPath.endsWith('/') ? normPath : normPath + '/';
-                    return normFile.startsWith(pathWithSlash) || normFile === normPath;
-                  }).map(m => ({ path: m.filePath, size: Math.round((m.sizeGB || 0) * 1024 * 1024 * 1024) }));
-            let validCount = 0;
-            for (const fileObj of files) {
-                const file = fileObj.path;
-                const lower = file.toLowerCase();
-                if (allowedExtensions.some(ext => lower.endsWith(ext))) {
-                    allFiles.push(file);
-                    const normPath = normalizePath(file);
-                    // Temporarily store the physical size in the map so we can use it later
-                    existingFilesMap.set(normPath + "_physical_size", fileObj.size);
-                    validCount++;
-                }
+        const files = isTauri() ? await invoke<{path: string, size: number}[]>("walk_dir", { path: p }) : [];
+        let validCount = 0;
+        for (const fileObj of files) {
+            const file = fileObj.path;
+            const lower = file.toLowerCase();
+            if (allowedExtensions.some(ext => lower.endsWith(ext))) {
+                allFiles.push(file);
+                const normPath = normalizePath(file);
+                // Temporarily store the physical size in the map so we can use it later
+                existingFilesMap.set(normPath + "_physical_size", fileObj.size);
+                validCount++;
             }
-            onLog(`Found ${validCount} valid media files in ${p}`);
-        } catch (err: any) {
-            let errorMsg = err.message || String(err);
-            onLog(`ERROR walking directory "${p}": ${errorMsg}`);
-            
-            // Translate technical file errors to descriptive user-readable ones
-            if (errorMsg.includes("does not exist") || errorMsg.includes("No such file")) {
-                errorMsg = `The directory "${p}" does not exist. Please double-check the path configuration.`;
-            } else if (errorMsg.includes("Permission denied") || errorMsg.includes("access") || errorMsg.includes("inaccessible")) {
-                errorMsg = `Permission denied accessing directory "${p}". Please check read permissions.`;
-            } else {
-                errorMsg = `Failed to access folder "${p}": ${errorMsg}`;
-            }
-            throw new Error(errorMsg);
         }
+        onLog(`Found ${validCount} valid media files in ${p}`);
     }
 
-    if (!isResume) {
+    if (!isResume && isTauri()) {
         onLog("Pruning database and detecting file moves/deletions...");
         try {
             const existingDbFiles = await getDbFiles();
@@ -353,7 +329,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 return !existingDbFilesSet.has(normalizePath(file));
             });
 
-            if (existingDbFiles.length > 0 && (ghostFiles.length > 0 || newFilesOnDisk.length > 0)) {
+            if (ghostFiles.length > 0 || newFilesOnDisk.length > 0) {
                 const changes: any[] = [];
                 const today = new Date();
                 const formatDateMMDDYY = (date: Date) => {
@@ -455,7 +431,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
     // Use all but one core to prevent system freezing, fallback to 1 if needed
     const logicalCores = typeof navigator !== 'undefined' && navigator.hardwareConcurrency ? navigator.hardwareConcurrency : 4;
     const CONCURRENCY = Math.max(1, logicalCores - 1);
-    const BATCH_SIZE = 500;
+    const BATCH_SIZE = 50;
     
     // ITEM 2: Concurrency & Database Write Safety.
     // Each worker has a local `batch` array to write records to SQLite in chunks of `BATCH_SIZE`.
@@ -466,124 +442,38 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
     const worker = async () => {
         let batch: MediaItem[] = [];
         while (currentIndex < allFiles.length) {
-            if (signal?.aborted) {
-                break;
-            }
             const i = currentIndex++;
             const file = allFiles[i];
-            let skipFfprobe = false;
-            let existingItem: MediaItem | undefined = undefined;
+            let skipFile = false;
             const normPath = normalizePath(file);
-            
             if (existingPaths.has(normPath)) {
-                existingItem = existingFilesMap.get(normPath);
-                try {
-                    const physicalSize = existingFilesMap.get(normPath + "_physical_size");
-                    const currentSizeGB = (physicalSize || 0) / (1024 * 1024 * 1024);
-                    const storedSizeGB = existingItem?.sizeGB || 0;
-                    
-                    // If file size matches within 1MB, skip ffprobe
-                    if (Math.abs(currentSizeGB - storedSizeGB) <= 0.001) {
-                        skipFfprobe = true;
-                    } else {
-                        onLog(`Change detected for ${file}: Size changed from ${storedSizeGB.toFixed(3)}GB to ${currentSizeGB.toFixed(3)}GB. Re-probing.`);
+                if (isResume) {
+                    try {
+                        const physicalSize = existingFilesMap.get(normPath + "_physical_size");
+                        const currentSizeGB = (physicalSize || 0) / (1024 * 1024 * 1024);
+                        const storedSizeGB = existingFilesMap.get(normPath)?.sizeGB || 0;
+                        
+                        // We check difference up to 1MB
+                        if (Math.abs(currentSizeGB - storedSizeGB) > 0.001) {
+                            skipFile = false;
+                            onLog(`Change detected for ${file}: Size changed from ${storedSizeGB.toFixed(3)}GB to ${currentSizeGB.toFixed(3)}GB.`);
+                        } else {
+                            skipFile = true;
+                        }
+                    } catch (err) {
+                        skipFile = true;
                     }
-                } catch (err) {
-                    skipFfprobe = false;
+                } else {
+                    skipFile = true;
                 }
             }
 
-            if (skipFfprobe && existingItem) {
-                // Skip ffprobe but still re-evaluate streaming compatibility with active rules
-                const evalResult = evaluatePlexCompatibility(existingItem, rules, false, true);
-                existingItem.streamFriendlyLevel = evalResult.level as any;
-                existingItem.streamFriendlyReason = evalResult.reason;
-                existingItem.streamFriendlySuggestion = evalResult.suggestion;
-                existingItem.streamFriendlyEvaluated = Date.now();
-                
-                onProgress({ current: i + 1, total: allFiles.length, item: existingItem });
-                batch.push(existingItem);
-                
-                if (batch.length >= BATCH_SIZE) {
-                    const toSave = batch.splice(0, BATCH_SIZE);
-                    await saveDbFiles(toSave);
-                }
+            if (skipFile) {
+                onProgress({ current: i + 1, total: allFiles.length, item: null });
                 continue;
             }
             onLog(`Probing (${i+1}/${allFiles.length}): ${file.substring(Math.max(0, file.length - 40))}`);
             
-            if (!isTauri()) {
-                const mockItem = MOCK_MEDIA_LIBRARY.find(m => normalizePath(m.filePath) === normPath);
-                if (mockItem) {
-                    const isMusic = mockItem.category === 'Music' || mockItem.category === 'Music Albums' || mockItem.category === 'Soundtracks' || mockItem.category === 'Music Compilations';
-                    const isAudiobook = mockItem.category === 'Audiobooks';
-                    const isPodcast = mockItem.category === 'Podcasts';
-                    const isAudioOnly = isMusic || isAudiobook || isPodcast;
-
-                    let vBitDepth: string | undefined = undefined;
-                    let aSampleRate = 48000;
-                    let cCount = 0;
-
-                    if (!isAudioOnly) {
-                      const resolution = (mockItem.videoResolution || "").toUpperCase();
-                      const filename = (mockItem.filename || "").toUpperCase();
-                      const hasHDR = !!mockItem.hdrFormat && mockItem.hdrFormat !== 'SDR';
-                      if (resolution.includes('4K') || resolution.includes('2160') || filename.includes('2160P') || filename.includes('4K') || hasHDR) {
-                        vBitDepth = "10-bit";
-                      } else {
-                        if (filename.includes('10BIT') || mockItem.category === 'Anime' || mockItem.category === 'Anime Movies' || mockItem.category === 'Anime TV Shows') {
-                          vBitDepth = "10-bit";
-                        } else {
-                          vBitDepth = "8-bit";
-                        }
-                      }
-                      aSampleRate = 48000;
-                      if (mockItem.category === 'Movie' || mockItem.category === 'Movies' || mockItem.category === 'Movies (4K)' || mockItem.category === 'Movies (1080p)') {
-                        const hash = mockItem.filename.length;
-                        cCount = hash % 2 === 0 ? (12 + (hash % 17)) : 0;
-                      } else if (mockItem.category === 'TV' || mockItem.category === 'TV Shows' || mockItem.category === 'TV Shows (4K)' || mockItem.category === 'TV Shows (1080p)') {
-                        const hash = mockItem.filename.length;
-                        cCount = hash % 3 === 0 ? (4 + (hash % 5)) : 0;
-                      }
-                    } else {
-                      const isFlac = (mockItem.container || "").toLowerCase() === 'flac';
-                      const hash = mockItem.filename.length;
-                      if (isFlac) {
-                        aSampleRate = hash % 2 === 0 ? 96000 : 44100;
-                      } else {
-                        aSampleRate = 44100;
-                      }
-                    }
-
-                    const hydratedItem: MediaItem = {
-                        ...mockItem,
-                        durationMins: mockItem.durationMins || 116,
-                        year: mockItem.year || 2010,
-                        videoBitrateMbps: mockItem.videoBitrateMbps || ((mockItem as any).videoBitrate ? (mockItem as any).videoBitrate / 1000 : 12.5),
-                        topLevelFolder: mockItem.topLevelFolder || getTopLevelFolder(mockItem.filePath, paths),
-                        videoBitDepth: mockItem.videoBitDepth || vBitDepth,
-                        audioSampleRate: mockItem.audioSampleRate || aSampleRate,
-                        chapterCount: mockItem.chapterCount !== undefined ? mockItem.chapterCount : cCount,
-                        streamFriendlyLevel: "unknown",
-                        streamFriendlyReason: "",
-                        streamFriendlySuggestion: "",
-                        streamFriendlyEvaluated: rules.useDiscoveryPreset ? 0 : 1
-                    };
-                    
-                    const evalResult = evaluatePlexCompatibility(hydratedItem, rules, false, true);
-                    hydratedItem.streamFriendlyLevel = evalResult.level as any;
-                    hydratedItem.streamFriendlyReason = evalResult.reason;
-                    hydratedItem.streamFriendlySuggestion = evalResult.suggestion;
-                    hydratedItem.streamFriendlyEvaluated = Date.now();
-                    
-                    onProgress({ current: i + 1, total: allFiles.length, item: hydratedItem });
-                    batch.push(hydratedItem);
-                    continue;
-                } else {
-                    throw new Error("Simulated mock file metadata not found");
-                }
-            }
-
             try {
                 // Securely execute ffprobe sidecar with a strict 15-second timeout safeguard to prevent hangs
                 const probePromise = Command.sidecar('bin/ffprobe', [

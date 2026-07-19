@@ -2249,16 +2249,16 @@ export default function App() {
     }
     try {
       const activePaths = scanPaths.filter((p) => p.enabled).map(p => p.path);
-      const finalItemsMap = new Map<string, MediaItem>();
-      const corruptItemsMap = new Map<string, MediaItem>();
+      const finalItems: MediaItem[] = [];
+      const corruptItems: MediaItem[] = [];
       if (localStorage.getItem("bitscribe_scan_in_progress") === "true") {
           try {
               const existingFiles = await getDbFiles();
               existingFiles.forEach(f => {
                   if (f.category === "Corrupted" || (f.category && f.category.toLowerCase().includes("corrupt"))) {
-                      corruptItemsMap.set(f.id, f);
+                      corruptItems.push(f);
                   } else {
-                      finalItemsMap.set(f.id, f);
+                      finalItems.push(f);
                   }
               });
           } catch (e) {
@@ -2289,7 +2289,7 @@ export default function App() {
         }
       };
 
-      const isResumingScan = isResuming;
+      const isResumingScan = localStorage.getItem("bitscribe_scan_in_progress") === "true";
       await scanDirectories(activePaths, customRules, 
           (total) => {
               logsBuffer.unshift(`Found ${total} files. Probing started...`);
@@ -2308,62 +2308,33 @@ export default function App() {
               }
               if (prog.item) {
                   if (prog.error) {
-                      corruptItemsMap.set(prog.item.id, prog.item);
+                      const idx = corruptItems.findIndex(i => i.id === prog.item.id);
+                      if (idx >= 0) corruptItems[idx] = prog.item;
+                      else corruptItems.push(prog.item);
                   } else {
-                      finalItemsMap.set(prog.item.id, prog.item);
+                      const idx = finalItems.findIndex(i => i.id === prog.item.id);
+                      if (idx >= 0) finalItems[idx] = prog.item;
+                      else finalItems.push(prog.item);
                       scannedCount++;
                   }
               }
           }
-      , isResumingScan, isQ, abortControllerRef.current?.signal || undefined);
+      , isResumingScan);
       
-      if (abortControllerRef.current?.signal.aborted) {
-          // Scan was paused or cancelled. Load whatever was scanned so far without completing the scan sequence or clearing resume state
-          const reloadedDbFiles = await getDbFiles();
-          const finalItemsLoaded: MediaItem[] = [];
-          const corruptItemsLoaded: MediaItem[] = [];
-          reloadedDbFiles.forEach(f => {
-              if (f.category === "Corrupted" || (f.category && f.category.toLowerCase().includes("corrupt"))) {
-                  corruptItemsLoaded.push(f);
-              } else {
-                  finalItemsLoaded.push(f);
-              }
-          });
-          flushUiUpdates(true);
-          setIsScanning(false);
-          setCurrentScanFile("");
-          setScannedFilesList(finalItemsLoaded);
-          setScannedFiles(finalItemsLoaded);
-          setCorruptFiles(corruptItemsLoaded);
-          return;
-      }
-      
-      // Reload final lists from persistent database to guarantee pruned/deleted ghost files are correctly omitted in React state
-      const reloadedDbFiles = await getDbFiles();
-      const finalItemsLoaded: MediaItem[] = [];
-      const corruptItemsLoaded: MediaItem[] = [];
-      reloadedDbFiles.forEach(f => {
-          if (f.category === "Corrupted" || (f.category && f.category.toLowerCase().includes("corrupt"))) {
-              corruptItemsLoaded.push(f);
-          } else {
-              finalItemsLoaded.push(f);
-          }
-      });
-
       flushUiUpdates(true);
       setIsScanning(false);
       setCurrentScanFile("");
       setScanProgress(100);
-      setScannedFilesList(finalItemsLoaded);
-      setScannedFiles(finalItemsLoaded);
-      setCorruptFiles(corruptItemsLoaded);
+      setScannedFilesList(finalItems);
+      setScannedFiles(finalItems);
+      setCorruptFiles(corruptItems);
       if (startTimeRef.current) {
         setLastScanDuration(Date.now() - startTimeRef.current);
       }
       setScanLogs([
         isQ 
           ? `Scan complete. ${scannedCount} changed/new files were checked and updated.`
-          : `Scanning operations finished! ${finalItemsLoaded.length} files parsed.`,
+          : `Scanning operations finished! ${finalItems.length} files parsed.`,
         ...logsBuffer.slice(0, 5000),
       ]);
       setNotification({ type: 'success', message: isQ ? `Scan complete: ${scannedCount} new or changed files were updated in the database.` : `Successfully completed media library scan from ${activePaths.length} active paths!` });

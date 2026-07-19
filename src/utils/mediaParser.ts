@@ -1,7 +1,5 @@
 import { MediaItem } from "../types";
 
-const videoMetadataCache = new WeakMap<MediaItem, any>();
-
 export const EXTRAS_REGEX = /\b(extras|bonus(?: features)?|bonus disc|behind[ _\-]?the[ _\-]?scenes|featurettes|shorts|deleted[ _\-]?scenes|commentar(?:y|ies)|interview(?:s)?|promos|trailers|bloopers|gag[ _\-]?reel|outtakes)\b/i;
 
 export function extractSeasonNumber(dir: string): string | null {
@@ -219,20 +217,7 @@ export function cleanEmbeddedTitle(embTitle: string, showTitle?: string): string
 }
 
 export const parseVideoMetadata = (item: MediaItem) => {
-  if (!item) {
-    return {
-      title: "Unknown",
-      year: "-",
-      season: "-",
-      episode: "-",
-      epTitle: "-",
-    };
-  }
-  if (videoMetadataCache.has(item)) {
-    return videoMetadataCache.get(item);
-  }
-
-  const rawFilename = item.filename || "";
+  const rawFilename = item.filename;
   const rawName = rawFilename.replace(/\.[a-z0-9]+$/i, "");
 
   // Helper to extract case-insensitive tag values safely
@@ -527,14 +512,11 @@ export const parseVideoMetadata = (item: MediaItem) => {
     epTitle = cleanTitleText(epTitle, year);
   }
 
-  const result = {
+  return {
     title: titleStr,
     year: year,
     season: seasonNum,
     episode: episodeNum,
     epTitle: epTitle || "-",
   };
-
-  videoMetadataCache.set(item, result);
-  return result;
 };
