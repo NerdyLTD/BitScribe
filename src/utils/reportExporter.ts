@@ -1558,7 +1558,7 @@ export async function exportMediaLibraryToHTML(
       container.innerHTML = filters.map(f => {
         const isAct = activeDupFilter === f.id;
         const cls = isAct ? f.activeClass : f.normalClass;
-        return '<button onclick="setDupFilter(\''+f.id+'\')" class="px-4 py-1.5 rounded-full text-sm font-medium transition-all '+cls+'">'+f.label+'</button>';
+        return '<button onclick="setDupFilter(&quot;'+f.id+'&quot;)" class="px-4 py-1.5 rounded-full text-sm font-medium transition-all '+cls+'">'+f.label+'</button>';
       }).join('');
       return;
     }
