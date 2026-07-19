@@ -2465,7 +2465,7 @@ const handleCategoryToggle = (cat: string) => {
             {/* Enhanced Pagination */}
             {paginationControls}
             {/* Media List Grid */}
-            <div className={`overflow-x-auto max-w-full rounded-xl border border-slate-800 bg-[#14171F] transition-opacity duration-200 ${isPending ? 'opacity-50 pointer-events-none' : 'opacity-100'}`} style={{ resize: 'vertical', minHeight: '300px' }} id="table-scroll-container">
+            <div className={`overflow-auto max-w-full rounded-xl border border-slate-800 bg-[#14171F] transition-opacity duration-200 ${isPending ? 'opacity-50 pointer-events-none' : 'opacity-100'}`} style={{ resize: 'vertical', minHeight: '300px', maxHeight: 'calc(100vh - 300px)' }} id="table-scroll-container">
               {(() => {
   const group = selectedCategories.length > 0 ? getCategoryGroup(selectedCategories[0]) : 'Other';
   let headers = [];
@@ -2556,7 +2556,7 @@ const handleCategoryToggle = (cat: string) => {
               key={i} 
               id={`th-header-${h.key}`}
               onClick={() => handleSort(h.key)}
-              className="p-3 font-semibold select-none align-middle text-left cursor-pointer hover:bg-[#252b36] hover:text-slate-200 transition-colors border-r border-[#1e232e]/50 last:border-r-0 relative group" 
+              className="p-3 bg-[#1E232E] font-semibold select-none align-middle text-left cursor-pointer hover:bg-[#252b36] hover:text-slate-200 transition-colors border-r border-[#1e232e]/50 last:border-r-0 sticky top-0 z-20 group" 
               style={{ width: columnWidths[h.key] ? `${columnWidths[h.key]}px` : (h.width || '150px'), minWidth: '80px', maxWidth: '800px', overflow: 'hidden' }}
             >
               <div className="flex items-center justify-between gap-1 w-full pr-2">

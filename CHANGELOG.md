@@ -1,3 +1,9 @@
+## [1.4.27] - 2026-07-19
+
+### Added
+- **Sticky Table Header on Library Tab**: Implemented a highly requested usability enhancement for the media library grid view. The table header row is now locked and stays visible at the top of the viewport when scrolling down the media library list.
+- **Scrollable Resizable Table Container**: Configured the media list grid container with a flexible maximum height (`calc(100vh - 300px)`) and active scroll overlays to support seamless vertical navigation and layout persistence under custom user-resizes.
+
 ## [1.4.26] - 2026-07-19
 
 ### Fixed
