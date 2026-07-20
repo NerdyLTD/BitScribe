@@ -114,6 +114,9 @@ export const CATEGORY_ORDER = [
   'Photos',
   'Backgrounds',
   'Extras',
+  'Books',
+  'Comics',
+  'Manga',
   'Other',
   'Uncategorized',
   'Unrecognized',
@@ -121,8 +124,14 @@ export const CATEGORY_ORDER = [
   'Corrupted'
 ];
 
-export function getCategoryGroup(category: string): 'Music' | 'TV' | 'Movies' | 'Other' {
+export function isBookCategory(category: string | undefined): boolean {
+  if (!category) return false;
+  return category === 'Books' || category === 'Audiobooks' || category === 'Comics' || category === 'Manga' || category === 'Podcasts';
+}
+
+export function getCategoryGroup(category: string): 'Music' | 'TV' | 'Movies' | 'Books' | 'Other' {
   if (isMusicCategory(category)) return 'Music';
+  if (isBookCategory(category)) return 'Books';
   const lower = category.toLowerCase();
   
   if (lower.includes('movie') || lower.includes('documentar') || lower.includes('docuseries') || lower.includes('shorts') || lower === 'plays' || lower === 'specials' || lower.includes('music video')) {

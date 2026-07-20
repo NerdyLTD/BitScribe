@@ -76,9 +76,18 @@ function inferCategory(baseDirName: string, fileName: string, extName: string, f
     
     if (isAudioFile) {
       if (fileName.toLowerCase() === "theme.mp3") return "Ignore";
+      if (lowerFilePath.includes('/audiobooks/') || lowerFilePath.includes('\\audiobooks\\') || ext === 'm4b') return 'Audiobooks';
+      if (lowerFilePath.includes('/podcasts/') || lowerFilePath.includes('\\podcasts\\')) return 'Podcasts';
       if (lowerFilePath.includes('/soundtracks/') || lowerFilePath.includes('\\soundtracks\\')) return 'Soundtracks';
       if (lowerFilePath.includes('/compilations/') || lowerFilePath.includes('\\compilations\\')) return 'Music Compilations';
       return "Music Albums";
+    }
+
+    const isBookFile = ['epub', 'pdf', 'mobi', 'azw3', 'cbz', 'cbr'].includes(ext);
+    if (isBookFile) {
+      if (lowerFilePath.includes('/comics/') || lowerFilePath.includes('\\comics\\')) return 'Comics';
+      if (lowerFilePath.includes('/manga/') || lowerFilePath.includes('\\manga\\')) return 'Manga';
+      return "Books";
     }
 
     const isVideoFile = ['mp4', 'mkv', 'avi', 'mov', 'wmv', 'm4v', 'flv', 'webm', 'mpg', 'mpeg', 'ts', 'vob', '3gp', 'ogv'].includes(ext);
@@ -277,7 +286,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
             onLog("Failed to load DB for resume. Starting fresh.");
         }
     }
-    const allowedExtensions = ['.mkv', '.mp4', '.avi', '.mov', '.wmv', '.flv', '.webm', '.m4v', '.mpg', '.mpeg', '.m2ts', '.ts', '.vob', '.mxf', '.mp3', '.flac', '.m4a', '.wav', '.aac', '.ogg', '.wma', '.alac', '.m4b', '.ape', '.opus', '.mka'];
+    const allowedExtensions = ['.mkv', '.mp4', '.avi', '.mov', '.wmv', '.flv', '.webm', '.m4v', '.mpg', '.mpeg', '.m2ts', '.ts', '.vob', '.mxf', '.mp3', '.flac', '.m4a', '.wav', '.aac', '.ogg', '.wma', '.alac', '.m4b', '.ape', '.opus', '.mka', '.epub', '.pdf', '.mobi', '.azw3', '.cbz', '.cbr'];
     
     let allFiles: {path: string, hash: string}[] = [];
     for (const p of paths) {
@@ -591,8 +600,17 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 }
             }
             
+            const pathFilenameTmp = file.split(/[\\\/]/).pop() || "";
+            const lastDotTmp = pathFilenameTmp.lastIndexOf('.');
+            const extTmp = lastDotTmp !== -1 ? pathFilenameTmp.substring(lastDotTmp + 1).toLowerCase() : "";
+            const isBook = ['epub', 'pdf', 'mobi', 'azw3', 'cbz', 'cbr'].includes(extTmp);
+
             try {
-                // Securely execute ffprobe sidecar with a strict 15-second timeout safeguard to prevent hangs
+                let metadata = { format: { tags: {} }, streams: [], chapters: [] };
+                let output = { code: 0, stdout: "{}" };
+                
+                if (!isBook) {
+                    // Securely execute ffprobe sidecar with a strict 15-second timeout safeguard to prevent hangs
                 const probePromise = Command.sidecar('bin/ffprobe', [
                     '-v', 'quiet', '-print_format', 'json', '-show_format', '-show_streams', '-show_chapters', '-analyzeduration', '1000000', '-probesize', '1000000', file
                 ]).execute();
@@ -603,7 +621,8 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
 
                 const output = await Promise.race([probePromise, timeoutPromise]);
                 
-                if (output.code !== 0) {
+                }
+                if (output.code !== 0 && !isBook) {
                     throw new Error("ffprobe returned non-zero code");
                 }
                 
@@ -625,7 +644,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 
                 const hasEmbeddedPoster = streams.some((s: any) => s.codec_type === 'video' && (s.codec_name === 'mjpeg' || s.codec_name === 'png'));
                 
-                const sizeBytes = format.size ? safeParseInt(format.size) : 0;
+                const sizeBytes = format.size ? safeParseInt(format.size) : (existingFilesMap.get(normPath + "_physical_size") || 0);
                 const sizeGB = sizeBytes / (1024 * 1024 * 1024);
                 const durationSec = format.duration ? safeParseFloat(format.duration) : 0;
                 const durationMins = durationSec / 60;
