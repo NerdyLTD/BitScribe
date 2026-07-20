@@ -2443,7 +2443,7 @@ const handleCategoryToggle = (cat: string) => {
       {label: 'Sample Rate', key: 'audioSampleRate', center: true, width: '100px'},
       {label: 'File Path', key: 'path', width: '180px'}
     ];
-  } else if (group === 'Books') {
+    } else if (group === 'Books') {
     headers = [
       {label: 'Author', key: 'author', width: '120px'},
       {label: 'Book Series', key: 'bookSeries', width: '150px'},
@@ -2602,7 +2602,7 @@ const handleCategoryToggle = (cat: string) => {
                 section = parsed?.title || 'Ungrouped';
               } else if (group === 'Music') {
                 section = getMusicGroupTitle(item, customRules, item.category);
-              } else if (group === 'Books') {
+                } else if (group === 'Books') {
                 section = item.author || 'Unknown Author';
               }
 
@@ -2644,7 +2644,7 @@ const handleCategoryToggle = (cat: string) => {
                   </tr>
                 );
               }
-              } else if (group === 'Books') {
+               else if (group === 'Books') {
                 return (
                   <tr key={item.id} className="hover:bg-slate-800/20 transition-colors">
                     {visibleColumns.author && <td className={cStyle} title={item.author}>{item.author || '-'}</td>}

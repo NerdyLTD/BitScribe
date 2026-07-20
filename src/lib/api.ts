@@ -634,7 +634,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                     stdoutStr = stdoutStr.substring(firstBrace, lastBrace + 1);
                 }
 
-                const metadata = JSON.parse(stdoutStr);
+                metadata = JSON.parse(stdoutStr);
                 const format = metadata.format || {};
                 const streams = metadata.streams || [];
                 
