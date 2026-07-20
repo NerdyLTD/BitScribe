@@ -1753,6 +1753,11 @@ export async function exportMediaLibraryToHTML(
              if (row["Alert Level"] === "Critical") tdClass += " bg-red-900/30 font-semibold text-red-200 text-center";
              else if (row["Alert Level"] === "Warning") tdClass += " bg-yellow-900/30 font-semibold text-yellow-200 text-center";
              else tdClass += " text-center";
+          } else if (h === "Stream Audit") {
+             if (val === "Bleeding Edge" || val === "Transcode Required") tdClass += " bg-red-900/30 font-semibold text-red-200 text-center";
+             else if (val === "Modern+") tdClass += " bg-emerald-900/30 font-semibold text-emerald-200 text-center";
+             else if (val === "Legacy+") tdClass += " bg-yellow-900/30 font-semibold text-yellow-200 text-center";
+             else tdClass += " text-center";
           } else if (isMetadata && val === "[MISSING]") {
              tdClass += " bg-rose-950/40 text-rose-300 font-semibold text-center";
           }
