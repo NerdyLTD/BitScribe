@@ -193,7 +193,8 @@ export default memo(function Dashboard({
   const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({
     stream: true, title: true, seriesTitle: true, season: true, episode: true, epTitle: true, filename: false, videoCodec: true,
     audioCodec: true, container: false, path: false, artist: true, album: true,
-    songTitle: true, format: true, bitrate: false
+    songTitle: true, format: true, bitrate: false,
+    videoBitDepth: false, audioSampleRate: false, chapterCount: false
   });
   
   const toggleColumn = (key: string) => {
@@ -2427,6 +2428,7 @@ const handleCategoryToggle = (cat: string) => {
       {label: 'Song Title', key: 'songTitle', width: '220px'},
       {label: 'Format/Codec', key: 'format', center: true, width: '110px'},
       {label: 'Bitrate', key: 'bitrate', center: true, width: '100px'},
+      {label: 'Sample Rate', key: 'audioSampleRate', center: true, width: '100px'},
       {label: 'File Path', key: 'path', width: '180px'}
     ];
   } else if (group === 'TV') {
@@ -2438,8 +2440,10 @@ const handleCategoryToggle = (cat: string) => {
       {label: 'Episode Title', key: 'epTitle', width: '200px'},
       {label: 'Filename', key: 'filename', width: '250px'},
       {label: 'Video Codec', key: 'videoCodec', center: true, width: '100px'},
+      {label: 'Video Depth', key: 'videoBitDepth', center: true, width: '90px'},
       {label: 'Audio Codec', key: 'audioCodec', center: true, width: '120px'},
       {label: 'Container', key: 'container', center: true, width: '90px'},
+      {label: 'Chapters', key: 'chapterCount', center: true, width: '80px'},
       {label: 'File Path', key: 'path', width: '180px'}
     ];
   } else if (group === 'Movies') {
@@ -2448,8 +2452,10 @@ const handleCategoryToggle = (cat: string) => {
       {label: 'Title', key: 'title', width: '200px'},
       {label: 'Filename', key: 'filename', width: '250px'},
       {label: 'Video Codec', key: 'videoCodec', center: true, width: '100px'},
+      {label: 'Video Depth', key: 'videoBitDepth', center: true, width: '90px'},
       {label: 'Audio Codec', key: 'audioCodec', center: true, width: '120px'},
       {label: 'Container', key: 'container', center: true, width: '90px'},
+      {label: 'Chapters', key: 'chapterCount', center: true, width: '80px'},
       {label: 'File Path', key: 'path', width: '180px'}
     ];
   } else {
@@ -2606,6 +2612,7 @@ const handleCategoryToggle = (cat: string) => {
                     {visibleColumns.songTitle && <td className={cStyle} title={getDisplaySongTitle(item, customRules)}>{getDisplaySongTitle(item, customRules)}</td>}
                     {visibleColumns.format && <td className={cCenter}>{codec}</td>}
                     {visibleColumns.bitrate && <td className={cCenter}>{item.audioBitrate ? Math.round(item.audioBitrate / 1000) + ' kbps' : '-'}</td>}
+                    {visibleColumns.audioSampleRate && <td className={cCenter}>{item.audioSampleRate ? `${item.audioSampleRate / 1000} kHz` : '-'}</td>}
                     {visibleColumns.path && <td className={cStyle} title={item.filePath}>{item.filePath}</td>}
                   </tr>
                 );
@@ -2619,8 +2626,10 @@ const handleCategoryToggle = (cat: string) => {
                     {visibleColumns.epTitle && <td className={cStyle} title={parsed.epTitle}>{parsed.epTitle || '-'}</td>}
                     {visibleColumns.filename && <td className={cStyle} title={item.filename}>{item.filename}</td>}
                     {visibleColumns.videoCodec && <td className={cCenter}>{getPrimaryVideoCodec(item)}</td>}
+                    {visibleColumns.videoBitDepth && <td className={cCenter}>{item.videoBitDepth || '-'}</td>}
                     {visibleColumns.audioCodec && <td className={cCenter}>{getFormattedAudioTracks(item)}</td>}
                     {visibleColumns.container && <td className={cCenter}>{getContainerFormat(item)}</td>}
+                    {visibleColumns.chapterCount && <td className={cCenter}>{item.chapterCount !== undefined && item.chapterCount > 0 ? item.chapterCount : '-'}</td>}
                     {visibleColumns.path && <td className={cStyle} title={item.filePath}>{item.filePath}</td>}
                   </tr>
                 );
@@ -2631,8 +2640,10 @@ const handleCategoryToggle = (cat: string) => {
                     {visibleColumns.title && <td className={cStyle} title={parsed.title}>{parsed.title || '-'}</td>}
                     {visibleColumns.filename && <td className={cStyle} title={item.filename}>{item.filename}</td>}
                     {visibleColumns.videoCodec && <td className={cCenter}>{getPrimaryVideoCodec(item)}</td>}
+                    {visibleColumns.videoBitDepth && <td className={cCenter}>{item.videoBitDepth || '-'}</td>}
                     {visibleColumns.audioCodec && <td className={cCenter}>{getFormattedAudioTracks(item)}</td>}
                     {visibleColumns.container && <td className={cCenter}>{getContainerFormat(item)}</td>}
+                    {visibleColumns.chapterCount && <td className={cCenter}>{item.chapterCount !== undefined && item.chapterCount > 0 ? item.chapterCount : '-'}</td>}
                     {visibleColumns.path && <td className={cStyle} title={item.filePath}>{item.filePath}</td>}
                   </tr>
                 );

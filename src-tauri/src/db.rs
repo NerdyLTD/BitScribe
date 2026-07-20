@@ -39,5 +39,32 @@ pub fn init_db(data_dir: &PathBuf) -> Result<Connection> {
         [],
     )?;
     
+    // Schema upgrades - safe to run sequentially as they will be ignored if the column exists
+    let new_columns = vec![
+        "videoBitDepth TEXT DEFAULT ''",
+        "audioSampleRate INTEGER DEFAULT 0",
+        "chapterCount INTEGER DEFAULT 0",
+        "rawAudioCodec TEXT DEFAULT ''",
+        "physicalAudioChannels INTEGER DEFAULT 0",
+        "matchedOnlineId TEXT DEFAULT ''",
+        "fileUuid TEXT DEFAULT ''",
+        "hasExternalSubtitles INTEGER DEFAULT 0",
+        "embeddedSubtitleLanguages TEXT DEFAULT ''",
+        "author TEXT DEFAULT ''",
+        "narrator TEXT DEFAULT ''",
+        "publisher TEXT DEFAULT ''",
+        "bookSeries TEXT DEFAULT ''",
+        "seriesIndex REAL DEFAULT 0",
+        "isbn TEXT DEFAULT ''",
+        "pageCount INTEGER DEFAULT 0"
+    ];
+
+    for col_def in new_columns {
+        let _ = conn.execute(
+            &format!("ALTER TABLE scanned_files ADD COLUMN {}", col_def),
+            [],
+        );
+    }
+    
     Ok(conn)
 }

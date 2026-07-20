@@ -63,4 +63,69 @@ pub struct ScannedFile {
     #[serde(rename = "streamFriendlyEvaluated")]
     #[serde(default)]
     pub stream_friendly_evaluated: i64,
+
+    // NEW COLUMNS FOR BITSCRIBE SUITE
+    #[serde(rename = "videoBitDepth")]
+    #[serde(default)]
+    pub video_bit_depth: String,
+    
+    #[serde(rename = "audioSampleRate")]
+    #[serde(default)]
+    pub audio_sample_rate: i32,
+    
+    #[serde(rename = "chapterCount")]
+    #[serde(default)]
+    pub chapter_count: i32,
+    
+    #[serde(rename = "rawAudioCodec")]
+    #[serde(default)]
+    pub raw_audio_codec: String,
+    
+    #[serde(rename = "physicalAudioChannels")]
+    #[serde(default)]
+    pub physical_audio_channels: i32,
+    
+    #[serde(rename = "matchedOnlineId")]
+    #[serde(default)]
+    pub matched_online_id: String,
+    
+    #[serde(rename = "fileUuid")]
+    #[serde(default)]
+    pub file_uuid: String,
+    
+    #[serde(rename = "hasExternalSubtitles")]
+    #[serde(default)]
+    pub has_external_subtitles: bool,
+    
+    #[serde(rename = "embeddedSubtitleLanguages")]
+    #[serde(default)]
+    pub embedded_subtitle_languages: String,
+
+    #[serde(rename = "author")]
+    #[serde(default)]
+    pub author: String,
+
+    #[serde(rename = "narrator")]
+    #[serde(default)]
+    pub narrator: String,
+
+    #[serde(rename = "publisher")]
+    #[serde(default)]
+    pub publisher: String,
+
+    #[serde(rename = "bookSeries")]
+    #[serde(default)]
+    pub book_series: String,
+
+    #[serde(rename = "seriesIndex")]
+    #[serde(default)]
+    pub series_index: f64,
+
+    #[serde(rename = "isbn")]
+    #[serde(default)]
+    pub isbn: String,
+
+    #[serde(rename = "pageCount")]
+    #[serde(default)]
+    pub page_count: i32,
 }

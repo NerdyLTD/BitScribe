@@ -125,3 +125,19 @@ capture and flag:
 9. "audioSampleRate" (integer sample rate e.g., 44100, 48000, 96000, critical for sorting high-fidelity and audiophile tracks).
 10. "chapterCount" (integer chapter count, crucial for identifying and flagging files missing internal chapters).
 ================================================================================
+
+--------------------------------------------------------------------------------
+4. ARCHITECTURAL TRANSITION FAQ & DEPLOYMENT STRATEGY
+--------------------------------------------------------------------------------
+
+Q: How does this model look when we move into a local/portable executable mode that someone might store either on a network share, a folder on their desktop or even a USB stick?
+A: Because the apps are built using Tauri and SQLite, true portability is highly achievable. We simply configure the Rust database connector to store and read the `steward.db` SQLite file in a directory relative to the executable (e.g., `./BitScribeDB`) rather than using the default OS-specific AppData folders. If a user runs the app from a USB stick, the database travels with it, and paths can be managed relative to the workspace.
+
+Q: How does this model look if we create a Docker version or LXC/VM version?
+A: Tauri is inherently a desktop framework (it relies on the host OS's webview and windowing system). To run it in Docker, we would need to decouple the application. Because we are modularizing the core logic, we could create a "headless" backend service (a Node/Express or pure Rust web server) that exposes the core scanning and remediation APIs. The React frontend would then be served via HTTP, allowing users to access BitScribe entirely through a web browser on their local network, backed by Docker volume mounts.
+
+Q: How extensive of a rewrite are we talking about? Does all the work and testing we've done so far become irrelevant?
+A: It is absolutely NOT a rewrite, and no work becomes irrelevant. The core evaluation logic, the React UI paradigms, and the Rust file operations remain identical. We are simply embarking on a *structural refactoring*. We will extract the shared brains (rules, types, parsers) into central libraries so that the new RX app can import them, rather than copying and pasting code. 
+
+Q: How destructive will this be to the codebase? Should we create a new github repo and work from there instead?
+A: We should NOT delay the imminent release. The current codebase is stable and should be released as a standalone version. Following the release, we will transition the repository into a "Monorepo" structure (using tools like npm workspaces or Turborepo). The current app will move into a subfolder (`apps/steward`), keeping its history and functionality intact. The new apps will be built alongside it (`apps/rx`), safely isolated.

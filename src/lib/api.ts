@@ -559,7 +559,20 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                         streamFriendlyLevel: "unknown",
                         streamFriendlyReason: "",
                         streamFriendlySuggestion: "",
-                        streamFriendlyEvaluated: rules.useDiscoveryPreset ? 0 : 1
+                        streamFriendlyEvaluated: rules.useDiscoveryPreset ? 0 : 1,
+                        rawAudioCodec: "",
+                        physicalAudioChannels: 0,
+                        matchedOnlineId: "",
+                        fileUuid: "",
+                        hasExternalSubtitles: false,
+                        embeddedSubtitleLanguages: "",
+                        author: "",
+                        narrator: "",
+                        publisher: "",
+                        bookSeries: "",
+                        seriesIndex: 0,
+                        isbn: "",
+                        pageCount: 0
                     };
                     
                     const evalResult = evaluatePlexCompatibility(hydratedItem, rules, false, true);
@@ -724,7 +737,20 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                     streamFriendlyEvaluated: 0,
                     videoBitDepth: videoBitDepth || undefined,
                     audioSampleRate: audioSampleRate || undefined,
-                    chapterCount: chapterCount
+                    chapterCount: chapterCount,
+                    rawAudioCodec: firstAudioStream ? (firstAudioStream.codec_name || "") : "",
+                    physicalAudioChannels: firstAudioStream && firstAudioStream.channels ? safeParseInt(firstAudioStream.channels) : 0,
+                    matchedOnlineId: "",
+                    fileUuid: "",
+                    hasExternalSubtitles: false,
+                    embeddedSubtitleLanguages: parsedSubtitleTracks.map((t: any) => t.language).filter(Boolean).join(","),
+                    author: tags.author || tags.AUTHOR || tags.artist || "",
+                    narrator: tags.narrator || tags.NARRATOR || "",
+                    publisher: tags.publisher || tags.PUBLISHER || "",
+                    bookSeries: tags.series || tags.SERIES || "",
+                    seriesIndex: tags.series_part ? parseFloat(tags.series_part) : 0,
+                    isbn: tags.isbn || tags.ISBN || "",
+                    pageCount: 0
                 };
                 
                 const evalResult = evaluatePlexCompatibility(hydratedItem, rules, false, true);
@@ -743,7 +769,9 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                     videoBitrateMbps: 0, audioTracks: [], subtitleTracks: [], tags: {}, audioBitrate: 0,
                     isCorrupted: true, errorMessage: e.message, hasEmbeddedPoster: false, bitrateAnomaly: false,
                     bitrateAnomalyReason: '', topLevelFolder: getTopLevelFolder(file, paths), streamFriendlyLevel: 'corrupted',
-                    streamFriendlyReason: '', streamFriendlySuggestion: '', streamFriendlyEvaluated: 0
+                    streamFriendlyReason: '', streamFriendlySuggestion: '', streamFriendlyEvaluated: 0,
+                    rawAudioCodec: "", physicalAudioChannels: 0, matchedOnlineId: "", fileUuid: "", hasExternalSubtitles: false, embeddedSubtitleLanguages: "",
+                    author: "", narrator: "", publisher: "", bookSeries: "", seriesIndex: 0, isbn: "", pageCount: 0
                 };
                 onProgress({ current: i + 1, total: allFiles.length, error: true, item: corrupted });
                 onLog("PROBE ERROR: " + (e.message || String(e)));

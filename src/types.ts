@@ -46,6 +46,21 @@ export interface MediaItem {
   videoBitDepth?: string;
   audioSampleRate?: number;
   chapterCount?: number;
+  
+  // Suite Expansion Fields
+  rawAudioCodec?: string;
+  physicalAudioChannels?: number;
+  matchedOnlineId?: string;
+  fileUuid?: string;
+  hasExternalSubtitles?: boolean;
+  embeddedSubtitleLanguages?: string;
+  author?: string;
+  narrator?: string;
+  publisher?: string;
+  bookSeries?: string;
+  seriesIndex?: number;
+  isbn?: string;
+  pageCount?: number;
 }
 
 export type PlexFriendlyLevel = 'bleeding' | 'modern' | 'legacy' | 'unfriendly' | 'corrupted' | 'pending';
