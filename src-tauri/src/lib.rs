@@ -114,9 +114,8 @@ fn save_db_files(state: State<'_, DbState>, files: Vec<ScannedFile>) -> Result<(
 
 use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
-use std::io::Read;
 
-fn generate_file_hash(path: &std::path::Path, metadata: &std::fs::Metadata) -> String {
+fn generate_file_hash(_path: &std::path::Path, metadata: &std::fs::Metadata) -> String {
     let mut hasher = DefaultHasher::new();
     metadata.len().hash(&mut hasher);
     
