@@ -116,14 +116,14 @@ use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
 use std::io::Read;
 
-fn generate_file_hash(path: &std::path::Path, size: u64) -> String {
+fn generate_file_hash(path: &std::path::Path, metadata: &std::fs::Metadata) -> String {
     let mut hasher = DefaultHasher::new();
-    size.hash(&mut hasher);
+    metadata.len().hash(&mut hasher);
     
-    if let Ok(mut file) = std::fs::File::open(path) {
-        let mut buffer = [0u8; 65536];
-        if let Ok(bytes_read) = file.read(&mut buffer) {
-            buffer[..bytes_read].hash(&mut hasher);
+    if let Ok(modified) = metadata.modified() {
+        if let Ok(duration) = modified.duration_since(std::time::UNIX_EPOCH) {
+            duration.as_secs().hash(&mut hasher);
+            duration.subsec_nanos().hash(&mut hasher);
         }
     }
     
@@ -161,8 +161,11 @@ fn walk_dir(path: String) -> Result<Vec<FileEntry>, String> {
                     } else {
                         entry.path().to_string_lossy().into_owned()
                     };
-                    let size = entry.metadata().map(|m| m.len()).unwrap_or(0);
-                    let file_hash = generate_file_hash(entry.path(), size);
+                    let metadata = entry.metadata();
+                    if metadata.is_err() { continue; }
+                    let meta = metadata.unwrap();
+                    let size = meta.len();
+                    let file_hash = generate_file_hash(entry.path(), &meta);
                     files.push(FileEntry {
                         path: path_str,
                         size,
