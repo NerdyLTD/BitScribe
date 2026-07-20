@@ -59,6 +59,7 @@ pub fn init_db(data_dir: &PathBuf) -> Result<Connection> {
         "rawAudioCodec TEXT DEFAULT ''",
         "physicalAudioChannels INTEGER DEFAULT 0",
         "matchedOnlineId TEXT DEFAULT ''",
+        "fileUuid TEXT DEFAULT ''",
         "hasExternalSubtitles INTEGER DEFAULT 0",
         "embeddedSubtitleLanguages TEXT DEFAULT ''",
         "author TEXT DEFAULT ''",

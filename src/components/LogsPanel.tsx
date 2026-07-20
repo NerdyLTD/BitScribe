@@ -1,15 +1,17 @@
 import React from "react";
 import { Terminal, Download } from "lucide-react";
+import { downloadOrSaveFile } from "../utils/downloader";
 
 export default function LogsPanel({ logs }: { logs: string[] }) {
-  const exportLogs = () => {
-    const content = logs.join('\\n') || "No logs available for this session.";
+  const exportLogs = async () => {
+    const content = logs.join('\n') || "No logs available for this session.";
     const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'Bitscribe_App_Logs.log';
-    a.click();
+    try {
+      await downloadOrSaveFile('Bitscribe_App_Logs.log', blob);
+    } catch (e: any) {
+      console.error("Failed to export logs", e);
+      alert("Failed to export logs: " + e.message);
+    }
   };
 
   return (
@@ -26,15 +28,16 @@ export default function LogsPanel({ logs }: { logs: string[] }) {
         </div>
         <div className="flex gap-2">
           <button
-            onClick={() => {
+            onClick={async () => {
               const errorLogs = logs.filter(log => (log || "").toString().toUpperCase().includes('ERROR') || (log || "").toString().toUpperCase().includes('FAIL'));
               const content = errorLogs.length > 0 ? errorLogs.join('\n') : "No runtime application errors logged during this session.";
               const blob = new Blob([content], { type: 'text/plain' });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = 'Bitscribe_error.log';
-              a.click();
+              try {
+                await downloadOrSaveFile('Bitscribe_error.log', blob);
+              } catch (e: any) {
+                console.error("Failed to export error logs", e);
+                alert("Failed to export logs: " + e.message);
+              }
             }}
             className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-4 py-2 rounded transition-colors flex items-center gap-2"
           >
