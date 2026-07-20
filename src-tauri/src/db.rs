@@ -8,21 +8,20 @@ pub fn init_db(data_dir: &PathBuf) -> Result<Connection> {
     
     let conn = Connection::open(db_path)?;
     
-    // Check if the old table exists with `id` as the primary key instead of `fileHash`
-    let has_file_hash_pk: Result<String, _> = conn.query_row(
-        "SELECT name FROM pragma_table_info('scanned_files') WHERE pk = 1 AND name = 'fileHash'",
+    // Check if the table exists with `id` as the primary key
+    let has_id_pk: Result<String, _> = conn.query_row(
+        "SELECT name FROM pragma_table_info('scanned_files') WHERE pk = 1 AND name = 'id'",
         [],
         |row| row.get(0),
     );
-
-    if has_file_hash_pk.is_err() {
-        // Drop the old table to upgrade to the new schema with fileHash as primary key
+    if has_id_pk.is_err() {
+        // Drop the old table to upgrade to the new schema
         conn.execute("DROP TABLE IF EXISTS scanned_files", []).ok();
     }
     
     conn.execute(
         "CREATE TABLE IF NOT EXISTS scanned_files (
-            fileHash TEXT PRIMARY KEY,
+            id TEXT PRIMARY KEY,
             filename TEXT,
             filePath TEXT,
             category TEXT,
