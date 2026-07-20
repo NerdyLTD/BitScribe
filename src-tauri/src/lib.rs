@@ -112,10 +112,29 @@ fn save_db_files(state: State<'_, DbState>, files: Vec<ScannedFile>) -> Result<(
     Ok(())
 }
 
+use std::hash::{Hash, Hasher};
+use std::collections::hash_map::DefaultHasher;
+use std::io::Read;
+
+fn generate_file_hash(path: &std::path::Path, size: u64) -> String {
+    let mut hasher = DefaultHasher::new();
+    size.hash(&mut hasher);
+    
+    if let Ok(mut file) = std::fs::File::open(path) {
+        let mut buffer = [0u8; 65536];
+        if let Ok(bytes_read) = file.read(&mut buffer) {
+            buffer[..bytes_read].hash(&mut hasher);
+        }
+    }
+    
+    format!("{:016x}", hasher.finish())
+}
+
 #[derive(serde::Serialize)]
 struct FileEntry {
     path: String,
     size: u64,
+    fileHash: String,
 }
 
 #[tauri::command]
@@ -142,9 +161,11 @@ fn walk_dir(path: String) -> Result<Vec<FileEntry>, String> {
                         entry.path().to_string_lossy().into_owned()
                     };
                     let size = entry.metadata().map(|m| m.len()).unwrap_or(0);
+                    let file_hash = generate_file_hash(entry.path(), size);
                     files.push(FileEntry {
                         path: path_str,
                         size,
+                        fileHash: file_hash,
                     });
                 }
             }
@@ -153,6 +174,7 @@ fn walk_dir(path: String) -> Result<Vec<FileEntry>, String> {
             }
         }
     }
+
     Ok(files)
 }
 

@@ -279,7 +279,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
     }
     const allowedExtensions = ['.mkv', '.mp4', '.avi', '.mov', '.wmv', '.flv', '.webm', '.m4v', '.mpg', '.mpeg', '.m2ts', '.ts', '.vob', '.mxf', '.mp3', '.flac', '.m4a', '.wav', '.aac', '.ogg', '.wma', '.alac', '.m4b', '.ape', '.opus', '.mka'];
     
-    let allFiles: string[] = [];
+    let allFiles: {path: string, hash: string}[] = [];
     for (const p of paths) {
         if (signal?.aborted) {
             onLog("Scan aborted by user during directory walk.");
@@ -288,22 +288,22 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
         onLog(`Walking directory: ${p}`);
         try {
             const files = isTauri()
-                ? await invoke<{path: string, size: number}[]>("walk_dir", { path: p })
+                ? await invoke<{path: string, size: number, fileHash: string}[]>("walk_dir", { path: p })
                 : MOCK_MEDIA_LIBRARY.filter(m => {
                     const normFile = m.filePath.replace(/\\/g, '/').toLowerCase();
                     const normPath = p.replace(/\\/g, '/').toLowerCase();
                     const pathWithSlash = normPath.endsWith('/') ? normPath : normPath + '/';
                     return normFile.startsWith(pathWithSlash) || normFile === normPath;
-                  }).map(m => ({ path: m.filePath, size: Math.round((m.sizeGB || 0) * 1024 * 1024 * 1024) }));
+                  }).map(m => ({ path: m.filePath, size: Math.round((m.sizeGB || 0) * 1024 * 1024 * 1024), fileHash: "mock-" + m.id }));
             let validCount = 0;
             for (const fileObj of files) {
                 const file = fileObj.path;
                 const lower = file.toLowerCase();
                 if (allowedExtensions.some(ext => lower.endsWith(ext))) {
-                    allFiles.push(file);
+                    allFiles.push({path: file, hash: fileObj.fileHash});
                     const normPath = normalizePath(file);
                     // Temporarily store the physical size in the map so we can use it later
-                    existingFilesMap.set(normPath + "_physical_size", fileObj.size);
+                    existingFilesMap.set(normPath + "_physical_size", fileObj.size as any);
                     validCount++;
                 }
             }
@@ -336,7 +336,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 return normFile.startsWith(apWithSlash) || normFile === normActive;
             };
 
-            const allFilesSet = new Set(allFiles.map(normalizePath));
+            const allFilesSet = new Set(allFiles.map(f => normalizePath(f.path)));
             
             // Find which DB files are under the active scan paths
             const dbFilesUnderActivePaths = existingDbFiles.filter(item => {
@@ -351,8 +351,8 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
             
             // New files: on disk, but not in existing DB
             const existingDbFilesSet = new Set(existingDbFiles.map(f => normalizePath(f.filePath)));
-            const newFilesOnDisk = allFiles.filter(file => {
-                return !existingDbFilesSet.has(normalizePath(file));
+            const newFilesOnDisk = allFiles.filter(fileObjItem => {
+                return !existingDbFilesSet.has(normalizePath(fileObjItem.path));
             });
 
             if (ghostFiles.length > 0 || newFilesOnDisk.length > 0) {
@@ -368,7 +368,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 
                 // Map new files on disk by filename for fast pairing
                 const newFilesByBasename = new Map<string, string>();
-                newFilesOnDisk.forEach(f => {
+                newFilesOnDisk.forEach(fObj => { const f = fObj.path;
                     const base = f.replace(/\\/g, '/').split('/').pop();
                     if (base) {
                         newFilesByBasename.set(base.toLowerCase(), f);
@@ -400,7 +400,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 
                 // Track purely added files that were not part of a move
                 const ghostBasenames = new Set(ghostFiles.map(gf => (gf.filename || gf.filePath.replace(/\\/g, '/').split('/').pop() || "").toLowerCase()));
-                newFilesOnDisk.forEach(nf => {
+                newFilesOnDisk.forEach(nfObj => { const nf = nfObj.path;
                     const nfBasename = nf.replace(/\\/g, '/').split('/').pop() || "";
                     if (nfBasename && !ghostBasenames.has(nfBasename.toLowerCase())) {
                         changes.push({
@@ -472,7 +472,9 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 break;
             }
             const i = currentIndex++;
-            const file = allFiles[i];
+            const fileObjItem = allFiles[i];
+            const file = fileObjItem.path;
+            const fileHash = fileObjItem.hash;
             let skipFile = false;
             const normPath = normalizePath(file);
             if (existingPaths.has(normPath)) {
@@ -563,7 +565,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                         rawAudioCodec: "",
                         physicalAudioChannels: 0,
                         matchedOnlineId: "",
-                        fileUuid: "",
+                        
                         hasExternalSubtitles: false,
                         embeddedSubtitleLanguages: "",
                         author: "",
@@ -710,7 +712,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 const topLevelFolder = getTopLevelFolder(file, paths);
                 
                 const hydratedItem: MediaItem = {
-                    id: file,
+                    id: fileHash,
                     filename: filename,
                     filePath: file,
                     category: category as any,
@@ -741,7 +743,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                     rawAudioCodec: firstAudioStream ? (firstAudioStream.codec_name || "") : "",
                     physicalAudioChannels: firstAudioStream && firstAudioStream.channels ? safeParseInt(firstAudioStream.channels) : 0,
                     matchedOnlineId: "",
-                    fileUuid: "",
+                    
                     hasExternalSubtitles: false,
                     embeddedSubtitleLanguages: parsedSubtitleTracks.map((t: any) => t.language).filter(Boolean).join(","),
                     author: tags.author || tags.AUTHOR || tags.artist || "",
@@ -764,13 +766,13 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 
             } catch (e: any) {
                 const corrupted: MediaItem = {
-                    id: file, filename: file.split(/[\\\/]/).pop()!, filePath: file, category: 'Corrupted' as any,
+                    id: fileHash, filename: file.split(/[\\\/]/).pop()!, filePath: file, category: 'Corrupted' as any,
                     container: 'unknown', sizeGB: 0, durationMins: 0, year: 0, videoCodec: '', videoResolution: '',
                     videoBitrateMbps: 0, audioTracks: [], subtitleTracks: [], tags: {}, audioBitrate: 0,
                     isCorrupted: true, errorMessage: e.message, hasEmbeddedPoster: false, bitrateAnomaly: false,
                     bitrateAnomalyReason: '', topLevelFolder: getTopLevelFolder(file, paths), streamFriendlyLevel: 'corrupted',
                     streamFriendlyReason: '', streamFriendlySuggestion: '', streamFriendlyEvaluated: 0,
-                    rawAudioCodec: "", physicalAudioChannels: 0, matchedOnlineId: "", fileUuid: "", hasExternalSubtitles: false, embeddedSubtitleLanguages: "",
+                    rawAudioCodec: "", physicalAudioChannels: 0, matchedOnlineId: "",  hasExternalSubtitles: false, embeddedSubtitleLanguages: "",
                     author: "", narrator: "", publisher: "", bookSeries: "", seriesIndex: 0, isbn: "", pageCount: 0
                 };
                 onProgress({ current: i + 1, total: allFiles.length, error: true, item: corrupted });

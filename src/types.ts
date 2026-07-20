@@ -51,7 +51,6 @@ export interface MediaItem {
   rawAudioCodec?: string;
   physicalAudioChannels?: number;
   matchedOnlineId?: string;
-  fileUuid?: string;
   hasExternalSubtitles?: boolean;
   embeddedSubtitleLanguages?: string;
   author?: string;
