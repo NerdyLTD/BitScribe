@@ -1,0 +1,106 @@
+<svg viewBox="0 0 1200 750" fill="none" xmlns="http://www.w3.org/2000/svg" width="1920" height="1200">
+  <defs>
+    <!-- Dark Radial background -->
+    <radialGradient id="bgGradV7" cx="50%" cy="50%" r="50%" fx="50%" fy="30%">
+      <stop offset="0%" stop-color="#1E293B" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </radialGradient>
+    <linearGradient id="glowGradV7" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+    <filter id="shadowV7" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#000000" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+
+  <!-- Outer wrapper -->
+  <rect width="1200" height="750" fill="#090D16" />
+
+  <!-- Window Frame -->
+  <rect x="80" y="60" width="1040" height="620" rx="12" fill="url(#bgGradV7)" filter="url(#shadowV7)" stroke="#334155" stroke-width="1.8" />
+
+  <!-- OS Browser Header Bar -->
+  <path d="M80 72 C80 65.37 85.37 60 92 60 H1108 C1114.63 60 1120 65.37 1120 72 V100 H80 V72 Z" fill="#0F172A" />
+  <line x1="80" y1="100" x2="1120" y2="100" stroke="#1E293B" stroke-width="1.2" />
+
+  <!-- macOS Controls -->
+  <circle cx="105" cy="80" r="5" fill="#EF4444" />
+  <circle cx="121" cy="80" r="5" fill="#F59E0B" />
+  <circle cx="137" cy="80" r="5" fill="#10B981" />
+
+  <!-- URL Bar -->
+  <rect x="180" y="68" width="840" height="20" rx="5" fill="#030712" stroke="#1E293B" />
+  <text x="192" y="82" font-family="'Inter', sans-serif" font-size="11" fill="#4B5563">localhost:3000/plex-realtime-scanner-v0.7</text>
+
+  <!-- Left Sidebar -->
+  <rect x="80" y="100" width="220" height="540" fill="#090D16" />
+  <line x1="300" y1="100" x2="300" y2="640" stroke="#1E293B" stroke-width="1" />
+
+  <text x="100" y="138" font-family="'Inter', sans-serif" font-size="14" font-weight="950" fill="#FFFFFF">PlexAuditor</text>
+  <text x="188" y="137" font-family="'Inter', sans-serif" font-size="10" font-weight="700" fill="#10B981">v0.7</text>
+
+  <!-- Sidebar Links -->
+  <rect x="90" y="170" width="200" height="30" rx="6" fill="#1E293B" />
+  <text x="110" y="190" font-family="'Inter', sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">⚡ Real-time Scan</text>
+  <text x="110" y="230" font-family="'Inter', sans-serif" font-size="11" fill="#64748B">📂 Libraries Manager</text>
+  <text x="110" y="270" font-family="'Inter', sans-serif" font-size="11" fill="#64748B">⚙️ Custom Rules Profiles</text>
+  <text x="110" y="310" font-family="'Inter', sans-serif" font-size="11" fill="#64748B">📥 Advanced Exporters</text>
+
+  <!-- Main Workspace Header -->
+  <text x="330" y="140" font-family="'Inter', sans-serif" font-size="18" font-weight="900" fill="#FFFFFF">Real-time Batch Scan</text>
+  <text x="330" y="158" font-family="'Inter', sans-serif" font-size="11" fill="#64748B">Directly parses media structures with responsive terminal tracking outputs</text>
+
+  <!-- Action button top right wrapper -->
+  <rect x="945" y="118" width="145" height="34" rx="6" fill="url(#glowGradV7)" />
+  <text x="965" y="139" font-family="'Inter', sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">📥 Export Reports</text>
+
+  <!-- Main Active Scanning Block / Console Progress Tracker -->
+  <rect x="330" y="186" width="735" height="110" rx="8" fill="#030712" stroke="#334155" />
+  <circle cx="355" cy="210" r="4" fill="#10B981" />
+  <text x="368" y="214" font-family="'Inter', sans-serif" font-size="11" font-weight="800" fill="#10B981" letter-spacing="0.5">ACTIVE DIRECTORY SCANNING PROCESS</text>
+  
+  <!-- Custom Progress Bar -->
+  <rect x="350" y="232" width="600" height="8" rx="4" fill="#1E2937" />
+  <rect x="350" y="232" width="480" height="8" rx="4" fill="#10B981" />
+  <text x="965" y="240" font-family="'Inter', sans-serif" font-size="12" font-weight="800" fill="#10B981">80%</text>
+
+  <!-- Interactive logs lines -->
+  <text x="350" y="265" font-family="'JetBrains Mono', monospace" font-size="9" fill="#94A3B8">> scanning /volume1/media/movies recursively... [Matched 1,124 movie items]</text>
+  <text x="350" y="280" font-family="'JetBrains Mono', monospace" font-size="9" fill="#A78BFA">> analyzing audio tracking channels for dts multichannel stream exceptions...</text>
+
+  <!-- Unified Items list dashboard preview -->
+  <rect x="330" y="310" width="735" height="256" rx="8" fill="#131B2E" stroke="#1E293B" />
+  
+  <rect x="330" y="310" width="735" height="34" fill="#111827" />
+  <line x1="330" y1="344" x2="1065" y2="344" stroke="#1E293B" />
+
+  <!-- Columns -->
+  <text x="345" y="331" font-family="'Inter', sans-serif" font-size="11" font-weight="800" fill="#64748B">PARSED FILE DIRECTORY IN PROGRESS</text>
+  
+  <!-- Scan Item Row 1 -->
+  <text x="345" y="372" font-family="'Inter', sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">Avatar_The_Way_of_Water_2022.mkv</text>
+  <text x="345" y="386" font-family="'Inter', sans-serif" font-size="10" fill="#10B981">Status: OK. Direct play target matched perfectly.</text>
+  <text x="700" y="378" font-family="'Inter', sans-serif" font-size="11" fill="#E2E8F0">HEVC 4K / AAC stereo (18.4 GB)</text>
+  <rect x="945" y="364" width="100" height="18" rx="3" fill="#10B981" fill-opacity="0.2" stroke="#10B981" stroke-width="0.8" />
+  <text x="965" y="377" font-family="'Inter', sans-serif" font-size="9" font-weight="800" fill="#10B981">SAFE PASS</text>
+
+  <line x1="330" y1="404" x2="1065" y2="404" stroke="#1E293B" stroke-width="0.8" />
+
+  <!-- Scan Item Row 2 -->
+  <text x="345" y="432" font-family="'Inter', sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">The_Dark_Knight_Rip.avi</text>
+  <text x="345" y="446" font-family="'Inter', sans-serif" font-size="10" fill="#EF4444">Status: Alert. Transcoder will be spawned on web clients.</text>
+  <text x="700" y="438" font-family="'Inter', sans-serif" font-size="11" fill="#EF4444">mpeg4 (avi) (700 MB)</text>
+  <rect x="945" y="424" width="100" height="18" rx="3" fill="#EF4444" fill-opacity="0.2" stroke="#EF4444" stroke-width="0.8" />
+  <text x="962" y="437" font-family="'Inter', sans-serif" font-size="9" font-weight="800" fill="#EF4444">UNFRIENDLY</text>
+
+  <line x1="330" y1="464" x2="1065" y2="464" stroke="#1E293B" stroke-width="0.8" />
+
+  <text x="345" y="500" font-family="'Inter', sans-serif" font-size="11" font-weight="800" fill="#A78BFA">LIVE COUNTS COMPLIANT RATIO</text>
+  <text x="345" y="520" font-family="'Inter', sans-serif" font-size="11" fill="#94A3B8">Movies scanned: 1,480 | Incompatible items: 114 | Excel file will automatically include dedicated 'Remediation' tab dashboard.</text>
+
+  <!-- Browser Window Footer -->
+  <path d="M80 640 V670 C80 675.52 84.48 680 90 680 H1108 C1114.63 680 1120 675.52 1120 670 V640 Z" fill="#0F172A" />
+  <line x1="80" y1="640" x2="1120" y2="640" stroke="#1E293B" stroke-width="1.2" />
+  <text x="110" y="666" font-family="'Inter', sans-serif" font-size="11" fill="#4B5563">Draft 0.7 background thread scanner live | Matched 2,422 unique items across mounts</text>
+</svg>

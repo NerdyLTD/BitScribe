@@ -1,0 +1,4 @@
+# Preserved Graphics Backup Directory
+DO NOT DELETE THIS FOLDER OR ITS CONTENTS.
+
+This folder contains backup launcher assets, icons, and platform-specific app icons (iOS, Android, macOS, Windows) generated for the desktop and mobile wrappers. These are preserved to safeguard against icon corruption.
