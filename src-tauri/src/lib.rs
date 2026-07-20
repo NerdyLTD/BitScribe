@@ -131,6 +131,7 @@ fn generate_file_hash(path: &std::path::Path, size: u64) -> String {
 }
 
 #[derive(serde::Serialize)]
+#[allow(non_snake_case)]
 struct FileEntry {
     path: String,
     size: u64,
