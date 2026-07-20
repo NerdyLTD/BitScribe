@@ -1370,7 +1370,7 @@ export async function exportMediaLibraryToHTML(
       const audioCounts = {};
       const musicCounts = {};
 
-      ALL_DATA.forEach(i => {
+      targetItems.forEach(i => {
         const cat = i.category || 'Other';
         const isMusic = isMusicCat(cat);
 
@@ -1416,7 +1416,7 @@ export async function exportMediaLibraryToHTML(
       container.className = "grid grid-cols-2 md:grid-cols-5 gap-4 mb-8 text-center";
 
       html = [
-        '<div class="glass-panel p-4 rounded-xl"><div class="text-3xl font-bold text-slate-100">'+ALL_DATA.length+'</div><div class="text-xs text-slate-400 uppercase tracking-wider mt-1">Total Files</div></div>',
+        '<div class="glass-panel p-4 rounded-xl"><div class="text-3xl font-bold text-slate-100">'+total+'</div><div class="text-xs text-slate-400 uppercase tracking-wider mt-1">Total Files</div></div>',
         '<div class="glass-panel p-4 rounded-xl text-indigo-400"><div class="text-3xl font-bold">'+distVideo+'</div><div class="text-xs text-slate-400 uppercase tracking-wider mt-1">Video Codecs</div></div>',
         '<div class="glass-panel p-4 rounded-xl text-emerald-400"><div class="text-3xl font-bold">'+distAudio+'</div><div class="text-xs text-slate-400 uppercase tracking-wider mt-1">Audio Codecs</div></div>',
         '<div class="glass-panel p-4 rounded-xl text-amber-400"><div class="text-3xl font-bold">'+distContainers+'</div><div class="text-xs text-slate-400 uppercase tracking-wider mt-1">Containers</div></div>',
@@ -1447,12 +1447,12 @@ export async function exportMediaLibraryToHTML(
     }
 
     container.innerHTML = html;
-    renderCodecDistribution();
+    renderCodecDistribution(targetItems);
   }
 
   const isMusicCat = (cat) => ["Music Albums", "Soundtracks", "Music Compilations", "Music", "audio"].includes(cat || "");
 
-  function renderCodecDistribution() {
+  function renderCodecDistribution(targetItems) {
     const codecContainer = document.getElementById('codec-metrics-container');
     if (!codecContainer) return;
 
@@ -1467,7 +1467,7 @@ export async function exportMediaLibraryToHTML(
     const audioCounts = {};
     const musicCounts = {};
 
-    ALL_DATA.forEach(i => {
+    targetItems.forEach(i => {
       const cat = i.category || 'Other';
       const isMusic = isMusicCat(cat);
 
