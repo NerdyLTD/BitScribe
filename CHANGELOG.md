@@ -140,6 +140,10 @@ All notable changes to this project will be documented in this file.
 - Fixed the discrepancy where the "Media Duplicates" dashboard card showed "0 duplicates found" or "No duplicates found" even though duplicates were found during scanning/exporting. The dashboard now dynamically calculates duplicates whenever the card is visible on the page (via manual block toggle, custom block preset, or duplicate scanning profiles), bypassing the requirement for rule-specific toggles to be active in the custom rules state.
 - Aligned the "Year" missing tags checking logic in `Dashboard.tsx` and `excelExporter.ts` to use the unified `getCategoryGroup` helper instead of hardcoded `Movie` and `TV` strings. This ensures video files belonging to other categories (e.g. documentaries, docuseries, anime, specials, shorts, plays) are mapped to their most suitable format (either Movies or TV) for year check and missing tag reports across all UI blocks, Excel sheets, and report exports.
 
+## [1.4.4] - 2026-07-20
+### Fixed
+- 2026-07-20: Fixed `npm run tauri dev` execution failure from the workspace root after monorepo migration by proxying the `tauri` script in the root package.json to the Steward app workspace.
+
 ## [1.4.3] - 2026-07-15
 
 ### Added
