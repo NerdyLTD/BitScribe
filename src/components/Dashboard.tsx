@@ -362,7 +362,7 @@ export default memo(function Dashboard({
     });
 
     const group = selectedCategories.length > 0 ? getCategoryGroup(selectedCategories[0]) : 'Other';
-    const activeSortCol = sortColumn || (group === 'Movies' ? 'title' : (group === 'TV' ? 'seriesTitle' : (group === 'Music' ? 'artist' : (group === 'Books' ? 'author' : null))));
+    const activeSortCol = sortColumn || (group === 'Movies' ? 'title' : (group === 'TV' ? 'seriesTitle' : (group === 'Music' ? 'artist' : null)));
 
     if (activeSortCol) {
       const sortCache = new Map();
@@ -379,18 +379,6 @@ export default memo(function Dashboard({
             val = getDisplayAlbum(item, customRules) || ''; break;
           case 'songTitle':
             val = getDisplaySongTitle(item, customRules) || ''; break;
-          case 'author':
-            val = item.author || ''; break;
-          case 'bookSeries':
-            val = item.bookSeries || ''; break;
-          case 'seriesIndex':
-            val = item.seriesIndex || 0; break;
-          case 'narrator':
-            val = item.narrator || ''; break;
-          case 'isbn':
-            val = item.isbn || ''; break;
-          case 'pageCount':
-            val = item.pageCount || 0; break;
           case 'format':
             val = getPrimaryAudioCodec(item) || ''; break;
           case 'bitrate':
@@ -2443,17 +2431,6 @@ const handleCategoryToggle = (cat: string) => {
       {label: 'Sample Rate', key: 'audioSampleRate', center: true, width: '100px'},
       {label: 'File Path', key: 'path', width: '180px'}
     ];
-    } else if (group === 'Books') {
-    headers = [
-      {label: 'Author', key: 'author', width: '120px'},
-      {label: 'Book Series', key: 'bookSeries', width: '150px'},
-      {label: 'Idx', key: 'seriesIndex', center: true, width: '50px'},
-      {label: 'Title / Filename', key: 'title', width: '200px'},
-      {label: 'Format', key: 'format', center: true, width: '80px'},
-      {label: 'Narrator', key: 'narrator', width: '120px'},
-      {label: 'ISBN', key: 'isbn', width: '100px'},
-      {label: 'File Path', key: 'path', width: '180px'}
-    ];
   } else if (group === 'TV') {
     headers = [
       {label: 'Stream Friendly?', key: 'stream', width: '130px'},
@@ -2588,9 +2565,7 @@ const handleCategoryToggle = (cat: string) => {
             const showHeaders = ((group === 'Movies' || group === 'TV') && 
                                 (sortColumn === null || sortColumn === 'title' || sortColumn === 'seriesTitle')) ||
                                 (group === 'Music' && 
-                                (sortColumn === null || sortColumn === 'artist' || sortColumn === 'album')) ||
-                                (group === 'Books' && 
-                                (sortColumn === null || sortColumn === 'author'));
+                                (sortColumn === null || sortColumn === 'artist' || sortColumn === 'album'));
 
             let sectionHeaderRow = null;
             if (showHeaders) {
@@ -2602,8 +2577,6 @@ const handleCategoryToggle = (cat: string) => {
                 section = parsed?.title || 'Ungrouped';
               } else if (group === 'Music') {
                 section = getMusicGroupTitle(item, customRules, item.category);
-                } else if (group === 'Books') {
-                section = item.author || 'Unknown Author';
               }
 
               const normSection = normalizeGroupTitle(section);
@@ -2640,20 +2613,6 @@ const handleCategoryToggle = (cat: string) => {
                     {visibleColumns.format && <td className={cCenter}>{codec}</td>}
                     {visibleColumns.bitrate && <td className={cCenter}>{item.audioBitrate ? Math.round(item.audioBitrate / 1000) + ' kbps' : '-'}</td>}
                     {visibleColumns.audioSampleRate && <td className={cCenter}>{item.audioSampleRate ? `${item.audioSampleRate / 1000} kHz` : '-'}</td>}
-                    {visibleColumns.path && <td className={cStyle} title={item.filePath}>{item.filePath}</td>}
-                  </tr>
-                );
-              }
-               else if (group === 'Books') {
-                return (
-                  <tr key={item.id} className="hover:bg-slate-800/20 transition-colors">
-                    {visibleColumns.author && <td className={cStyle} title={item.author}>{item.author || '-'}</td>}
-                    {visibleColumns.bookSeries && <td className={cStyle} title={item.bookSeries}>{item.bookSeries || '-'}</td>}
-                    {visibleColumns.seriesIndex && <td className={cCenter}>{item.seriesIndex || '-'}</td>}
-                    {visibleColumns.title && <td className={cStyle} title={item.filename}>{item.filename}</td>}
-                    {visibleColumns.format && <td className={cCenter}>{item.container}</td>}
-                    {visibleColumns.narrator && <td className={cStyle} title={item.narrator}>{item.narrator || '-'}</td>}
-                    {visibleColumns.isbn && <td className={cStyle}>{item.isbn || '-'}</td>}
                     {visibleColumns.path && <td className={cStyle} title={item.filePath}>{item.filePath}</td>}
                   </tr>
                 );
