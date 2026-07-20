@@ -1192,14 +1192,14 @@ export async function exportMediaLibraryToHTML(
     if (showAllMetricsMode) {
       btn.className = "px-4 py-1.5 bg-indigo-600 text-white rounded-full text-sm font-medium shadow-lg shadow-indigo-500/20 border border-indigo-500 transition-all flex items-center gap-2";
       if (tableContainer) tableContainer.classList.add('hidden');
-      if (filterSection) filterSection.classList.add('opacity-40', 'pointer-events-none');
+      if (filterSection) filterSection.classList.add('opacity-50');
       if (rightControls) rightControls.classList.add('opacity-40', 'pointer-events-none');
       if (paginationControlsTop) paginationControlsTop.classList.add('hidden');
       if (paginationControlsBottom) paginationControlsBottom.classList.add('hidden');
     } else {
       btn.className = "px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-full text-sm font-medium border border-slate-700 transition-all flex items-center gap-2";
       if (tableContainer) tableContainer.classList.remove('hidden');
-      if (filterSection) filterSection.classList.remove('opacity-40', 'pointer-events-none');
+      if (filterSection) filterSection.classList.remove('opacity-50', 'opacity-40', 'pointer-events-none');
       if (rightControls) rightControls.classList.remove('opacity-40', 'pointer-events-none');
       if (paginationControlsTop) paginationControlsTop.classList.remove('hidden');
       if (paginationControlsBottom) paginationControlsBottom.classList.remove('hidden');
@@ -1570,6 +1570,9 @@ export async function exportMediaLibraryToHTML(
   }
 
   window.setCategory = function(cat) {
+    if (showAllMetricsMode) {
+      window.toggleAllMetrics();
+    }
     activeCategory = cat;
     currentPage = 1;
     
@@ -1582,6 +1585,9 @@ export async function exportMediaLibraryToHTML(
   };
 
   window.setDupFilter = function(filter) {
+    if (showAllMetricsMode) {
+      window.toggleAllMetrics();
+    }
     activeDupFilter = filter;
     currentPage = 1;
     renderFilters();
