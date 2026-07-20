@@ -1569,7 +1569,7 @@ export async function exportMediaLibraryToExcel(
     console.warn("Failed to retrieve media changes for Excel export:", e);
   }
 
-  if (storedChanges.length > 0) {
+  if (storedChanges.length > 0 && globalScanType === "Discovery Scan") {
     const changesWs = wb.addWorksheet("Changes", {
       views: [{ showGridLines: true }],
     });
