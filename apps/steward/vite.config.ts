@@ -15,10 +15,14 @@ export default defineConfig(() => {
     },
     resolve: {
       alias: {
+        '@bitscribe/core-types': path.resolve(__dirname, '../../packages/core-types/index.ts'),
         '@': path.resolve(__dirname, '.'),
       },
     },
     server: {
+      fs: {
+        allow: ['../..']
+      },
       port: 3000,
       strictPort: true,
       // HMR is disabled in AI Studio via DISABLE_HMR env var.

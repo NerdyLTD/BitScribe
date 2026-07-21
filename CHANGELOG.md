@@ -144,6 +144,10 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - 2026-07-20: Fixed `npm run tauri dev` execution failure from the workspace root after monorepo migration by proxying the `tauri` script in the root package.json to the Steward app workspace.
 
+## [1.4.5] - 2026-07-21
+### Fixed
+- 2026-07-21: Fixed Vite module resolution failures on Windows by adding an explicit alias and `server.fs.allow` rule in `vite.config.ts` to map `@bitscribe/core-types` directly to the monorepo package source, bypassing flaky npm symlink resolution during `npm run tauri dev`.
+
 ## [1.4.3] - 2026-07-15
 
 ### Added

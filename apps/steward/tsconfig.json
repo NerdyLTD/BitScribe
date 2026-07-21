@@ -18,6 +18,9 @@
     "paths": {
       "@/*": [
         "./*"
+      ],
+      "@bitscribe/core-types": [
+        "../../packages/core-types/index.ts"
       ]
     },
     "allowImportingTsExtensions": true,
