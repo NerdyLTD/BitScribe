@@ -7,11 +7,11 @@ import confetti from "canvas-confetti";
 import React, { useState, useEffect, useMemo, useRef, useTransition } from "react";
 import { scanDirectories, getDbFiles, clearDb, saveDbFiles, getDiagnostic, injectDemoData, saveSettings, loadSettings } from "./lib/api";
 import { MediaItem, RuleCriteria, APP_VERSION, APP_NAME, APP_VERSION_DATE } from '@bitscribe/core-types';
-import { filterItemsForReport } from "./utils/reportFilters";
+import { filterItemsForReport } from '@bitscribe/core-eval';
 import {
   DEFAULT_RULES,
   evaluatePlexCompatibility, computeDuplicatesMap,
-} from "./utils/plexEvaluator";
+} from '@bitscribe/core-eval';
 import { exportMediaLibraryToExcel } from "./utils/excelExporter";
 import {
   exportMediaLibraryToCSV,

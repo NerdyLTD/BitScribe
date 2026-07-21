@@ -89,6 +89,10 @@
 - Fixed an issue where the Excel and HTML Metadata Scanner modules erroneously audited music files as non-compliant by relying on streaming compatibility flags rather than the dedicated metadata scanner. Music files are now properly audited for their own trackable metadata (Title, Year, Artist, Album, Disc, Track).
 - Separated `Metadata Scan` metric rendering in Excel and HTML into responsive variants that respect the isolation of `Video Metadata Scan` and `Music Metadata Scan` preferences.
 
+## [1.5.0] - 2026-07-21
+### Refactored
+- 2026-07-21: Extracted evaluation logic, media parsers, formatters, sorting helpers, and scan utilities into `@bitscribe/core-eval` package as part of the monorepo architecture Phase 3 refactoring.
+
 ## [1.4.5] - 2026-07-16
 ### Changed
 - Eliminated all duplicate, hard-coded logic for metric calculations across the entire application. Created a centralized "source of truth" in `plexEvaluator.ts` by adding standardized boolean flags (`isBloated`, `isStarved`, `isAnomaly`) to the `EvaluationResult` interface.

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { RuleCriteria } from '@bitscribe/core-types';
 import { Sliders, RotateCcw, Info, Check } from "lucide-react";
-import { DEFAULT_RULES } from "../utils/plexEvaluator";
+import { DEFAULT_RULES } from '@bitscribe/core-eval';
 
 // Full options representing FFprobe-compatible codecs and container parameters
 const ALL_DISCOVERY_VIDEO = [

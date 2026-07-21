@@ -19,6 +19,7 @@
       "@/*": [
         "./*"
       ],
+      "@bitscribe/core-eval": ["../../packages/core-eval/index.ts"],
       "@bitscribe/core-types": [
         "../../packages/core-types/index.ts"
       ]

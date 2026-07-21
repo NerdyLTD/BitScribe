@@ -1,14 +1,14 @@
-import { formatCodecString, getPrimaryAudioCodec, getPrimaryVideoCodec, getContainerFormat, getFormattedAudioTracks } from "../utils/mediaFormatter";
+import { formatCodecString, getPrimaryAudioCodec, getPrimaryVideoCodec, getContainerFormat, getFormattedAudioTracks } from '@bitscribe/core-eval';
 import { createPortal } from "react-dom";
 import React, { useState, useEffect, useMemo, memo, useTransition } from "react";
 import { MediaItem, RuleCriteria, sortCategories, getCategoryGroup, isMusicCategory } from '@bitscribe/core-types';
 import { MOCK_MEDIA_LIBRARY } from "../data/mockMediaData";
-import { evaluatePlexCompatibility, computeDuplicatesMap, getDuplicatePairRows, isMissingSubtitles } from "../utils/plexEvaluator";
-import { parseVideoMetadata } from "../utils/mediaParser";
-import { getDisplayArtist, getDisplayAlbum, getDisplaySongTitle } from "../utils/musicHelper";
-import { normalizeTitleForSort, getSectionHeaderForTitle, normalizeGroupTitle, getMusicGroupTitle } from "../utils/sortingHelper";
+import { evaluatePlexCompatibility, computeDuplicatesMap, getDuplicatePairRows, isMissingSubtitles } from '@bitscribe/core-eval';
+import { parseVideoMetadata } from '@bitscribe/core-eval';
+import { getDisplayArtist, getDisplayAlbum, getDisplaySongTitle } from '@bitscribe/core-eval';
+import { normalizeTitleForSort, getSectionHeaderForTitle, normalizeGroupTitle, getMusicGroupTitle } from '@bitscribe/core-eval';
 
-import { getMissingMetadataTags } from "../utils/excelExporter";
+import { getMissingMetadataTags } from "@bitscribe/core-eval";
 import DiagnosticPanel from "./DiagnosticPanel";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LabelList } from 'recharts';
 import {

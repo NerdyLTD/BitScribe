@@ -1,108 +1,33 @@
-import { formatCodecString, getPrimaryAudioCodec, getPrimaryVideoCodec, getContainerFormat, formatSubtitleSummary, formatSubtitleTechnical } from "./mediaFormatter";
+import { formatCodecString, getPrimaryAudioCodec, getPrimaryVideoCodec, getContainerFormat, formatSubtitleSummary, formatSubtitleTechnical } from '@bitscribe/core-eval';
 import { isMusicCategory, sortCategories, getCategoryGroup } from '@bitscribe/core-types';
 import ExcelJS from "exceljs";
 import { downloadOrSaveFile } from "./downloader";
 import { MediaItem, RuleCriteria } from '@bitscribe/core-types';
-import { normalizeTitleForSort, getSectionHeaderForTitle, normalizeGroupTitle, getMusicGroupTitle, getGroupTitleInit } from "./sortingHelper";
+import { normalizeTitleForSort, getSectionHeaderForTitle, normalizeGroupTitle, getMusicGroupTitle, getGroupTitleInit } from '@bitscribe/core-eval';
 
 import {
   evaluatePlexCompatibility,
   computeDuplicatesMap,
-} from "./plexEvaluator";
-import { getDuplicatePairRows, DuplicatePairRow } from "./duplicateHelper";
+} from '@bitscribe/core-eval';
+import { getDuplicatePairRows, DuplicatePairRow } from '@bitscribe/core-eval';
 import {
   getDisplayArtist,
   getDisplayAlbum,
   getDisplaySongTitle,
-} from "./musicHelper";
-import { getScanType, getReportTitle } from "./reportExporter";
+} from '@bitscribe/core-eval';
+import { getScanType, getReportTitle } from "@bitscribe/core-eval";
 import {
   parseVideoMetadata,
   getExtrasGroupTitle,
   extractSeasonNumber,
-} from "./mediaParser";
+} from '@bitscribe/core-eval';
 
-export function formatResolutionForExcel(
-  videoResolution: string | undefined,
-): string {
-  if (!videoResolution || videoResolution === "-") return "-";
-  const val = videoResolution.trim();
-  const match = val.match(/^(\d+x\d+)\s*\[(.*?)\]/);
-  if (match) {
-    return `${match[2]} (${match[1]})`;
-  }
-  if (/^(4K|1080p|720p|SD|480p|360p)$/i.test(val)) {
-    const lower = val.toLowerCase();
-    if (lower === "4k") return "4K (3840x2160)";
-    if (lower === "1080p") return "1080p (1920x1080)";
-    if (lower === "720p") return "720p (1280x720)";
-    if (lower === "sd" || lower === "480p") return "SD (720x480)";
-    return val;
-  }
-  return val;
-}
 
-export function getMissingMetadataTags(item: MediaItem): string[] {
-  const tags = item.tags || {};
-  const missing: string[] = [];
 
-  if (item.category === "Static" || item.category === "Corrupted") {
-    return [];
-  }
 
-  const titleVal = tags.title || tags.TITLE || "";
-  const titleCleaned = titleVal.trim();
-  const hasTitle =
-    !!titleCleaned &&
-    titleCleaned.toLowerCase() !== (item.filename || "").toLowerCase();
-  if (!hasTitle) {
-    missing.push("Title");
-  }
 
-  const yearVal =
-    item.year ||
-    parseInt(tags.date || tags.DATE || tags.year || tags.YEAR || "0") ||
-    0;
-  if (!yearVal) {
-    missing.push("Release Year");
-  }
 
-  const catGroup = getCategoryGroup(item.category || "");
-  const isTV = catGroup === "TV";
-  const isMovie = catGroup === "Movies";
-  const isMusic = catGroup === "Music";
-
-  if (isMovie) {
-    if (!tags.director && !tags.DIRECTOR) missing.push("Director");
-    if (!tags.writer && !tags.WRITER) missing.push("Writer");
-    if (!tags.cast && !tags.CAST && !tags.actors && !tags.ACTORS && !tags.actor && !tags.ACTOR)
-      missing.push("Cast/Actors");
-    if (!tags.studio && !tags.STUDIO && !tags.publisher && !tags.PUBLISHER && !tags.network && !tags.NETWORK)
-      missing.push("Studio");
-  } else if (isTV) {
-    if (!tags.show && !tags.SHOW && !tags.series && !tags.SERIES)
-      missing.push("Show Title");
-    if (!tags.writer && !tags.WRITER) missing.push("Writer");
-    if (!tags.cast && !tags.CAST && !tags.actors && !tags.ACTORS && !tags.actor && !tags.ACTOR)
-      missing.push("Cast/Actors");
-    if (!tags.studio && !tags.STUDIO && !tags.network && !tags.NETWORK && !tags.publisher && !tags.PUBLISHER)
-      missing.push("Studio");
-  } else if (isMusic) {
-    if (!tags.artist && !tags.ARTIST) missing.push("Artist");
-    if (!tags.album && !tags.ALBUM) missing.push("Album");
-    if (!tags.album_artist && !tags.ALBUM_ARTIST) missing.push("Album Artist");
-    if (!tags.track && !tags.TRACK && !tags.tracknumber && !tags.TRACKNUMBER) missing.push("Track");
-    if (!tags.disc && !tags.DISC) missing.push("Disc");
-  }
-
-  return missing;
-}
-
-export const getFolderPath = (filepath: string, filename: string) => {
-  const p = filepath.substring(0, filepath.lastIndexOf(filename));
-  return p.endsWith("/") || p.endsWith("\\") ? p.slice(0, -1) : p;
-};
-
+  
 
 
 export async function exportMediaLibraryToExcel(

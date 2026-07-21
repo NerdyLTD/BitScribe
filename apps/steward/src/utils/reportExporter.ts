@@ -1,4 +1,4 @@
-import { formatCodecString, getPrimaryAudioCodec, getPrimaryVideoCodec, getContainerFormat, formatSubtitleSummary, formatSubtitleTechnical } from "./mediaFormatter";
+import { formatCodecString, getPrimaryAudioCodec, getPrimaryVideoCodec, getContainerFormat, formatSubtitleSummary, formatSubtitleTechnical } from '@bitscribe/core-eval';
 import { isMusicCategory, sortCategories, getCategoryGroup } from '@bitscribe/core-types';
 import { MediaItem, RuleCriteria } from '@bitscribe/core-types';
 import {
@@ -6,19 +6,19 @@ import {
   computeDuplicatesMap,
   isMissingSubtitles,
   hasBadSubtitles
-} from "./plexEvaluator";
-import { getDuplicatePairRows } from "./duplicateHelper";
+} from '@bitscribe/core-eval';
+import { getDuplicatePairRows } from '@bitscribe/core-eval';
 import {
   getFolderPath,
   getMissingMetadataTags,
   formatResolutionForExcel,
-} from "./excelExporter";
-import { parseVideoMetadata } from "./mediaParser";
+} from "@bitscribe/core-eval";
+import { parseVideoMetadata } from '@bitscribe/core-eval';
 import {
   getDisplayArtist,
   getDisplayAlbum,
   getDisplaySongTitle,
-} from "./musicHelper";
+} from '@bitscribe/core-eval';
 import { downloadOrSaveFile } from "./downloader";
 
 async function triggerClientDownload(
@@ -39,60 +39,9 @@ async function triggerClientDownload(
   return fileName;
 }
 
-export function getScanType(
-  rules: RuleCriteria,
-  items: MediaItem[] = [],
-): string {
-  let scanType = "Local Audit Scan";
-  if (
-    rules.useMetadataScan ||
-    rules.useVideoMetadataScan ||
-    rules.useMusicMetadataScan
-  ) {
-    if (rules.useVideoMetadataScan && !rules.useMusicMetadataScan) {
-      scanType = "Video Metadata Scan";
-    } else if (rules.useMusicMetadataScan && !rules.useVideoMetadataScan) {
-      scanType = "Music Metadata Scan";
-    } else {
-      scanType = "Metadata Scan";
-    }
-  } else if (rules.useSubtitleScan) {
-    scanType = "Subtitle Scan";
-  } else if (rules.useAnomalyScan) {
-    scanType = "Anomaly Scan";
-  } else if (
-    rules.useDuplicationScan ||
-    rules.useDuplicationVideoScan ||
-    rules.useDuplicationMusicScan
-  ) {
-    scanType = "Duplication Scan";
-  } else if (rules.useDiscoveryPreset) {
-    scanType = "Discovery Scan";
-  } else if (rules.useModernPreset && rules.useLegacyPreset) {
-    scanType = "Stream Audit Scan";
-  } else if (rules.useModernPreset) {
-    scanType = "Stream Audit Scan";
-  } else if (
-    items.length > 0 &&
-    items.every((i) => i.category === "Corrupted")
-  ) {
-    scanType = "Corrupted Audit";
-  } else {
-    scanType = "Stream Audit Scan"; // default
-  }
-  return scanType;
-}
 
-export function getReportTitle(scanType: string): string {
-  if (scanType === "Discovery Scan") return "Discovery Audit";
-  if (scanType === "Stream Audit Scan") return "Streaming Audit";
-  if (scanType === "Subtitle Scan") return "Subtitle Audit";
-  if (scanType === "Metadata Scan" || scanType === "Video Metadata Scan" || scanType === "Music Metadata Scan") return "Metadata Audit";
-  if (scanType === "Duplication Scan") return "Duplicate Files Audit";
-  if (scanType === "Corrupted Audit") return "Bad Files Audit";
-  if (scanType === "Anomaly Scan") return "Quality Audit";
-  return "Media Library Audit";
-}
+
+
 
 function getReportFileName(
   rules: RuleCriteria,

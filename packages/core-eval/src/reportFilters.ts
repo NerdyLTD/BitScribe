@@ -1,7 +1,7 @@
 import { MediaItem, RuleCriteria, isMusicCategory } from '@bitscribe/core-types';
 import { evaluatePlexCompatibility, isMissingSubtitles, hasBadSubtitles } from "./plexEvaluator";
-import { getScanType } from "./reportExporter";
-import { getMissingMetadataTags } from "./excelExporter";
+import { getScanType } from "./scanUtils";
+import { getMissingMetadataTags } from "./scanUtils";
 
 export function filterItemsForReport(
   items: MediaItem[],
