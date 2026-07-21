@@ -2738,9 +2738,19 @@ export default function App() {
             if (shouldPopulate) {
                 localStorage.setItem("bitscribe_tour_status", JSON.stringify({ status: "active", startStep: 0 }));
                 localStorage.setItem("bitscribe_demo_data_inserted", "true");
-                injectDemoData().then(() => {
-                  window.location.reload();
-                });
+                injectDemoData().then(async () => {
+                        try {
+                            const newFiles = await getDbFiles();
+                            const cleanFiles = newFiles.filter((f: any) => f.category !== "Corrupted" && (!f.category || !f.category.toLowerCase().includes("corrupt")));
+                            const corrupt = newFiles.filter((f: any) => f.category === "Corrupted" || (f.category && f.category.toLowerCase().includes("corrupt")));
+                            setScannedFiles(cleanFiles);
+                            setScannedFilesList(cleanFiles);
+                            setCorruptFiles(corrupt);
+                            setScanLogs([`Populated demo database with ${newFiles.length} items.`]);
+                        } catch (e) {
+                            console.error("Failed to load demo data", e);
+                        }
+                      });
             } else if (files && files.length > 0) {
                 const cleanFiles = files.filter((f: any) => f.category !== "Corrupted" && (!f.category || !f.category.toLowerCase().includes("corrupt")));
                 const corrupt = files.filter((f: any) => f.category === "Corrupted" || (f.category && f.category.toLowerCase().includes("corrupt")));
@@ -4386,8 +4396,18 @@ export default function App() {
                     if (scannedFilesList.length < 5) {
                       localStorage.setItem("bitscribe_tour_status", JSON.stringify({ status: "active", startStep }));
                       localStorage.setItem("bitscribe_demo_data_inserted", "true");
-                      injectDemoData().then(() => {
-                        window.location.reload();
+                      injectDemoData().then(async () => {
+                        try {
+                            const newFiles = await getDbFiles();
+                            const cleanFiles = newFiles.filter((f: any) => f.category !== "Corrupted" && (!f.category || !f.category.toLowerCase().includes("corrupt")));
+                            const corrupt = newFiles.filter((f: any) => f.category === "Corrupted" || (f.category && f.category.toLowerCase().includes("corrupt")));
+                            setScannedFiles(cleanFiles);
+                            setScannedFilesList(cleanFiles);
+                            setCorruptFiles(corrupt);
+                            setScanLogs([`Populated demo database with ${newFiles.length} items.`]);
+                        } catch (e) {
+                            console.error("Failed to load demo data", e);
+                        }
                       });
                       return;
                     }
@@ -4555,8 +4575,14 @@ export default function App() {
                     onConfirm: () => {
                       localStorage.clear();
                       clearDb().then(() => {
-                         window.location.reload();
-                      }).catch(() => window.location.reload());
+                    setScannedFiles([]);
+                    setScannedFilesList([]);
+                    setCorruptFiles([]);
+                    setScanLogs(["App state and database completely wiped."]);
+                  }).catch(() => {
+                    setScannedFiles([]);
+                    setScannedFilesList([]);
+                  });
                     }
                   });
                 }}
