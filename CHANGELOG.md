@@ -1,3 +1,6 @@
+## [1.4.6] - 2026-07-21
+### Fixed
+- 2026-07-21: Fixed a critical crash (Tauri app exiting with 4294967295 / -1) occurring a few seconds after launching the app with an empty state. Replaced dangerous `window.location.reload()` calls (which destabilize Vite HMR and WebView2) with secure React state updates to seamlessly load the mock library data.
 ## [1.4.14] - 2026-07-19
 
 ### Added
