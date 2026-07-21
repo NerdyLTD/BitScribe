@@ -1,0 +1,15 @@
+{
+  "name": "@bitscribe/ui-components",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "types": "index.ts",
+  "dependencies": {
+    "react": "^19.0.1",
+    "react-dom": "^19.0.1",
+    "motion": "^12.23.24"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3"
+  }
+}

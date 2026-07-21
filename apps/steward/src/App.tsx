@@ -5,7 +5,7 @@ import confetti from "canvas-confetti";
  */
 
 import React, { useState, useEffect, useMemo, useRef, useTransition } from "react";
-import { scanDirectories, getDbFiles, clearDb, saveDbFiles, getDiagnostic, injectDemoData, saveSettings, loadSettings } from "./lib/api";
+import { scanDirectories, getDbFiles, clearDb, saveDbFiles, getDiagnostic, injectDemoData, saveSettings, loadSettings } from '@bitscribe/core-db';
 import { MediaItem, RuleCriteria, APP_VERSION, APP_NAME, APP_VERSION_DATE } from '@bitscribe/core-types';
 import { filterItemsForReport } from '@bitscribe/core-eval';
 import {
@@ -28,8 +28,8 @@ import { EVENTS, STATUS, ACTIONS, EventData } from 'react-joyride';
 import { Play, Pause, Sparkles, ChevronLeft, ChevronRight, X as CloseIcon, List, ChevronUp, ChevronDown, GripHorizontal, Sliders, Check, Film, Trash2, Database, Clapperboard, FolderOpen, AlertCircle, AlertTriangle, Download, CheckCircle, Maximize, Minimize } from "lucide-react";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import BitsyCharacter from "./components/BitsyCharacter";
-import { BitsyReel } from "./components/BitsyReel";
+import { BitsyCharacter } from '@bitscribe/ui-components';
+import { BitsyReel } from '@bitscribe/ui-components';
 import { readTextFile, writeFile, mkdir, exists } from "@tauri-apps/plugin-fs";
 import { join } from "@tauri-apps/api/path";
 import { invoke } from "@tauri-apps/api/core";

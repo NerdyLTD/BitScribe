@@ -18,7 +18,7 @@ function saveMockDb(items: MediaItem[]) {
 import { Command } from "@tauri-apps/plugin-shell";
 import { MediaItem } from '@bitscribe/core-types';
 import { evaluatePlexCompatibility } from '@bitscribe/core-eval';
-import { MOCK_MEDIA_LIBRARY } from "../data/mockMediaData";
+import { MOCK_MEDIA_LIBRARY } from "./data/mockMediaData";
 
 export async function getDbFiles(): Promise<MediaItem[]> {
     if (!isTauri()) return _mockDb;

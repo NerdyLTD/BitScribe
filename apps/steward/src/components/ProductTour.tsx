@@ -1,5 +1,5 @@
 import React from 'react';
-import BitsyCharacter from './BitsyCharacter';
+import { BitsyCharacter } from '@bitscribe/ui-components';
 import { Joyride, EventData, Step, TooltipRenderProps } from 'react-joyride';
 
 interface ProductTourProps {

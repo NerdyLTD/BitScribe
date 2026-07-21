@@ -91,7 +91,8 @@
 
 ## [1.5.0] - 2026-07-21
 ### Refactored
-- 2026-07-21: Extracted evaluation logic, media parsers, formatters, sorting helpers, and scan utilities into `@bitscribe/core-eval` package as part of the monorepo architecture Phase 3 refactoring.
+- Extracted evaluation logic, media parsers, formatters, sorting helpers, and scan utilities into `@bitscribe/core-eval` package as part of the monorepo architecture Phase 3 refactoring.
+- Extracted database access logic (api.ts) to `@bitscribe/core-db` and UI elements (BitsyCharacter, BitsyReel) to `@bitscribe/ui-components` as part of the monorepo architecture Phase 4 refactoring.
 
 ## [1.4.5] - 2026-07-16
 ### Changed

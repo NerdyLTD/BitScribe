@@ -19,6 +19,8 @@
       "@/*": [
         "./*"
       ],
+      "@bitscribe/core-db": ["../../packages/core-db/index.ts"],
+      "@bitscribe/ui-components": ["../../packages/ui-components/index.ts"],
       "@bitscribe/core-eval": ["../../packages/core-eval/index.ts"],
       "@bitscribe/core-types": [
         "../../packages/core-types/index.ts"

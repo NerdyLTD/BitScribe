@@ -2,7 +2,7 @@ import { formatCodecString, getPrimaryAudioCodec, getPrimaryVideoCodec, getConta
 import { createPortal } from "react-dom";
 import React, { useState, useEffect, useMemo, memo, useTransition } from "react";
 import { MediaItem, RuleCriteria, sortCategories, getCategoryGroup, isMusicCategory } from '@bitscribe/core-types';
-import { MOCK_MEDIA_LIBRARY } from "../data/mockMediaData";
+import { MOCK_MEDIA_LIBRARY } from '@bitscribe/core-db';
 import { evaluatePlexCompatibility, computeDuplicatesMap, getDuplicatePairRows, isMissingSubtitles } from '@bitscribe/core-eval';
 import { parseVideoMetadata } from '@bitscribe/core-eval';
 import { getDisplayArtist, getDisplayAlbum, getDisplaySongTitle } from '@bitscribe/core-eval';
