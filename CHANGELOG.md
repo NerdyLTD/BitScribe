@@ -1,3 +1,7 @@
+## [1.4.10] - 2026-07-21
+### Fixed
+- 2026-07-21: Renamed the startup debug log file from `debug.log` to `debuglog.txt` and added an on-screen alert to expose any errors encountered during the write process.
+
 ## [1.4.9] - 2026-07-21
 ### Added
 - 2026-07-21: Added automatic debug log creation in the `Downloads/BitScribe` directory upon application launch to aid in troubleshooting startup issues.

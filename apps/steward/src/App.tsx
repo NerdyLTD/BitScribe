@@ -113,7 +113,7 @@ export default function App() {
             await mkdir(bitScribeDir, { recursive: true });
           }
           
-          const logFile = await join(bitScribeDir, "debug.log");
+          const logFile = await join(bitScribeDir, "debuglog.txt");
           const timestamp = new Date().toISOString();
           const logContent = `[${timestamp}] App launched successfully.\nVersion: ${APP_VERSION}\n`;
           
@@ -121,6 +121,7 @@ export default function App() {
         }
       } catch (err) {
         console.error("Failed to write debug log", err);
+        alert("Failed to write debug log: " + String(err));
       }
     };
     initDebugLog();
