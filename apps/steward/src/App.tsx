@@ -4309,6 +4309,7 @@ export default function App() {
                         setScanLogs(prev => [`[SUCCESS] Exported ${fname}`, ...prev]);
                       } catch (e: any) {
                         f++;
+                        console.error("Export Error in " + targetProfile + " " + format, e);
                         setScanLogs(prev => [`[ERROR] Failed to export ${targetProfile} (${format}): ${e.message}`, ...prev]);
                       }
                       currentReportIndex.val++;

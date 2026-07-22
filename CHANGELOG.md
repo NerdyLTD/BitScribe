@@ -1,3 +1,9 @@
+## [1.4.14] - 2026-07-21
+### Fixed
+- 2026-07-21: Switched from base64 string conversion to direct byte streaming via Tauri `plugin-fs` in `downloader.ts` to prevent out-of-memory crashes and IPC payload limits when exporting very large media library reports.
+- 2026-07-21: Added `fs:write-all` and `fs:allow-write-file` permissions to Tauri capabilities to fully support binary file writing.
+- 2026-07-21: Added verbose error logging (`console.error`) inside the export handler to ensure export failures are captured in the background `debuglog.txt` moving forward.
+
 ## [1.4.12] - 2026-07-21
 ### Fixed
 - 2026-07-21: Expanded the startup debug log to capture all `console.log`, `console.warn`, `console.error`, and unhandled exceptions across the application lifecycle to assist in deep troubleshooting.

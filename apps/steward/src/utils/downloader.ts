@@ -1,22 +1,6 @@
 import { save } from '@tauri-apps/plugin-dialog';
 import { join } from '@tauri-apps/api/path';
-import { invoke } from '@tauri-apps/api/core';
-
-function blobToBase64(blob: Blob): Promise<string> {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            if (typeof reader.result === 'string') {
-                const b64 = reader.result.split(',')[1];
-                resolve(b64);
-            } else {
-                reject(new Error("Failed to convert blob to base64"));
-            }
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-    });
-}
+import { writeFile } from '@tauri-apps/plugin-fs';
 
 export async function downloadOrSaveFile(fileName: string, blob: Blob, explicitPath?: string) {
     let wasSavedNatively = false;
@@ -30,12 +14,15 @@ export async function downloadOrSaveFile(fileName: string, blob: Blob, explicitP
             } else {
                 filePath = await join(explicitPath, fileName);
             }
+            
             if (filePath) {
-                const b64 = await blobToBase64(blob);
-                await invoke('save_file', { path: filePath, contentsB64: b64 });
+                const buffer = await blob.arrayBuffer();
+                const data = new Uint8Array(buffer);
+                await writeFile(filePath, data);
                 wasSavedNatively = true;
             }
         } catch (e: any) {
+            console.error("Downloader native error:", e);
             nativeError = e;
         }
     }
