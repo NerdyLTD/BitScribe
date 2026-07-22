@@ -1,3 +1,7 @@
+## [1.4.20] - 2026-07-21
+### Fixed
+- 2026-07-21: Fixed PowerShell `npm error Lifecycle script dev failed with error` when closing the Tauri window by changing `beforeDevCommand` in `tauri.conf.json` from `npm run dev` to `npx vite`. This prevents npm from catching signal terminations on app exit.
+
 ## [1.4.19] - 2026-07-21
 ### Fixed
 - 2026-07-21: Adjusted the debug log system to create a uniquely timestamped log file on every launch (e.g., `2026-07-21_14-30-00_debuglog.txt`) instead of appending all history to a single giant text file.
