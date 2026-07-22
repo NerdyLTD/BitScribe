@@ -1,3 +1,7 @@
+## [1.4.17] - 2026-07-21
+### Fixed
+- 2026-07-21: Fixed Recharts `width/height` console warnings on window close/resize by adding `minWidth={0}` and `minHeight={0}` properties to all `ResponsiveContainer` components in the dashboard.
+
 ## [1.4.16] - 2026-07-21
 ### Fixed
 - 2026-07-21: Fixed missing import for `formatResolutionForExcel` in `excelExporter.ts` which was causing ReferenceErrors during background report generation for specific audit profiles.
