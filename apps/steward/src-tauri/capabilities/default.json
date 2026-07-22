@@ -20,6 +20,10 @@
       ]
     },
     "fs:default",
+    "fs:allow-write-text-file",
+    "fs:allow-mkdir",
+    "fs:allow-download-write",
+    "fs:allow-download-write-recursive",
     {
       "identifier": "fs:scope",
       "allow": [

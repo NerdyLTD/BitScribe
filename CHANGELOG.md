@@ -1,3 +1,7 @@
+## [1.4.11] - 2026-07-21
+### Fixed
+- 2026-07-21: Fixed missing Tauri fs permissions (`fs:allow-write-text-file`, `fs:allow-mkdir`, `fs:allow-download-write`) which prevented the startup debug log from being written to the Downloads folder.
+
 ## [1.4.10] - 2026-07-21
 ### Fixed
 - 2026-07-21: Renamed the startup debug log file from `debug.log` to `debuglog.txt` and added an on-screen alert to expose any errors encountered during the write process.
