@@ -22,9 +22,6 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   return (
     <header id="app-header" className="sticky top-0 z-[100] bg-[#0F1117]/95 backdrop-blur-sm border-b border-[#1e2333]/80 py-2.5 px-6 shrink-0 overflow-hidden select-none">
-      {/* Glow behind the header */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-24 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-      
       {/* Centered Lockup */}
       <div className="w-full flex items-center justify-between relative z-10">
         {/* Left subtle telemetry marker */}

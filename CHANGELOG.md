@@ -1,3 +1,7 @@
+## [1.4.26] - 2026-07-22
+### Removed
+- 2026-07-22: Completely removed the purple-to-blue radial backdrop glow div (`blur-3xl`) from `Header.tsx` as requested by the user, leaving a clean, flat header container background.
+
 ## [1.4.25] - 2026-07-21
 ### Fixed
 - 2026-07-21: Unified the background colors across the Header (`Header.tsx`), Navigation Tabs (`NavigationTabs.tsx`), Sidebar, Troubleshooting block, and Main Content area (`App.tsx`) to a cohesive `#0F1117` canvas background, eliminating visual color discrepancies and creating a seamless, polished application layout.
