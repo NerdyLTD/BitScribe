@@ -1,3 +1,7 @@
+## [1.4.9] - 2026-07-21
+### Added
+- 2026-07-21: Added automatic debug log creation in the `Downloads/BitScribe` directory upon application launch to aid in troubleshooting startup issues.
+
 ## [1.4.8] - 2026-07-21
 ### Fixed
 - 2026-07-21: Fixed a critical issue causing the application to crash to a black screen upon launch due to a missing `getCategoryGroup` import in the core evaluation module. Added the missing import to resolve the React render exception.

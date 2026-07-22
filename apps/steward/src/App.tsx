@@ -98,6 +98,35 @@ export default function App() {
   const [demoReelTarget, setDemoReelTarget] = useState<string | null>(null);
   const demoMsgRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    const initDebugLog = async () => {
+      try {
+        if (typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__) {
+          const { downloadDir, join } = await import('@tauri-apps/api/path');
+          const { writeTextFile, mkdir, exists } = await import('@tauri-apps/plugin-fs');
+          
+          const dlDir = await downloadDir();
+          const bitScribeDir = await join(dlDir, "BitScribe");
+          
+          const dirExists = await exists(bitScribeDir);
+          if (!dirExists) {
+            await mkdir(bitScribeDir, { recursive: true });
+          }
+          
+          const logFile = await join(bitScribeDir, "debug.log");
+          const timestamp = new Date().toISOString();
+          const logContent = `[${timestamp}] App launched successfully.\nVersion: ${APP_VERSION}\n`;
+          
+          await writeTextFile(logFile, logContent, { append: true });
+        }
+      } catch (err) {
+        console.error("Failed to write debug log", err);
+      }
+    };
+    initDebugLog();
+  }, []);
+
+
   const handleBrowseFolder = async () => {
     try {
       if (typeof window === 'undefined' || !(window as any).__TAURI_INTERNALS__) {
