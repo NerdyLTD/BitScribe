@@ -1,3 +1,7 @@
+## [1.4.22] - 2026-07-21
+### Fixed
+- 2026-07-21: Moved the Troubleshooting section inside the primary scrollable sidebar container in `App.tsx`. This ensures that when the window is vertically shrunk, the Troubleshooting block remains strictly in document flow below the Export Formats block with a clean margin gap, preventing any vertical visual overlap.
+
 ## [1.4.21] - 2026-07-21
 ### Refactored
 - 2026-07-21: Completed Phase 5 of the BitScribe Monorepo transition by cleaning up orphaned workspace build scripts and configuring top-level `npm run lint` workspace delegation. Verified full type safety and modular export integration across `@bitscribe/core-types`, `@bitscribe/core-eval`, `@bitscribe/core-db`, and `@bitscribe/ui-components`.

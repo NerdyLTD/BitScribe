@@ -4420,9 +4420,8 @@ export default function App() {
               Reports were sent to Downloads\\BitScribe Reports\\
             </div>
           </section>
-          </div>
           {/* Troubleshooting section */}
-          <section id="troubleshooting-section" className="space-y-1.5 bg-[#14171F] border-t border-slate-700/50 p-4 z-20 shrink-0">
+          <section id="troubleshooting-section" className="space-y-1.5 bg-[#14171F] border-t border-slate-700/50 pt-3 mt-1 shrink-0">
             <label className="text-[10px] uppercase tracking-wider text-slate-500 font-bold block mb-1">
               Troubleshooting
             </label>
@@ -4529,6 +4528,7 @@ export default function App() {
 
             </div>
           </section>
+          </div>
         </aside>
 
         {/* Right Main Content Panel */}
