@@ -1,3 +1,7 @@
+## [1.4.27] - 2026-07-22
+### Refactored
+- 2026-07-22: Phase 7 of Monorepo Refactoring: Extracted the complete left sidebar navigation, scanner controls, export formats, report profiles, custom column selector, and troubleshooting panel into a standalone modular `Sidebar` component (`apps/steward/src/components/Sidebar.tsx`). Reduced `App.tsx` monolith complexity while preserving all interactive scanner, export, and diagnostic state handlers.
+
 ## [1.4.26] - 2026-07-22
 ### Removed
 - 2026-07-22: Completely removed the purple-to-blue radial backdrop glow div (`blur-3xl`) from `Header.tsx` as requested by the user, leaving a clean, flat header container background.
