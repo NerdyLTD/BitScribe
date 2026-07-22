@@ -1,3 +1,8 @@
+## [1.4.18] - 2026-07-21
+### Fixed
+- 2026-07-21: Fixed an issue where resizing the window vertically caused the Troubleshooting block in the sidebar to overlap the Export Formats text by correcting its flex layout classes.
+- 2026-07-21: Renamed the generated executable from `Steward.exe` to `BitScribeSteward.exe` in the Tauri configuration to maintain consistent branding.
+
 ## [1.4.17] - 2026-07-21
 ### Fixed
 - 2026-07-21: Fixed Recharts `width/height` console warnings on window close/resize by adding `minWidth={0}` and `minHeight={0}` properties to all `ResponsiveContainer` components in the dashboard.
