@@ -17,7 +17,7 @@ function saveMockDb(items: MediaItem[]) {
 
 import { Command } from "@tauri-apps/plugin-shell";
 import { MediaItem } from '@bitscribe/core-types';
-import { evaluatePlexCompatibility } from '@bitscribe/core-eval';
+import { evaluatePlexCompatibility, sanitizeTags } from '@bitscribe/core-eval';
 import { MOCK_MEDIA_LIBRARY } from "./data/mockMediaData";
 
 export async function getDbFiles(): Promise<MediaItem[]> {
@@ -725,7 +725,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                     videoBitrateMbps: videoBitrateMbps,
                     audioTracks: parsedAudioTracks,
                     subtitleTracks: parsedSubtitleTracks,
-                    tags: tags,
+                    tags: sanitizeTags(tags),
                     audioBitrate: totalAudioBitrate,
                     isCorrupted: false,
                     errorMessage: "",

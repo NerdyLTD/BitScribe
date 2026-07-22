@@ -1,3 +1,9 @@
+## [1.4.28] - 2026-07-22
+### Added
+- 2026-07-22: Added `sanitizeTags` function in `@bitscribe/core-eval` (`mediaParser.ts`) to strip out junk metadata (proprietary ID3 frames like `id3v2_priv.*`, `WM/*`, `Zune*`, `iTun*`, hex byte dumps, build signatures like `ENCODER`, `creation_time`, `TLEN`, `TMED`, `compatible_brands`, and scene uploader signatures) during initial file scans and JSON report exports.
+- 2026-07-22: Consolidated and preserved all song lyrics (`lyrics`, `lyrics-eng`, `lyrics-XXX`, `unsyncedlyrics`) into a clean, normalized `lyrics` string without binary noise, preserving full multiline compatibility for external players and future embedding tools.
+- 2026-07-22: Drastically reduced SQLite database storage footprint and JSON audit report file size (e.g., Discovery Audit size drop) while maintaining 100% field parity for all standard video, TV, movie, music, and audiobook metadata.
+
 ## [1.4.27] - 2026-07-22
 ### Refactored
 - 2026-07-22: Phase 7 of Monorepo Refactoring: Extracted the complete left sidebar navigation, scanner controls, export formats, report profiles, custom column selector, and troubleshooting panel into a standalone modular `Sidebar` component (`apps/steward/src/components/Sidebar.tsx`). Reduced `App.tsx` monolith complexity while preserving all interactive scanner, export, and diagnostic state handlers.

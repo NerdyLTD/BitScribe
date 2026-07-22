@@ -520,3 +520,133 @@ export const parseVideoMetadata = (item: MediaItem) => {
     epTitle: epTitle || "-",
   };
 };
+
+export function sanitizeTags(rawTags: Record<string, string> | undefined | null): Record<string, string> {
+  if (!rawTags || typeof rawTags !== 'object') return {};
+
+  const cleanTags: Record<string, string> = {};
+
+  // Standard metadata keys to keep and normalize to clean lower_snake_case
+  const KEEP_KEYS: Record<string, string> = {
+    // Title & General
+    title: 'title',
+    
+    // Artist & Roles
+    artist: 'artist',
+    album_artist: 'album_artist',
+    albumartist: 'album_artist',
+    composer: 'composer',
+    author: 'author',
+    narrator: 'narrator',
+    performer: 'performer',
+    director: 'director',
+    writer: 'writer',
+    cast: 'cast',
+    actor: 'cast',
+    actors: 'cast',
+
+    // Collection & Grouping
+    album: 'album',
+    genre: 'genre',
+    track: 'track',
+    tracknumber: 'track',
+    disc: 'disc',
+    discnumber: 'disc',
+    show: 'show',
+    show_title: 'show',
+    series: 'series',
+    series_title: 'series',
+    season: 'season',
+    season_number: 'season',
+    episode: 'episode',
+    episode_id: 'episode',
+    episode_sort: 'episode',
+    book_series: 'book_series',
+    series_index: 'series_index',
+
+    // Publishing & Identification
+    publisher: 'publisher',
+    label: 'publisher',
+    studio: 'studio',
+    network: 'studio',
+    date: 'date',
+    year: 'year',
+    original_year: 'year',
+    original_release_date: 'date',
+    isbn: 'isbn',
+    isrc: 'isrc',
+    copyright: 'copyright',
+
+    // Descriptions & Summaries
+    synopsis: 'synopsis',
+    description: 'description',
+  };
+
+  for (const [key, rawVal] of Object.entries(rawTags)) {
+    if (!rawVal || typeof rawVal !== 'string') continue;
+    const val = rawVal.trim();
+    if (!val) continue;
+
+    const lowerKey = key.toLowerCase().trim();
+
+    // 1. Filter out proprietary ID3 frames, software versions, build tags, and FFprobe container metadata
+    if (
+      lowerKey.startsWith('id3v2_priv') ||
+      lowerKey.startsWith('wm/') ||
+      lowerKey.startsWith('zune') ||
+      lowerKey.startsWith('itun') ||
+      lowerKey.includes('mediaclass') ||
+      lowerKey.includes('unique_file_identifier') ||
+      lowerKey.includes('uniquefileidentifier') ||
+      lowerKey.includes('collectiongroupid') ||
+      lowerKey.includes('collectionid') ||
+      lowerKey.includes('contentid') ||
+      lowerKey.includes('provider') ||
+      lowerKey === 'tlen' ||
+      lowerKey === 'tmed' ||
+      lowerKey === 'tso2' ||
+      lowerKey === 'text' ||
+      lowerKey === 'encoder' ||
+      lowerKey === 'encoded_by' ||
+      lowerKey === 'writing frontend' ||
+      lowerKey === 'writing_frontend' ||
+      lowerKey === 'writing_application' ||
+      lowerKey === 'compatible_brands' ||
+      lowerKey === 'major_brand' ||
+      lowerKey === 'minor_version' ||
+      lowerKey === 'creation_time'
+    ) {
+      continue;
+    }
+
+    // 2. Filter out binary/hex escape byte dumps (e.g. \xbc}\x00)
+    if (/^(\\x[0-9a-fA-F]{2})+/.test(val) || (val.startsWith('\\x') && val.length < 120 && (val.match(/\\x/g) || []).length > 3)) {
+      continue;
+    }
+
+    // 3. Preserve lyrics (handling language variations like lyrics-eng, lyrics-XXX, unsyncedlyrics, etc.)
+    if (lowerKey.includes('lyrics') || lowerKey === 'uslt' || lowerKey === 'unsyncedlyrics' || lowerKey === 'syncedlyrics') {
+      cleanTags['lyrics'] = val;
+      continue;
+    }
+
+    // 4. Preserve comments if genuine user notes and NOT scene release/ripping group signatures
+    if (lowerKey === 'comment') {
+      const isSceneSpam = /galaxy|torrentgalaxy|proxygalaxy|zortam|examdb|free\s*rip|handbrake|ffmpeg|lavf|staxrip/i.test(val);
+      if (!isSceneSpam && val.length > 0 && !val.startsWith('\\x')) {
+        cleanTags['comment'] = val;
+      }
+      continue;
+    }
+
+    // 5. Keep known whitelist fields
+    const mappedKey = KEEP_KEYS[lowerKey];
+    if (mappedKey) {
+      if (!cleanTags[mappedKey]) {
+        cleanTags[mappedKey] = val;
+      }
+    }
+  }
+
+  return cleanTags;
+}

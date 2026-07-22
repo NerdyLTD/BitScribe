@@ -14,6 +14,7 @@ import {
   formatResolutionForExcel,
   getScanType,
   getReportTitle,
+  sanitizeTags,
 } from "@bitscribe/core-eval";
 import { parseVideoMetadata } from '@bitscribe/core-eval';
 import {
@@ -406,8 +407,10 @@ export async function exportMediaLibraryToJSON(
 
   const reports = targetItems.map((item) => {
     const isDup = duplicatesMap.get(item.id) ?? false;
+    const cleanTags = sanitizeTags(item.tags);
     return {
       ...item,
+      tags: cleanTags,
       parsedMetadata: parseVideoMetadata(item),
       evaluation: evaluatePlexCompatibility(item, rules, isDup),
     };
