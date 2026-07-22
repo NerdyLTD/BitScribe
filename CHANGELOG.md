@@ -1,3 +1,7 @@
+## [1.4.24] - 2026-07-21
+### Refactored
+- 2026-07-21: Phase 6 of Monorepo Refactoring: Extracted modular `Header` (`Header.tsx`) and `NavigationTabs` (`NavigationTabs.tsx`) components out of `App.tsx` into `apps/steward/src/components/`, improving code readability and component isolation while maintaining exact UI parity.
+
 ## [1.4.23] - 2026-07-21
 ### Fixed
 - 2026-07-21: Added explicit bottom padding (`pb-6` on the Troubleshooting section and `pb-8` on the sidebar scroll container) in `App.tsx` so that when the window is vertically resized, the bottom buttons (Show Tour, Clear Cache) in the Troubleshooting section are fully visible with clean clearance above the bottom window edge.
