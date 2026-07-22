@@ -3545,8 +3545,8 @@ export default function App() {
       <div className={isFluidLayout ? "flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0" : "flex-1 flex overflow-hidden min-h-0"}>
         {/* Left Side Navigation & Health Panel */}
         <aside className={isFluidLayout 
-          ? "w-full lg:w-64 bg-[#14171F] border-b lg:border-b-0 lg:border-r border-[#1e232e] flex flex-col shrink-0 select-none overflow-hidden min-h-0" 
-          : "w-64 bg-[#14171F] border-r border-[#1e232e] flex flex-col shrink-0 select-none overflow-hidden min-h-0"
+          ? "w-full lg:w-64 bg-[#0F1117] border-b lg:border-b-0 lg:border-r border-[#1e232e] flex flex-col shrink-0 select-none overflow-hidden min-h-0" 
+          : "w-64 bg-[#0F1117] border-r border-[#1e232e] flex flex-col shrink-0 select-none overflow-hidden min-h-0"
         }>
 {/* Source path section */}
           <div className="flex flex-col gap-4 p-4 pb-8 flex-1 overflow-y-auto min-h-0 scrollbar-none">
@@ -4244,7 +4244,7 @@ export default function App() {
             </div>
           </section>
           {/* Troubleshooting section */}
-          <section id="troubleshooting-section" className="space-y-1.5 bg-[#14171F] border-t border-slate-700/50 pt-3 mt-1 pb-6 shrink-0">
+          <section id="troubleshooting-section" className="space-y-1.5 bg-[#0F1117] border-t border-slate-700/50 pt-3 mt-1 pb-6 shrink-0">
             <label className="text-[10px] uppercase tracking-wider text-slate-500 font-bold block mb-1">
               Troubleshooting
             </label>

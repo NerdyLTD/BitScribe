@@ -1,3 +1,7 @@
+## [1.4.25] - 2026-07-21
+### Fixed
+- 2026-07-21: Unified the background colors across the Header (`Header.tsx`), Navigation Tabs (`NavigationTabs.tsx`), Sidebar, Troubleshooting block, and Main Content area (`App.tsx`) to a cohesive `#0F1117` canvas background, eliminating visual color discrepancies and creating a seamless, polished application layout.
+
 ## [1.4.24] - 2026-07-21
 ### Refactored
 - 2026-07-21: Phase 6 of Monorepo Refactoring: Extracted modular `Header` (`Header.tsx`) and `NavigationTabs` (`NavigationTabs.tsx`) components out of `App.tsx` into `apps/steward/src/components/`, improving code readability and component isolation while maintaining exact UI parity.

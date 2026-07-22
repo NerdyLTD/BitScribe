@@ -21,7 +21,7 @@ export const Header: React.FC<HeaderProps> = ({
   isFullscreen,
 }) => {
   return (
-    <header id="app-header" className="sticky top-0 z-[100] bg-[#10141D]/95 backdrop-blur-sm border-b border-[#1e2333]/80 py-2.5 px-6 shrink-0 overflow-hidden select-none">
+    <header id="app-header" className="sticky top-0 z-[100] bg-[#0F1117]/95 backdrop-blur-sm border-b border-[#1e2333]/80 py-2.5 px-6 shrink-0 overflow-hidden select-none">
       {/* Glow behind the header */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-24 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-full blur-3xl pointer-events-none" />
       
@@ -36,17 +36,17 @@ export const Header: React.FC<HeaderProps> = ({
               value={activeModeName === "Select a mode" ? "" : activeModeName}
               onChange={handleHeaderModeChange}
               title={MODE_DESCRIPTIONS[activeModeName] || "Select an active audit preset for your media library."}
-              className="bg-[#0f111a] border border-slate-700/60 text-[10px] font-bold font-mono text-cyan-400 rounded px-1.5 py-0.5 outline-none cursor-pointer hover:border-cyan-500/50 transition-colors focus:border-cyan-500"
+              className="bg-[#0F1117] border border-slate-700/60 text-[10px] font-bold font-mono text-cyan-400 rounded px-1.5 py-0.5 outline-none cursor-pointer hover:border-cyan-500/50 transition-colors focus:border-cyan-500"
             >
-              <option value="" disabled className="text-slate-500 bg-[#0f111a]" title="Choose a preset mode to scan and audit your media collection.">Select a mode</option>
-              <option value="Stream Audit" className="text-slate-300 bg-[#0f111a]" title="Audits video, audio streams, and subtitles for direct play compatibility on both modern and legacy devices.">Stream Audit</option>
-              <option value="Media Discovery" className="text-slate-300 bg-[#0f111a]" title="Discovers and catalogs all media files, conforming to standard configurations.">Media Discovery</option>
-              <option value="Quality Audit" className="text-slate-300 bg-[#0f111a]" title="Scans for media stream corruption, quality anomalies, and bitrate issues.">Quality Audit</option>
-              <option value="Subtitle Audit" className="text-slate-300 bg-[#0f111a]" title="Detects missing subtitles, unsupported image-based subtitles, and text formatting.">Subtitle Audit</option>
-              <option value="Duplication Scan" className="text-slate-300 bg-[#0f111a]" title="Analyzes video and music libraries to identify duplicate media items.">Duplication Scan</option>
-              <option value="Metadata Audit" className="text-slate-300 bg-[#0f111a]" title="Audits embedded tags (titles, artists, years, cover art) for clean cataloging.">Metadata Audit</option>
+              <option value="" disabled className="text-slate-500 bg-[#0F1117]" title="Choose a preset mode to scan and audit your media collection.">Select a mode</option>
+              <option value="Stream Audit" className="text-slate-300 bg-[#0F1117]" title="Audits video, audio streams, and subtitles for direct play compatibility on both modern and legacy devices.">Stream Audit</option>
+              <option value="Media Discovery" className="text-slate-300 bg-[#0F1117]" title="Discovers and catalogs all media files, conforming to standard configurations.">Media Discovery</option>
+              <option value="Quality Audit" className="text-slate-300 bg-[#0F1117]" title="Scans for media stream corruption, quality anomalies, and bitrate issues.">Quality Audit</option>
+              <option value="Subtitle Audit" className="text-slate-300 bg-[#0F1117]" title="Detects missing subtitles, unsupported image-based subtitles, and text formatting.">Subtitle Audit</option>
+              <option value="Duplication Scan" className="text-slate-300 bg-[#0F1117]" title="Analyzes video and music libraries to identify duplicate media items.">Duplication Scan</option>
+              <option value="Metadata Audit" className="text-slate-300 bg-[#0F1117]" title="Audits embedded tags (titles, artists, years, cover art) for clean cataloging.">Metadata Audit</option>
               {(activeModeName === "Modern Direct Play" || activeModeName === "Legacy Direct Play") && (
-                <option value={activeModeName} disabled className="text-amber-400/80 bg-[#0f111a]">
+                <option value={activeModeName} disabled className="text-amber-400/80 bg-[#0F1117]">
                   Stream Audit (Custom)
                 </option>
               )}
