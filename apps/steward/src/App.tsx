@@ -116,8 +116,15 @@ export default function App() {
             await mkdir(bitScribeDir, { recursive: true });
           }
           
-          const logFile = await join(bitScribeDir, "debuglog.txt");
-          const timestamp = new Date().toISOString();
+          const now = new Date();
+          const safeTs = now.getFullYear() + '-' +
+            String(now.getMonth() + 1).padStart(2, '0') + '-' +
+            String(now.getDate()).padStart(2, '0') + '_' +
+            String(now.getHours()).padStart(2, '0') + '-' +
+            String(now.getMinutes()).padStart(2, '0') + '-' +
+            String(now.getSeconds()).padStart(2, '0');
+          const logFile = await join(bitScribeDir, `${safeTs}_debuglog.txt`);
+          const timestamp = now.toISOString();
           const logContent = `[\n\n${timestamp}] App launched successfully.\nVersion: ${APP_VERSION}\n`;
           
           await writeTextFile(logFile, logContent, { append: true });
