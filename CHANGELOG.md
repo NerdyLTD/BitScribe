@@ -1,3 +1,7 @@
+## [1.4.16] - 2026-07-21
+### Fixed
+- 2026-07-21: Fixed missing import for `formatResolutionForExcel` in `excelExporter.ts` which was causing ReferenceErrors during background report generation for specific audit profiles.
+
 ## [1.4.15] - 2026-07-21
 ### Fixed
 - 2026-07-21: Fixed missing import statements for `getFolderPath`, `getMissingMetadataTags`, `getScanType`, and `getReportTitle` in the export handlers (`excelExporter.ts`, `reportExporter.ts`) which were causing ReferenceErrors during background report generation.
