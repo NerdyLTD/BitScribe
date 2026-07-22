@@ -1728,7 +1728,7 @@ const handleCategoryToggle = (cat: string) => {
               </h4>
               {hasData ? (
                 <div className="flex-1 w-full min-h-0">
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                     <BarChart data={displayVideo} layout="vertical" margin={{ top: 0, right: 20, left: 5, bottom: 0 }}>
                       <XAxis type="number" hide />
                       <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} interval={0} tick={{fill: '#94a3b8', fontSize: 9}} width={80} />
@@ -1764,7 +1764,7 @@ const handleCategoryToggle = (cat: string) => {
               </h4>
               {hasData ? (
                 <div className="flex-1 w-full min-h-0">
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                     <BarChart data={displayAudio} layout="vertical" margin={{ top: 0, right: 20, left: 5, bottom: 0 }}>
                       <XAxis type="number" hide />
                       <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} interval={0} tick={{fill: '#94a3b8', fontSize: 9}} width={80} />
@@ -1800,7 +1800,7 @@ const handleCategoryToggle = (cat: string) => {
               </h4>
               {hasData ? (
                 <div className="flex-1 w-full min-h-0">
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                     <BarChart data={displayContainer} layout="vertical" margin={{ top: 0, right: 20, left: 5, bottom: 0 }}>
                       <XAxis type="number" hide />
                       <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} interval={0} tick={{fill: '#94a3b8', fontSize: 9}} width={80} />
@@ -1836,7 +1836,7 @@ const handleCategoryToggle = (cat: string) => {
               </h4>
               {hasData ? (
                 <div className="flex-1 w-full min-h-0">
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                     <BarChart data={displayMusic} layout="vertical" margin={{ top: 0, right: 20, left: 5, bottom: 0 }}>
                       <XAxis type="number" hide />
                       <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} interval={0} tick={{fill: '#94a3b8', fontSize: 9}} width={80} />
@@ -2248,7 +2248,7 @@ const handleCategoryToggle = (cat: string) => {
                 
                 <div className="h-[140px] mt-1 border-l sm:border-t-0 border-t border-[#1e232e]/30 sm:pl-4 sm:pt-0 pt-3">
                   <div className="text-[10px] text-slate-400 mb-2 uppercase tracking-wider font-bold">Category Breakdown</div>
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                     <BarChart 
                       data={displayDuplicateCategories} 
                       layout="vertical" 
