@@ -4415,7 +4415,7 @@ export default function App() {
           </section>
           </div>
           {/* Troubleshooting section */}
-          <section id="troubleshooting-section" className="space-y-1.5 bg-[#14171F] border-t border-slate-700/50 p-4 z-20 shrink-0 sticky bottom-0 mt-auto">
+          <section id="troubleshooting-section" className="space-y-1.5 bg-[#14171F] border-t border-slate-700/50 p-4 z-20 shrink-0">
             <label className="text-[10px] uppercase tracking-wider text-slate-500 font-bold block mb-1">
               Troubleshooting
             </label>
