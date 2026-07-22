@@ -1,3 +1,7 @@
+## [1.4.19] - 2026-07-21
+### Fixed
+- 2026-07-21: Adjusted the debug log system to create a uniquely timestamped log file on every launch (e.g., `2026-07-21_14-30-00_debuglog.txt`) instead of appending all history to a single giant text file.
+
 ## [1.4.18] - 2026-07-21
 ### Fixed
 - 2026-07-21: Fixed an issue where resizing the window vertically caused the Troubleshooting block in the sidebar to overlap the Export Formats text by correcting its flex layout classes.
