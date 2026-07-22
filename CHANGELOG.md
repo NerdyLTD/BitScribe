@@ -1,3 +1,6 @@
+## [1.4.8] - 2026-07-21
+### Fixed
+- 2026-07-21: Fixed a critical issue causing the application to crash to a black screen upon launch due to a missing `getCategoryGroup` import in the core evaluation module. Added the missing import to resolve the React render exception.
 ## [1.4.7] - 2026-07-21
 ### Fixed
 - 2026-07-21: Restored missing `ffprobe` binaries required for the Tauri build process which were accidentally deleted during the monorepo migration.

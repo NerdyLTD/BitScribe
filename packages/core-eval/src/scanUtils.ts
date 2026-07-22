@@ -1,5 +1,5 @@
 
-import { MediaItem, RuleCriteria } from '@bitscribe/core-types';
+import { MediaItem, RuleCriteria, getCategoryGroup } from '@bitscribe/core-types';
 
 export function getScanType(
   rules: RuleCriteria,
