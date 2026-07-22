@@ -1,3 +1,7 @@
+## [1.4.12] - 2026-07-21
+### Fixed
+- 2026-07-21: Expanded the startup debug log to capture all `console.log`, `console.warn`, `console.error`, and unhandled exceptions across the application lifecycle to assist in deep troubleshooting.
+
 ## [1.4.11] - 2026-07-21
 ### Fixed
 - 2026-07-21: Fixed missing Tauri fs permissions (`fs:allow-write-text-file`, `fs:allow-mkdir`, `fs:allow-download-write`) which prevented the startup debug log from being written to the Downloads folder.

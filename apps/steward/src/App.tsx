@@ -102,6 +102,9 @@ export default function App() {
     const initDebugLog = async () => {
       try {
         if (typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__) {
+          if ((window as any).__BITSCRIBE_LOG_INITIALIZED__) return;
+          (window as any).__BITSCRIBE_LOG_INITIALIZED__ = true;
+          
           const { downloadDir, join } = await import('@tauri-apps/api/path');
           const { writeTextFile, mkdir, exists } = await import('@tauri-apps/plugin-fs');
           
@@ -115,9 +118,51 @@ export default function App() {
           
           const logFile = await join(bitScribeDir, "debuglog.txt");
           const timestamp = new Date().toISOString();
-          const logContent = `[${timestamp}] App launched successfully.\nVersion: ${APP_VERSION}\n`;
+          const logContent = `[\n\n${timestamp}] App launched successfully.\nVersion: ${APP_VERSION}\n`;
           
           await writeTextFile(logFile, logContent, { append: true });
+          
+          const appendLog = async (level: string, ...args: any[]) => {
+            try {
+              const msg = args.map(a => {
+                if (a instanceof Error) return a.stack || a.message;
+                if (typeof a === 'object') {
+                   try { return JSON.stringify(a); } catch(e) { return String(a); }
+                }
+                return String(a);
+              }).join(' ');
+              const ts = new Date().toISOString();
+              await writeTextFile(logFile, `[${ts}] [${level}] ${msg}\n`, { append: true });
+            } catch (e) {
+               // ignore
+            }
+          };
+
+          const originalConsoleLog = console.log;
+          console.log = (...args) => {
+             originalConsoleLog(...args);
+             appendLog('LOG', ...args);
+          };
+
+          const originalConsoleWarn = console.warn;
+          console.warn = (...args) => {
+             originalConsoleWarn(...args);
+             appendLog('WARN', ...args);
+          };
+
+          const originalConsoleError = console.error;
+          console.error = (...args) => {
+             originalConsoleError(...args);
+             appendLog('ERROR', ...args);
+          };
+          
+          window.addEventListener('error', (event) => {
+              appendLog('UNHANDLED_ERROR', event.message, event.filename, event.lineno, event.colno, event.error?.stack);
+          });
+          
+          window.addEventListener('unhandledrejection', (event) => {
+              appendLog('UNHANDLED_REJECTION', event.reason);
+          });
         }
       } catch (err) {
         console.error("Failed to write debug log", err);
