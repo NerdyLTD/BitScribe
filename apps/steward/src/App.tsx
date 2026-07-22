@@ -3726,7 +3726,7 @@ export default function App() {
           : "w-64 bg-[#14171F] border-r border-[#1e232e] flex flex-col shrink-0 select-none overflow-hidden min-h-0"
         }>
 {/* Source path section */}
-          <div className="flex flex-col gap-4 p-4 flex-1 overflow-y-auto min-h-0 scrollbar-none">
+          <div className="flex flex-col gap-4 p-4 pb-8 flex-1 overflow-y-auto min-h-0 scrollbar-none">
           <section id="paths-section">
             <div className="mb-4">
               <div className="text-[11px] font-extrabold uppercase tracking-widest text-[#8B5CF6] select-none">
@@ -4421,7 +4421,7 @@ export default function App() {
             </div>
           </section>
           {/* Troubleshooting section */}
-          <section id="troubleshooting-section" className="space-y-1.5 bg-[#14171F] border-t border-slate-700/50 pt-3 mt-1 shrink-0">
+          <section id="troubleshooting-section" className="space-y-1.5 bg-[#14171F] border-t border-slate-700/50 pt-3 mt-1 pb-6 shrink-0">
             <label className="text-[10px] uppercase tracking-wider text-slate-500 font-bold block mb-1">
               Troubleshooting
             </label>

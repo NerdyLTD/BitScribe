@@ -1,3 +1,7 @@
+## [1.4.23] - 2026-07-21
+### Fixed
+- 2026-07-21: Added explicit bottom padding (`pb-6` on the Troubleshooting section and `pb-8` on the sidebar scroll container) in `App.tsx` so that when the window is vertically resized, the bottom buttons (Show Tour, Clear Cache) in the Troubleshooting section are fully visible with clean clearance above the bottom window edge.
+
 ## [1.4.22] - 2026-07-21
 ### Fixed
 - 2026-07-21: Moved the Troubleshooting section inside the primary scrollable sidebar container in `App.tsx`. This ensures that when the window is vertically shrunk, the Troubleshooting block remains strictly in document flow below the Export Formats block with a clean margin gap, preventing any vertical visual overlap.
