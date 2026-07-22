@@ -9,6 +9,7 @@
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "dev": "npm run dev --workspace=apps/steward",
+    "lint": "npm run lint --workspace=apps/steward",
     "tauri": "npm run tauri --workspace=apps/steward"
   }
 }

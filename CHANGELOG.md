@@ -1,3 +1,7 @@
+## [1.4.21] - 2026-07-21
+### Refactored
+- 2026-07-21: Completed Phase 5 of the BitScribe Monorepo transition by cleaning up orphaned workspace build scripts and configuring top-level `npm run lint` workspace delegation. Verified full type safety and modular export integration across `@bitscribe/core-types`, `@bitscribe/core-eval`, `@bitscribe/core-db`, and `@bitscribe/ui-components`.
+
 ## [1.4.20] - 2026-07-21
 ### Fixed
 - 2026-07-21: Fixed PowerShell `npm error Lifecycle script dev failed with error` when closing the Tauri window by changing `beforeDevCommand` in `tauri.conf.json` from `npm run dev` to `npx vite`. This prevents npm from catching signal terminations on app exit.
