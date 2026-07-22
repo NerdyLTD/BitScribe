@@ -1,3 +1,7 @@
+## [1.4.15] - 2026-07-21
+### Fixed
+- 2026-07-21: Fixed missing import statements for `getFolderPath`, `getMissingMetadataTags`, `getScanType`, and `getReportTitle` in the export handlers (`excelExporter.ts`, `reportExporter.ts`) which were causing ReferenceErrors during background report generation.
+
 ## [1.4.14] - 2026-07-21
 ### Fixed
 - 2026-07-21: Switched from base64 string conversion to direct byte streaming via Tauri `plugin-fs` in `downloader.ts` to prevent out-of-memory crashes and IPC payload limits when exporting very large media library reports.

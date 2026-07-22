@@ -15,7 +15,7 @@ import {
   getDisplayAlbum,
   getDisplaySongTitle,
 } from '@bitscribe/core-eval';
-import { getScanType, getReportTitle } from "@bitscribe/core-eval";
+import { getScanType, getReportTitle, getFolderPath, getMissingMetadataTags } from "@bitscribe/core-eval";
 import {
   parseVideoMetadata,
   getExtrasGroupTitle,

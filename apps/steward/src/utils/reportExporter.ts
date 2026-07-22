@@ -12,6 +12,8 @@ import {
   getFolderPath,
   getMissingMetadataTags,
   formatResolutionForExcel,
+  getScanType,
+  getReportTitle,
 } from "@bitscribe/core-eval";
 import { parseVideoMetadata } from '@bitscribe/core-eval';
 import {
