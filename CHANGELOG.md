@@ -1,3 +1,7 @@
+## [1.4.7] - 2026-07-21
+### Fixed
+- 2026-07-21: Restored missing `ffprobe` binaries required for the Tauri build process which were accidentally deleted during the monorepo migration.
+
 ## [1.4.6] - 2026-07-21
 ### Fixed
 - 2026-07-21: Fixed a critical crash (Tauri app exiting with 4294967295 / -1) occurring a few seconds after launching the app with an empty state. Replaced dangerous `window.location.reload()` calls (which destabilize Vite HMR and WebView2) with secure React state updates to seamlessly load the mock library data.
