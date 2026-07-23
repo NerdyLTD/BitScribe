@@ -408,23 +408,62 @@ export async function exportMediaLibraryToJSON(
   const reports = targetItems.map((item) => {
     const isDup = duplicatesMap.get(item.id) ?? false;
     const cleanTags = sanitizeTags(item.tags);
-    return {
-      ...item,
+    const evaluation = evaluatePlexCompatibility(item, rules, isDup);
+
+    // Remove top-level duplicate streamFriendly* fields that are encapsulated in evaluation
+    const {
+      streamFriendlyLevel,
+      streamFriendlyReason,
+      streamFriendlySuggestion,
+      streamFriendlyEvaluated,
+      ...restItem
+    } = item;
+
+    // Clean numeric floating-point precision
+    if (typeof restItem.sizeGB === 'number') {
+      restItem.sizeGB = Math.round(restItem.sizeGB * 1000000) / 1000000;
+    }
+    if (typeof restItem.durationMins === 'number') {
+      restItem.durationMins = Math.round(restItem.durationMins * 10000) / 10000;
+    }
+    if (typeof restItem.videoBitrateMbps === 'number') {
+      restItem.videoBitrateMbps = Math.round(restItem.videoBitrateMbps * 1000000) / 1000000;
+    }
+
+    const rawParsed = parseVideoMetadata(item);
+    const parsedMetadata: Record<string, any> = {};
+    if (rawParsed.title && rawParsed.title !== "-") parsedMetadata.title = rawParsed.title;
+    if (rawParsed.year && rawParsed.year !== "-") parsedMetadata.year = rawParsed.year;
+    if (rawParsed.season && rawParsed.season !== "-") parsedMetadata.season = rawParsed.season;
+    if (rawParsed.episode && rawParsed.episode !== "-") parsedMetadata.episode = rawParsed.episode;
+    if (rawParsed.epTitle && rawParsed.epTitle !== "-") parsedMetadata.epTitle = rawParsed.epTitle;
+
+    const baseObj: Record<string, any> = {
+      ...restItem,
       tags: cleanTags,
-      parsedMetadata: parseVideoMetadata(item),
-      evaluation: evaluatePlexCompatibility(item, rules, isDup),
+      parsedMetadata,
+      evaluation,
     };
+
+    // Omit empty/default keys to prevent bloat across thousands of entries
+    const exportedItem: Record<string, any> = {};
+    for (const [key, value] of Object.entries(baseObj)) {
+      if (value === "" || value === null || value === undefined) continue;
+      if (Array.isArray(value) && value.length === 0) continue;
+      if (typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === 0) continue;
+      if (typeof value === 'boolean' && value === false) continue;
+      if ((key === 'seriesIndex' || key === 'pageCount' || key === 'year' || key === 'chapterCount') && value === 0) continue;
+      exportedItem[key] = value;
+    }
+
+    return exportedItem;
   });
-  const jsonContent = JSON.stringify(
-    {
-      application: "Bitscribe",
-      version: "v1.0",
-      timestamp: new Date().toLocaleString(),
-      items: reports,
-    },
-    null,
-    2,
-  );
+  const jsonContent = JSON.stringify({
+    application: "Bitscribe",
+    version: "v1.0",
+    timestamp: new Date().toLocaleString(),
+    items: reports,
+  });
   const filename = `${getReportFileName(rules, items)}.json`;
   await triggerClientDownload(
     filename,

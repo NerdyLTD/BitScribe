@@ -1,3 +1,10 @@
+## [1.4.29] - 2026-07-23
+### Optimized
+- 2026-07-23: Optimized JSON report export (`exportMediaLibraryToJSON` in `reportExporter.ts`) to dramatically shrink JSON audit file sizes (e.g. reducing large discovery report files by over 65%-75% down to ~15-20MB for ~25,000 items) without any data or capability loss.
+- 2026-07-23: Eliminated duplicate top-level `streamFriendlyLevel`, `streamFriendlyReason`, `streamFriendlySuggestion`, and `streamFriendlyEvaluated` fields that duplicated the self-contained `evaluation` block.
+- 2026-07-23: Cleaned up empty default strings (`author`, `publisher`, `narrator`, `errorMessage`, `matchedOnlineId`, `fileUuid`, etc.), empty tag/subtitle structures, and default zero values from export items, and rounded floating-point number fields (`sizeGB`, `durationMins`, `videoBitrateMbps`).
+- 2026-07-23: Switched JSON export stringification to standard minified JSON, eliminating millions of whitespace indentation characters while keeping the SQLite database completely untouched.
+
 ## [1.4.28] - 2026-07-22
 ### Added
 - 2026-07-22: Added `sanitizeTags` function in `@bitscribe/core-eval` (`mediaParser.ts`) to strip out junk metadata (proprietary ID3 frames like `id3v2_priv.*`, `WM/*`, `Zune*`, `iTun*`, hex byte dumps, build signatures like `ENCODER`, `creation_time`, `TLEN`, `TMED`, `compatible_brands`, and scene uploader signatures) during initial file scans and JSON report exports.
