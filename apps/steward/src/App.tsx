@@ -5,7 +5,7 @@ import confetti from "canvas-confetti";
  */
 
 import React, { useState, useEffect, useMemo, useRef, useTransition } from "react";
-import { scanDirectories, getDbFiles, clearDb, saveDbFiles, getDiagnostic, injectDemoData, saveSettings, loadSettings } from '@bitscribe/core-db';
+import { scanDirectories, getDbFiles, clearDb, saveDbFiles, getDiagnostic, injectDemoData, clearDemoData, saveSettings, loadSettings } from '@bitscribe/core-db';
 import { MediaItem, RuleCriteria, APP_VERSION, APP_NAME, APP_VERSION_DATE } from '@bitscribe/core-types';
 import { filterItemsForReport } from '@bitscribe/core-eval';
 import {
@@ -2237,6 +2237,7 @@ export default function App() {
   };
 
   const handleStartScan = async (isQuickRefresh: boolean = false) => {
+    handleTabChange("scan");
     const isQ = isQuickRefresh === true;
     const hasData = scannedFilesList.length > 0;
 
@@ -2527,6 +2528,49 @@ export default function App() {
     setScannedFilesList([]);
     setCorruptFiles([]);
     setHasCompletedScan(false);
+  };
+
+  const flushDemoDataOnly = async () => {
+    localStorage.removeItem("bitscribe_demo_data_inserted");
+    try {
+      await clearDemoData();
+      const reloaded = await getDbFiles();
+      setScannedFilesList(reloaded);
+      
+      const nonCorrupt = reloaded.filter(f => !(f.category === "Corrupted" || (f.category && f.category.toLowerCase().includes("corrupt"))));
+      const corrupt = reloaded.filter(f => f.category === "Corrupted" || (f.category && f.category.toLowerCase().includes("corrupt")));
+      setScannedFiles(nonCorrupt);
+      setCorruptFiles(corrupt);
+      
+      if (reloaded.length === 0) {
+        setHasCompletedScan(false);
+      }
+      setScanLogs(["Demo media files removed from local database."]);
+      setNotification("Demo media files cleared successfully.");
+    } catch (e) {
+      console.error("Failed to clear demo data:", e);
+      setNotification({ type: 'error', message: "Failed to clear demo data." });
+    }
+  };
+
+  const handlePopulateDemo = async () => {
+    localStorage.setItem("bitscribe_demo_data_inserted", "true");
+    try {
+      await injectDemoData();
+      const reloaded = await getDbFiles();
+      setScannedFilesList(reloaded);
+      
+      const nonCorrupt = reloaded.filter(f => !(f.category === "Corrupted" || (f.category && f.category.toLowerCase().includes("corrupt"))));
+      const corrupt = reloaded.filter(f => f.category === "Corrupted" || (f.category && f.category.toLowerCase().includes("corrupt")));
+      setScannedFiles(nonCorrupt);
+      setCorruptFiles(corrupt);
+      setHasCompletedScan(true);
+      setScanLogs((prev) => [`Populated demo database with mock items.`, ...prev]);
+      setNotification({ type: 'success', message: 'Demo data populated successfully.' });
+    } catch (e) {
+      console.error("Failed to inject demo data:", e);
+      setNotification({ type: 'error', message: "Failed to inject demo data." });
+    }
   };
 
   const [scanPaths, setScanPaths] = useState<
@@ -3221,11 +3265,11 @@ export default function App() {
           hasDemoData={localStorage.getItem("bitscribe_demo_data_inserted") === "true"}
           onWipe={async () => {
             try {
-              await flushServerDatabase();
-              setNotification({ type: 'success', message: 'Demo data cleared successfully. Database is now empty and ready.' });
+              await flushDemoDataOnly();
+              setNotification({ type: 'success', message: 'Demo data cleared successfully. Real files are preserved.' });
             } catch (err) {
               console.error("Failed to clear database:", err);
-              setNotification({ type: 'error', message: 'Could not automatically wipe database.' });
+              setNotification({ type: 'error', message: 'Could not automatically wipe demo database.' });
             } finally {
               localStorage.removeItem("bitscribe_demo_data_inserted");
               setShowDemoCleanupModal(false);
@@ -3463,6 +3507,8 @@ export default function App() {
                   handleTabChange("help");
                   setHelpHighlight(id);
                 }}
+                onPopulateDemo={handlePopulateDemo}
+                onClearDemoData={flushDemoDataOnly}
               />
             </div>
 

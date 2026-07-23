@@ -33,6 +33,21 @@ export async function clearDb(): Promise<void> {
     await invoke("clear_db");
 }
 
+export async function clearDemoData(): Promise<void> {
+    const allItems = await getDbFiles();
+    const demoIds = new Set(MOCK_MEDIA_LIBRARY.map(x => x.id));
+    const nonDemoItems = allItems.filter(item => !demoIds.has(item.id));
+    
+    if (!isTauri()) {
+        saveMockDb(nonDemoItems);
+        return;
+    }
+    await invoke("clear_db");
+    if (nonDemoItems.length > 0) {
+        await invoke("save_db_files", { files: nonDemoItems });
+    }
+}
+
 export async function saveDbFiles(files: MediaItem[]): Promise<void> {
     if (!isTauri()) {
         const idMap = new Map(_mockDb.map(x => [x.id, x]));
@@ -263,21 +278,20 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
 
     let existingPaths = new Set<string>();
     let existingFilesMap = new Map<string, any>();
-    if (isResume) {
-        onLog("Loading existing database to determine resume point...");
-        try {
-            const dbFiles = await getDbFiles();
-            dbFiles.forEach(f => {
-                const normPath = normalizePath(f.filePath || f.id);
-                existingPaths.add(normPath);
-                existingFilesMap.set(normPath, f);
-            });
-            onLog(`Found ${existingPaths.size} already scanned files to skip.`);
-        } catch (e) {
-            onLog("Failed to load DB for resume. Starting fresh.");
-        }
+    onLog("Loading existing database to determine cache-skip files...");
+    try {
+        const dbFiles = await getDbFiles();
+        dbFiles.forEach(f => {
+            const normPath = normalizePath(f.filePath || f.id);
+            existingPaths.add(normPath);
+            existingFilesMap.set(normPath, f);
+        });
+        onLog(`Found ${existingPaths.size} existing files in database.`);
+    } catch (e) {
+        onLog("Failed to load DB. Starting fresh.");
     }
     const allowedExtensions = ['.mkv', '.mp4', '.avi', '.mov', '.wmv', '.flv', '.webm', '.m4v', '.mpg', '.mpeg', '.m2ts', '.ts', '.vob', '.mxf', '.mp3', '.flac', '.m4a', '.wav', '.aac', '.ogg', '.wma', '.alac', '.m4b', '.ape', '.opus', '.mka'];
+    const allowedExtensionsSet = new Set(allowedExtensions);
     
     let allFiles: {path: string, hash: string}[] = [];
     for (const p of paths) {
@@ -299,7 +313,9 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
             for (const fileObj of files) {
                 const file = fileObj.path;
                 const lower = file.toLowerCase();
-                if (allowedExtensions.some(ext => lower.endsWith(ext))) {
+                const lastDotIdx = lower.lastIndexOf('.');
+                const ext = lastDotIdx !== -1 ? lower.substring(lastDotIdx) : "";
+                if (allowedExtensionsSet.has(ext)) {
                     allFiles.push({path: file, hash: fileObj.fileHash});
                     const normPath = normalizePath(file);
                     // Temporarily store the physical size in the map so we can use it later
@@ -454,9 +470,9 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
     onStart(allFiles.length);
     if (allFiles.length === 0) return;
     
-    // Use all but one core to prevent system freezing, fallback to 1 if needed
+    // Use dynamic concurrency: I/O-bound processes like ffprobe benefit from a higher concurrency multiplier
     const logicalCores = typeof navigator !== 'undefined' && navigator.hardwareConcurrency ? navigator.hardwareConcurrency : 4;
-    const CONCURRENCY = Math.max(1, logicalCores - 1);
+    const CONCURRENCY = Math.max(8, logicalCores * 2);
     const BATCH_SIZE = 50;
     
     // ITEM 2: Concurrency & Database Write Safety.
@@ -475,34 +491,32 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
             const fileObjItem = allFiles[i];
             const file = fileObjItem.path;
             const fileHash = fileObjItem.hash;
-            let skipFile = false;
+            let skipProbe = false;
             const normPath = normalizePath(file);
-            if (existingPaths.has(normPath)) {
-                if (isResume) {
-                    try {
-                        const physicalSize = existingFilesMap.get(normPath + "_physical_size");
-                        const currentSizeGB = (physicalSize || 0) / (1024 * 1024 * 1024);
-                        const storedSizeGB = existingFilesMap.get(normPath)?.sizeGB || 0;
-                        
-                        // We check difference up to 1MB
-                        if (Math.abs(currentSizeGB - storedSizeGB) > 0.001) {
-                            skipFile = false;
-                            onLog(`Change detected for ${file}: Size changed from ${storedSizeGB.toFixed(3)}GB to ${currentSizeGB.toFixed(3)}GB.`);
-                        } else {
-                            skipFile = true;
-                        }
-                    } catch (err) {
-                        skipFile = true;
-                    }
-                } else {
-                    skipFile = true;
-                }
+            const cachedItem = existingFilesMap.get(normPath);
+            
+            if (cachedItem && cachedItem.id === fileHash) {
+                skipProbe = true;
             }
 
-            if (skipFile) {
-                onProgress({ current: i + 1, total: allFiles.length, item: null });
+            if (skipProbe && cachedItem) {
+                // Re-evaluate Plex compatibility based on latest rules without calling ffprobe
+                const evalResult = evaluatePlexCompatibility(cachedItem, rules, false, true);
+                cachedItem.streamFriendlyLevel = evalResult.level as any;
+                cachedItem.streamFriendlyReason = evalResult.reason;
+                cachedItem.streamFriendlySuggestion = evalResult.suggestion;
+                cachedItem.streamFriendlyEvaluated = Date.now();
+                
+                onProgress({ current: i + 1, total: allFiles.length, item: cachedItem });
+                batch.push(cachedItem);
+                
+                if (batch.length >= BATCH_SIZE) {
+                    const toSave = batch.splice(0, BATCH_SIZE);
+                    await saveDbFiles(toSave);
+                }
                 continue;
             }
+            
             onLog(`Probing (${i+1}/${allFiles.length}): ${file.substring(Math.max(0, file.length - 40))}`);
             
             if (!isTauri()) {
@@ -593,9 +607,20 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
             
             try {
                 // Securely execute ffprobe sidecar with a strict 15-second timeout safeguard to prevent hangs
-                const probePromise = Command.sidecar('bin/ffprobe', [
-                    '-v', 'quiet', '-print_format', 'json', '-show_format', '-show_streams', '-show_chapters', '-analyzeduration', '1000000', '-probesize', '1000000', file
-                ]).execute();
+                // Optimize ffprobe arguments by skipping chapters lookup on audio-only files
+                const isAudioFile = ['.mp3', '.flac', '.m4a', '.wav', '.aac', '.ogg', '.wma', '.alac', '.m4b', '.ape', '.opus', '.mka'].some(ext => file.toLowerCase().endsWith(ext));
+                const ffprobeArgs = [
+                    '-v', 'quiet',
+                    '-print_format', 'json',
+                    '-show_format',
+                    '-show_streams'
+                ];
+                if (!isAudioFile) {
+                    ffprobeArgs.push('-show_chapters');
+                }
+                ffprobeArgs.push('-analyzeduration', '1000000', '-probesize', '1000000', file);
+
+                const probePromise = Command.sidecar('bin/ffprobe', ffprobeArgs).execute();
 
                 const timeoutPromise = new Promise<never>((_, reject) => {
                     setTimeout(() => reject(new Error("ffprobe probe execution timed out after 15 seconds")), 15000);

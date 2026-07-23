@@ -108,6 +108,8 @@ interface RuleEditorProps {
   onFluidLayoutChange?: (val: boolean) => void;
   onAppReset?: () => void;
   onWipeDB?: () => void;
+  onPopulateDemo?: () => void;
+  onClearDemoData?: () => void;
 }
 
 export default function RuleEditor({
@@ -129,7 +131,9 @@ export default function RuleEditor({
   isFluidLayout = true,
   onFluidLayoutChange,
   onAppReset,
-  onWipeDB
+  onWipeDB,
+  onPopulateDemo,
+  onClearDemoData
 }: RuleEditorProps) {
   const [backupAllFeedback, setBackupAllFeedback] = useState(false);
   const [backupSettingsFeedback, setBackupSettingsFeedback] = useState(false);
@@ -1950,7 +1954,7 @@ const toggleBleedingEdgePreset = (checked: boolean) => {
               <div className="flex flex-col gap-1 w-full xl:w-[90px] shrink-0 justify-center mt-2 xl:mt-0">
                 <button
                   onClick={() => {
-                    fetch('/api/demo-data', { method: 'POST' }).then(() => window.location.reload());
+                    if (onPopulateDemo) onPopulateDemo();
                   }}
                   className="w-full bg-purple-600 hover:bg-purple-500 text-white rounded shadow-md text-[9px] font-semibold transition-colors h-6 flex items-center justify-center cursor-pointer"
                 >
@@ -1958,11 +1962,12 @@ const toggleBleedingEdgePreset = (checked: boolean) => {
                 </button>
                 <button
                   onClick={() => {
-                    fetch('/api/db-clear', { method: 'POST' }).then(() => window.location.reload());
+                    if (onClearDemoData) onClearDemoData();
                   }}
                   className="w-full bg-[#1A1D27] hover:bg-slate-700 border border-slate-700/50 text-slate-300 rounded shadow-md text-[9px] font-semibold transition-colors h-6 flex items-center justify-center cursor-pointer"
+                  title="Remove only the demo files from your library"
                 >
-                  Clear Database
+                  Clear Demo Data
                 </button>
               </div>
             </div>

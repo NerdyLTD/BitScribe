@@ -1,3 +1,12 @@
+## [1.4.33] - 2026-07-23
+### Optimized
+- 2026-07-23: Implemented major scan speed optimizations.
+  - Optimized directory walk file filtration by switching from nested `some` extensions loop to an `O(1)` `Set` lookup, significantly speeding up large library directory traversal.
+  - Dynamically increased worker pool concurrency multiplier from `logicalCores - 1` to `Math.max(8, logicalCores * 2)` to fully utilize hardware capability and overlapping disk/network I/O.
+  - Avoided redundant `ffprobe` sidecar execution for unmodified files by validating cached database files directly against Rust-calculated metadata size/time file hashes (`cachedItem.id === fileHash`).
+  - Added fast-skip metadata re-evaluation: if a file has not changed on disk, we bypass the heavy disk probe entirely but still run `evaluatePlexCompatibility` on the cached metadata dynamically, updating compatibility results instantly according to the user's latest custom rule criteria.
+  - Optimized `ffprobe` execution arguments for audio-only files (e.g. MP3, FLAC, M4A, etc.) by skipping chapters lookup (`-show_chapters`), reducing container analysis and parser overhead.
+
 ## [1.4.32] - 2026-07-23
 ### Fixed
 - 2026-07-23: Fixed Media Discovery HDR format selection default bug. Included `discoveryHdrFormats` (`SDR`, `HDR10`, `HDR10+`, `Dolby Vision`, `HLG`, `Advanced HDR`) in `DEFAULT_RULES` (`plexEvaluator.ts`), `App.tsx` state initialization (`customRules`), `resetToDiscoveryPreset`, and header mode switching. Corrected `handleSelectAllList` and `handleClearAllList` in `RuleEditor.tsx` to handle the `hdr` category correctly, ensuring HDR settings are enabled by default for fresh app downloads and mode resets.
