@@ -46,6 +46,9 @@ export const DEFAULT_RULES: RuleCriteria = {
   ],
   discoveryContainers: [
     'mkv', 'mp4', 'm4v', 'avi', 'ts', 'mov', 'flv', 'webm', 'wmv', 'mpg', 'vob', 'm2ts', 'ogg', 'wav', 'mp3', 'flac'
+  ],
+  discoveryHdrFormats: [
+    'SDR', 'HDR10', 'HDR10+', 'Dolby Vision', 'HLG', 'Advanced HDR'
   ]
 };
 

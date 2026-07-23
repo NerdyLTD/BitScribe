@@ -7,7 +7,7 @@
     },
     "apps/steward": {
       "name": "bitscribe-dmls",
-      "version": "1.4.29",
+      "version": "1.4.31",
       "dependencies": {
         "@bitscribe/core-db": "*",
         "@bitscribe/core-eval": "*",

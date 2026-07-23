@@ -55,6 +55,9 @@ const resetToDiscoveryPreset = (prev: RuleCriteria): RuleCriteria => ({
   useMetadataScan: false,
   useVideoMetadataScan: false,
   useMusicMetadataScan: false,
+  discoveryHdrFormats: (prev.discoveryHdrFormats && prev.discoveryHdrFormats.length > 0)
+    ? prev.discoveryHdrFormats
+    : ["SDR", "HDR10", "HDR10+", "Dolby Vision", "HLG", "Advanced HDR"],
 });
 
 export default function App() {
@@ -2651,6 +2654,9 @@ export default function App() {
         }
 
         const merged = { ...DEFAULT_RULES, ...parsed };
+        if (!merged.discoveryHdrFormats || merged.discoveryHdrFormats.length === 0) {
+          merged.discoveryHdrFormats = ["SDR", "HDR10", "HDR10+", "Dolby Vision", "HLG", "Advanced HDR"];
+        }
         const hasActiveMode = merged.useMetadataScan || merged.useVideoMetadataScan || merged.useMusicMetadataScan ||
                              merged.useSubtitleScan || merged.useDuplicationScan || merged.useAnomalyScan ||
                              merged.useDiscoveryPreset || merged.useModernPreset || merged.useLegacyPreset;
@@ -2969,6 +2975,9 @@ export default function App() {
       };
     } else if (val === "Media Discovery") {
       updatedRules.useDiscoveryPreset = true;
+      if (!updatedRules.discoveryHdrFormats || updatedRules.discoveryHdrFormats.length === 0) {
+        updatedRules.discoveryHdrFormats = ["SDR", "HDR10", "HDR10+", "Dolby Vision", "HLG", "Advanced HDR"];
+      }
       updatedExcel = {
         ...updatedExcel,
         "Stream Audit": true,

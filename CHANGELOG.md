@@ -1,3 +1,7 @@
+## [1.4.32] - 2026-07-23
+### Fixed
+- 2026-07-23: Fixed Media Discovery HDR format selection default bug. Included `discoveryHdrFormats` (`SDR`, `HDR10`, `HDR10+`, `Dolby Vision`, `HLG`, `Advanced HDR`) in `DEFAULT_RULES` (`plexEvaluator.ts`), `App.tsx` state initialization (`customRules`), `resetToDiscoveryPreset`, and header mode switching. Corrected `handleSelectAllList` and `handleClearAllList` in `RuleEditor.tsx` to handle the `hdr` category correctly, ensuring HDR settings are enabled by default for fresh app downloads and mode resets.
+
 ## [1.4.31] - 2026-07-23
 ### Refactored
 - 2026-07-23: Phase 8 of Monorepo Refactoring: Extracted modal dialogs and tour overlays (`ConfirmModal.tsx`, `DemoCleanupModal.tsx`, and `TourRemoteControl.tsx`) out of `App.tsx` into dedicated components in `apps/steward/src/components/modals/`. Reduced `App.tsx` monolith complexity while preserving all interactive modal state handlers and tour remote control behavior.

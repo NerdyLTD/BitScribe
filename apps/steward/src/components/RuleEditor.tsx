@@ -890,6 +890,10 @@ const toggleBleedingEdgePreset = (checked: boolean) => {
       onRulesChange({
         ...rules,
         discoveryContainers: [...ALL_DISCOVERY_CONTAINERS],
+      });
+    } else if (key === "hdr") {
+      onRulesChange({
+        ...rules,
         discoveryHdrFormats: [...ALL_DISCOVERY_HDR],
       });
     }
@@ -908,6 +912,8 @@ const toggleBleedingEdgePreset = (checked: boolean) => {
       onRulesChange({ ...rules, discoveryMusicCodecs: [] });
     } else if (key === "container") {
       onRulesChange({ ...rules, discoveryContainers: [] });
+    } else if (key === "hdr") {
+      onRulesChange({ ...rules, discoveryHdrFormats: [] });
     }
   };
 
