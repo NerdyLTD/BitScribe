@@ -636,6 +636,7 @@ export async function exportMediaLibraryToHTML(
           const songTitle = item.tags?.title || item.tags?.TITLE || "";
           const hasSongTitle = songTitle && songTitle.toLowerCase() !== (item.filename || "").toLowerCase();
 
+          rowData["Cleaned Title"] = missingFmt(parsedMeta.title);
           rowData["Title"] = hasSongTitle ? missingFmt(songTitle) : "[MISSING]";
           rowData["File Name"] = item.filename;
           rowData["Artist"] = missingFmt(item.tags?.artist || item.tags?.ARTIST);
@@ -1058,6 +1059,7 @@ export async function exportMediaLibraryToHTML(
     if (isMetadata) {
       if (isMusic) {
         return [
+          "Cleaned Title",
           "File Name",
           "Title",
           "Album Title",

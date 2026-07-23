@@ -700,6 +700,7 @@ export async function exportMediaLibraryToExcel(
     ) {
       if (isMusic) {
         headers = [
+          "Cleaned Title",
           "File Name",
           "Title",
           "Album Title",
@@ -1044,6 +1045,7 @@ export async function exportMediaLibraryToExcel(
           const songTitle = item.tags?.title || item.tags?.TITLE || "";
           const hasSongTitle = songTitle && songTitle.toLowerCase() !== (item.filename || "").toLowerCase();
           
+          rowValues["Cleaned Title"] = missingFmt(parsedMeta.title);
           rowValues["Title"] = hasSongTitle ? missingFmt(songTitle) : "[MISSING]";
           rowValues["File Name"] = item.filename;
           rowValues["Artist"] = missingFmt(item.tags?.artist || item.tags?.ARTIST);

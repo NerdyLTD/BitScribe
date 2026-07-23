@@ -1,3 +1,7 @@
+## [1.4.30] - 2026-07-23
+### Fixed
+- 2026-07-23: Preserved raw embedded metadata alongside cleaned titles in all report exporters (`reportExporter.ts` and `excelExporter.ts`). Added `Cleaned Title` column support for Music metadata exports across CSV, Excel, and HTML reports, ensuring both cleaned parsed titles and raw embedded metadata tags remain fully inspectable and visible for remediation/RX workflows.
+
 ## [1.4.29] - 2026-07-23
 ### Optimized
 - 2026-07-23: Optimized JSON report export (`exportMediaLibraryToJSON` in `reportExporter.ts`) to dramatically shrink JSON audit file sizes (e.g. reducing large discovery report files by over 65%-75% down to ~15-20MB for ~25,000 items) without any data or capability loss.
