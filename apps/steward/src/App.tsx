@@ -138,7 +138,29 @@ export default function App() {
           
           await writeTextFile(logFile, logContent, { append: true });
           
-          const appendLog = async (level: string, ...args: any[]) => {
+          let logBuffer: string[] = [];
+          let flushTimeout: any = null;
+          let isWriting = false;
+
+          const flushLogs = async () => {
+            if (logBuffer.length === 0 || isWriting) return;
+            isWriting = true;
+            const chunk = logBuffer.join("");
+            logBuffer = [];
+            try {
+              await writeTextFile(logFile, chunk, { append: true });
+            } catch (e) {
+              // ignore
+            } finally {
+              isWriting = false;
+              if (logBuffer.length > 0) {
+                if (flushTimeout) clearTimeout(flushTimeout);
+                flushTimeout = setTimeout(flushLogs, 250);
+              }
+            }
+          };
+
+          const appendLog = (level: string, ...args: any[]) => {
             try {
               const msg = args.map(a => {
                 if (a instanceof Error) return a.stack || a.message;
@@ -148,7 +170,13 @@ export default function App() {
                 return String(a);
               }).join(' ');
               const ts = new Date().toISOString();
-              await writeTextFile(logFile, `[${ts}] [${level}] ${msg}\n`, { append: true });
+              logBuffer.push(`[${ts}] [${level}] ${msg}\n`);
+              
+              if (logBuffer.length >= 100) {
+                flushLogs();
+              } else if (!flushTimeout) {
+                flushTimeout = setTimeout(flushLogs, 500);
+              }
             } catch (e) {
                // ignore
             }

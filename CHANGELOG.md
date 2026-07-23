@@ -1,3 +1,10 @@
+## [1.4.34] - 2026-07-23
+### Fixed
+- 2026-07-23: Implemented scanning robustness fixes to ensure rock-solid stability and eliminate crashes (STATUS_HEAP_CORRUPTION / exit code 0xc0000374).
+  - Capped scanning concurrency dynamically with a safe upper limit `Math.min(6, Math.max(1, logicalCores - 1))` (previously un-capped at up to 32+ on many-core processors). This avoids native WebView2 and Tauri process/thread pool exhaustion when spawning hundreds of concurrent sidecar subprocesses (`ffprobe`).
+  - Implemented an elegant in-memory log buffer and asynchronous write flushing interval (500ms or 100 entries chunk size) in the overridden browser console methods (`initDebugLog`). This avoids flooding the Tauri IPC bus and file system with unthrottled asynchronous write requests during rapid render or scan status events.
+  - Eliminated high-frequency `console.log("Dashboard rendering");` call from the `Dashboard` component render pass, saving substantial CPU cycles, React reconciliation work, and file writing overhead.
+
 ## [1.4.33] - 2026-07-23
 ### Optimized
 - 2026-07-23: Implemented major scan speed optimizations.

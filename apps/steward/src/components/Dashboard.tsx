@@ -91,7 +91,6 @@ export default memo(function Dashboard({
   lastScanDuration,
 }: DashboardProps) {
 
-  console.log("Dashboard rendering");
   const formatDurationStr = (ms: number | undefined | null) => {
     if (ms == null) return null;
     if (ms < 1000) return `${ms}ms`;

@@ -470,9 +470,10 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
     onStart(allFiles.length);
     if (allFiles.length === 0) return;
     
-    // Use dynamic concurrency: I/O-bound processes like ffprobe benefit from a higher concurrency multiplier
+    // Use dynamic concurrency: keep it moderate to prevent thread pool exhaustion and native crash/heap corruption.
+    // Cap concurrency to prevent more than 6 parallel ffprobe instances, which is extremely safe, light on disk I/O, and very fast.
     const logicalCores = typeof navigator !== 'undefined' && navigator.hardwareConcurrency ? navigator.hardwareConcurrency : 4;
-    const CONCURRENCY = Math.max(8, logicalCores * 2);
+    const CONCURRENCY = Math.min(6, Math.max(1, logicalCores - 1));
     const BATCH_SIZE = 50;
     
     // ITEM 2: Concurrency & Database Write Safety.
