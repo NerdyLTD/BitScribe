@@ -535,16 +535,17 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
     
     // Centralized write queue to guarantee database write safety and prevent transaction locks
     let dbWritePromise = Promise.resolve();
-    const queueDbSave = async (items: MediaItem[]) => {
-        if (items.length === 0) return;
-        dbWritePromise = dbWritePromise.then(async () => {
+    const queueDbSave = (items: MediaItem[]) => {
+        if (items.length === 0) return Promise.resolve();
+        const promise = dbWritePromise.then(async () => {
             try {
                 await saveDbFiles(items);
             } catch (err) {
-                onLog(`Error saving batch: ${err}`);
+                onLog(`Warning: Failed to save batch: ${(err as any).message}`);
             }
         });
-        await dbWritePromise;
+        dbWritePromise = promise;
+        return promise;
     };
     
     // ITEM 2: Concurrency & Database Write Safety.
@@ -701,25 +702,25 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 // Optimize ffprobe arguments by skipping chapters lookup on audio-only files
                 // Streamline output with -show_entries to fetch only the exact format, stream and tag fields needed
                 const isAudioFile = ['.mp3', '.flac', '.m4a', '.wav', '.aac', '.ogg', '.wma', '.alac', '.m4b', '.ape', '.opus', '.mka'].some(ext => file.toLowerCase().endsWith(ext));
-                let showEntries = 'format=size,duration,bit_rate,tags:stream=codec_name,codec_type,width,height,channels,sample_rate,bits_per_raw_sample,pix_fmt,bit_rate,tags';
                 const ffprobeArgs = [
                     '-v', 'quiet',
-                    '-print_format', 'json'
+                    '-print_format', 'json',
+                    '-show_entries', 'format=size,duration,bit_rate,tags:stream=codec_name,codec_type,width,height,channels,sample_rate,bits_per_raw_sample,pix_fmt,bit_rate,tags'
                 ];
                 if (!isAudioFile) {
                     ffprobeArgs.push('-show_chapters');
-                    showEntries += ':chapter=start';
                 }
-                ffprobeArgs.push('-show_entries', showEntries);
                 ffprobeArgs.push('-analyzeduration', '500000', '-probesize', '500000', file);
 
                 const probePromise = Command.sidecar('bin/ffprobe', ffprobeArgs).execute();
 
+                let timeoutId: any;
                 const timeoutPromise = new Promise<never>((_, reject) => {
-                    setTimeout(() => reject(new Error("ffprobe probe execution timed out after 15 seconds")), 15000);
+                    timeoutId = setTimeout(() => reject(new Error("ffprobe probe execution timed out after 15 seconds")), 15000);
                 });
 
                 const output = await Promise.race([probePromise, timeoutPromise]);
+                clearTimeout(timeoutId);
                 
                 if (output.code !== 0) {
                     throw new Error("ffprobe returned non-zero code");
@@ -930,6 +931,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
     }
     
     await Promise.all(workers);
+    await dbWritePromise;
 }
 
 export async function injectDemoData() {
