@@ -409,3 +409,5 @@ Update changelog
 ## CHANGELOG.md Update
 - Updated the Help Section to reflect 400+ combined hours of development, corrected out-of-date tutorial references (Audio Only -> Music Only), and added a button to view the open-source Apache 2.0 license.
 - Implemented a complete App Reset Modal featuring an animated Bitsy character holding her breath and exploding, followed by a true application cache, local storage, and database wipe.
+## CHANGELOG.md Update
+- Fixed a critical infinite render loop within the BitsyCharacter component where `requestAnimationFrame` was constantly generating new object references for eye tracking, causing the React scheduler to flood and crash the application during scanning.
