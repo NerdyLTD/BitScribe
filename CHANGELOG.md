@@ -411,3 +411,5 @@ Update changelog
 - Implemented a complete App Reset Modal featuring an animated Bitsy character holding her breath and exploding, followed by a true application cache, local storage, and database wipe.
 ## CHANGELOG.md Update
 - Fixed a critical infinite render loop within the BitsyCharacter component where `requestAnimationFrame` was constantly generating new object references for eye tracking, causing the React scheduler to flood and crash the application during scanning.
+## CHANGELOG.md Update
+- Enhanced Bitsy's scan dance animation with Michael Jackson-inspired moves, including a moonwalk and an anti-gravity lean.
