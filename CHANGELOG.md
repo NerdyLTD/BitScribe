@@ -1,3 +1,9 @@
+## [1.4.43] - 2026-07-24
+### Fixed
+- 2026-07-24: Fixed a layout shifting bug in the exported HTML reports where enabling the "All Metrics Dashboard" (Metrics Only mode) would push the main navigation/filter menu below the charts:
+  - **DOM Layout Restructuring**: Relocated the `#codec-metrics-container` div to be positioned directly below the Category Filters & Controls bar in the DOM template, rather than above it.
+  - **Static Menu Alignment**: Ensured that the main menu, filters, and dropdown controls remain statically anchored at the top of the viewport when toggling dashboard metrics on or off, with the dynamic charts appearing cleanly below them in place of the hidden data table.
+
 ## [1.4.42] - 2026-07-23
 ### Updated
 - 2026-07-23: Refactored suite nomenclature, corrected compatibility definitions, and updated agent standards:

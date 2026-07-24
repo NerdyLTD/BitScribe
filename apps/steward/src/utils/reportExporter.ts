@@ -931,7 +931,6 @@ export async function exportMediaLibraryToHTML(
   </header>
 
   <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 text-center" id="metrics-container"></div>
-  <div id="codec-metrics-container" class="hidden grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"></div>
 
   <div class="flex flex-col lg:flex-row gap-4 mb-4 justify-between items-start lg:items-center">
     <div class="flex flex-wrap gap-2 items-center gap-y-3" id="category-filters-container">
@@ -964,6 +963,8 @@ export async function exportMediaLibraryToHTML(
       </div>
     </div>
   </div>
+
+  <div id="codec-metrics-container" class="hidden grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"></div>
 
   <div class="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4" id="pagination-controls-top">
     <div class="text-sm text-slate-400" id="pagination-info-top">Showing 0 to 0 of 0 entries</div>
