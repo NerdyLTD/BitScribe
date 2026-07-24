@@ -470,10 +470,10 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
     onStart(allFiles.length);
     if (allFiles.length === 0) return;
     
-    // Use dynamic concurrency: keep it moderate to prevent thread pool exhaustion and native crash/heap corruption.
-    // Cap concurrency to prevent more than 6 parallel ffprobe instances, which is extremely safe, light on disk I/O, and very fast.
+    // Use dynamic concurrency: Keep concurrency high enough for rapid parallel I/O (especially over network/slow drives)
+    // but safely capped at a maximum of 20 to prevent Tauri/WebView2 thread pool exhaustion and native heap corruption.
     const logicalCores = typeof navigator !== 'undefined' && navigator.hardwareConcurrency ? navigator.hardwareConcurrency : 4;
-    const CONCURRENCY = Math.min(6, Math.max(1, logicalCores - 1));
+    const CONCURRENCY = Math.min(20, Math.max(8, logicalCores));
     const BATCH_SIZE = 50;
     
     // ITEM 2: Concurrency & Database Write Safety.
