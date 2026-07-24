@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { HelpCircle, Terminal, BookOpen, Settings, Layers, Calendar, Info, Subtitles, AlertCircle, ChevronDown, ChevronRight, HelpCircle as FaqIcon, CheckCircle, Folder, Heart, Download, Sliders, Monitor, FileJson, Zap } from 'lucide-react';
 import { APP_NAME, APP_VERSION, APP_VERSION_DATE } from '@bitscribe/core-types';
 import paypalQr from '../assets/paypal_qr.png';
+import licenseText from "../../../../LICENSE?raw";
+
 
 interface HelpSectionProps {
   highlightId?: string | null;
@@ -302,7 +304,7 @@ export default function HelpSection({ highlightId, isTourActive, tourStepIndex, 
                 BitScribe is the direct product of a highly collaborative creative partnership between a <strong>Human Product Director</strong> and an <strong>AI Software Architect</strong>.
               </p>
               <p className="text-[11px] text-slate-400 leading-relaxed font-sans">
-                Together, we have invested well over <strong className="text-emerald-400 font-semibold">300 combined hours</strong> across over 30 consecutive versions to engineer this production-ready library management ecosystem.
+                Together, we have invested well over <strong className="text-emerald-400 font-semibold">400+ combined hours</strong> across over 30 consecutive versions to engineer this production-ready library management ecosystem.
               </p>
               <div className="pt-1 text-[11px] text-slate-300 font-sans font-semibold">
                 🎁 Leave a Tip or Buy a Coffee
@@ -888,7 +890,39 @@ export default function HelpSection({ highlightId, isTourActive, tourStepIndex, 
 
           {/* Open Source Acknowledgments */}
           <div id="oss-section" className="space-y-2 p-3 rounded-xl bg-slate-900/30 border border-[#1e232e] transition-all duration-300">
-            <h4 className="text-xs font-bold text-slate-200">Open Source Acknowledgments</h4>
+            <div className="flex justify-between items-center">
+              <h4 className="text-xs font-bold text-slate-200">Open Source Acknowledgments</h4>
+              <button 
+                onClick={() => {
+                  const el = document.getElementById('license-modal');
+                  if (el) el.classList.toggle('hidden');
+                }}
+                className="text-[10px] text-blue-400 hover:text-blue-300 underline font-semibold"
+              >
+                View Apache 2.0 License
+              </button>
+            </div>
+            
+            <div id="license-modal" className="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+              <div className="bg-[#14171F] border border-blue-500/30 p-6 rounded-xl max-w-2xl w-full max-h-[80vh] flex flex-col shadow-2xl relative">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-bold text-slate-200">Apache 2.0 License</h3>
+                  <button 
+                    onClick={() => {
+                      const el = document.getElementById('license-modal');
+                      if (el) el.classList.add('hidden');
+                    }}
+                    className="text-slate-400 hover:text-white"
+                  >
+                    Close
+                  </button>
+                </div>
+                <div className="overflow-y-auto text-xs text-slate-400 font-mono whitespace-pre-wrap flex-1 pr-4 custom-scrollbar">
+                  {/* We will fetch the license via a separate step, but we can hardcode the generic text or leave a note */}
+                  {licenseText}
+                </div>
+              </div>
+            </div>
             <p className="text-[10px] text-slate-400 leading-relaxed font-sans">
               This application is built using the following awesome open-source software libraries. We sincerely appreciate the developers who made this app possible!
             </p>

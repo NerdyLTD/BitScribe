@@ -26,6 +26,7 @@ import Header from "./components/Header";
 import NavigationTabs from "./components/NavigationTabs";
 import Sidebar from "./components/Sidebar";
 import ConfirmModal from "./components/modals/ConfirmModal";
+import AppResetModal from "./components/modals/AppResetModal";
 import DemoCleanupModal from "./components/modals/DemoCleanupModal";
 import TourRemoteControl from "./components/modals/TourRemoteControl";
 import { ProductTour, TOUR_STEPS } from "./components/ProductTour";
@@ -2920,6 +2921,7 @@ export default function App() {
   const [showFileRegistry, setShowFileRegistry] = useState(true);
   const [showMetrics, setShowMetrics] = useState(true);
   const [confirmAction, setConfirmAction] = useState<{message: string, onConfirm: () => void} | null>(null);
+const [isAppResetting, setIsAppResetting] = useState(false);
   const [showDemoCleanupModal, setShowDemoCleanupModal] = useState(false);
   const [isReelEndingAnimation, setIsReelEndingAnimation] = useState(false);
 
@@ -3454,16 +3456,7 @@ export default function App() {
                   setConfirmAction({
                     message: "Warning: Are you sure you want to COMPLETELY WIPE your app state, paths, settings, and database? This cannot be undone.",
                     onConfirm: () => {
-                      localStorage.clear();
-                      clearDb().then(() => {
-                    setScannedFiles([]);
-                    setScannedFilesList([]);
-                    setCorruptFiles([]);
-                    setScanLogs(["App state and database completely wiped."]);
-                  }).catch(() => {
-                    setScannedFiles([]);
-                    setScannedFilesList([]);
-                  });
+                      setIsAppResetting(true);
                     }
                   });
                 }}
@@ -3526,6 +3519,16 @@ export default function App() {
             <div className="h-12 w-full shrink-0 pointer-events-none" />
           </div>
 
+            {isAppResetting && (
+              <AppResetModal onComplete={() => {
+                localStorage.clear();
+                clearDb().then(() => {
+                  window.location.reload();
+                }).catch(() => {
+                  window.location.reload();
+                });
+              }} />
+            )}
           </main>
       </div>
     </div>

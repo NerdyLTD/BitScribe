@@ -1557,7 +1557,7 @@ export async function exportMediaLibraryToHTML(
       const filters = [
         { id: "All", label: "All Duplicates", activeClass: "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30", normalClass: "bg-slate-800 text-slate-300 hover:bg-slate-700" },
         { id: "Video", label: "Video Only", activeClass: "bg-blue-600 text-white shadow-lg shadow-blue-500/30", normalClass: "bg-slate-800 text-slate-300 hover:bg-slate-700" },
-        { id: "Music", label: "Audio Only", activeClass: "bg-emerald-600 text-white shadow-lg shadow-emerald-500/30", normalClass: "bg-slate-800 text-slate-300 hover:bg-slate-700" }
+        { id: "Music", label: "Music Only", activeClass: "bg-emerald-600 text-white shadow-lg shadow-emerald-500/30", normalClass: "bg-slate-800 text-slate-300 hover:bg-slate-700" }
       ];
       container.innerHTML = filters.map(f => {
         const isAct = activeDupFilter === f.id;
