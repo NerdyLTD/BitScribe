@@ -143,39 +143,6 @@ fn generate_file_hash(_path: &std::path::Path, metadata: &std::fs::Metadata) -> 
     format!("{:016x}", hasher.finish())
 }
 
-fn has_sidecar_subtitles(video_path: &std::path::Path) -> bool {
-    let parent = match video_path.parent() {
-        Some(p) => p,
-        None => return false,
-    };
-    let file_stem = match video_path.file_stem() {
-        Some(s) => s.to_string_lossy().to_lowercase(),
-        None => return false,
-    };
-    
-    if let Ok(entries) = std::fs::read_dir(parent) {
-        for entry_res in entries {
-            if let Ok(entry) = entry_res {
-                let path = entry.path();
-                if path.is_file() {
-                    let name = path.file_name().unwrap_or_default().to_string_lossy().to_lowercase();
-                    if name.starts_with(&file_stem) {
-                        if let Some(ext) = path.extension().and_then(|s| s.to_str()).map(|s| s.to_lowercase()) {
-                            if ext == "srt" || ext == "ass" || ext == "vtt" || ext == "sub" {
-                                let suffix = &name[file_stem.len()..];
-                                if suffix.starts_with('.') && (suffix.ends_with(".srt") || suffix.ends_with(".ass") || suffix.ends_with(".vtt") || suffix.ends_with(".sub")) {
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    false
-}
-
 #[derive(serde::Serialize)]
 #[allow(non_snake_case)]
 struct FileEntry {
@@ -187,6 +154,9 @@ struct FileEntry {
 
 #[tauri::command]
 fn walk_dir(path: String) -> Result<Vec<FileEntry>, String> {
+    use std::collections::HashMap;
+    use std::path::PathBuf;
+
     let path_obj = std::path::Path::new(&path);
     if !path_obj.exists() {
         return Err(format!("The folder directory '{}' does not exist.", path));
@@ -198,7 +168,9 @@ fn walk_dir(path: String) -> Result<Vec<FileEntry>, String> {
         return Err(format!("Permission denied or directory inaccessible for '{}': {}", path, e));
     }
 
-    let mut files = Vec::new();
+    let mut discovered_media: Vec<(PathBuf, String, u64, String)> = Vec::new();
+    let mut subtitles_map: HashMap<PathBuf, Vec<String>> = HashMap::new();
+
     let mut iterator = WalkDir::new(&path).follow_links(true).into_iter();
     loop {
         let entry_res = match iterator.next() {
@@ -226,6 +198,17 @@ fn walk_dir(path: String) -> Result<Vec<FileEntry>, String> {
                     let ext = path_ref.extension()
                         .and_then(|s| s.to_str())
                         .map(|s| s.to_lowercase());
+
+                    if let Some(ref e) = ext {
+                        if e == "srt" || e == "ass" || e == "vtt" || e == "sub" {
+                            if let Some(parent) = path_ref.parent() {
+                                subtitles_map.entry(parent.to_path_buf())
+                                    .or_default()
+                                    .push(file_name.to_lowercase());
+                            }
+                            continue;
+                        }
+                    }
                     
                     const ALLOWED_EXTENSIONS: &[&str] = &[
                         "mkv", "mp4", "avi", "mov", "wmv", "flv", "webm", "m4v", "mpg", "mpeg", "m2ts", "ts", "vob", "mxf",
@@ -251,19 +234,44 @@ fn walk_dir(path: String) -> Result<Vec<FileEntry>, String> {
                     let meta = metadata.unwrap();
                     let size = meta.len();
                     let file_hash = generate_file_hash(entry.path(), &meta);
-                    let has_ext_subs = has_sidecar_subtitles(entry.path());
-                    files.push(FileEntry {
-                        path: path_str,
-                        size,
-                        fileHash: file_hash,
-                        hasExternalSubtitles: has_ext_subs,
-                    });
+
+                    discovered_media.push((path_ref.to_path_buf(), path_str, size, file_hash));
                 }
             }
             Err(e) => {
                 eprintln!("Warning: WalkDir item skipped in '{}': {}", path, e);
             }
         }
+    }
+
+    let mut files = Vec::new();
+    for (path_buf, path_str, size, file_hash) in discovered_media {
+        let mut has_ext_subs = false;
+        if let Some(parent) = path_buf.parent() {
+            if let Some(subs) = subtitles_map.get(parent) {
+                let file_stem = path_buf.file_stem()
+                    .map(|s| s.to_string_lossy().to_lowercase())
+                    .unwrap_or_default();
+                if !file_stem.is_empty() {
+                    for sub_name in subs {
+                        if sub_name.starts_with(&file_stem) {
+                            let suffix = &sub_name[file_stem.len()..];
+                            if suffix.starts_with('.') && (suffix.ends_with(".srt") || suffix.ends_with(".ass") || suffix.ends_with(".vtt") || suffix.ends_with(".sub")) {
+                                has_ext_subs = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        files.push(FileEntry {
+            path: path_str,
+            size,
+            fileHash: file_hash,
+            hasExternalSubtitles: has_ext_subs,
+        });
     }
 
     Ok(files)

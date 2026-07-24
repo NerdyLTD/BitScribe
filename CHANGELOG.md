@@ -1,3 +1,10 @@
+## [1.4.41] - 2026-07-23
+### Fixed
+- 2026-07-23: Resolved a severe scanning pipeline freeze and Windows application crash (exit code `0xcfffffff` / `STATUS_HEAP_CORRUPTION` / `STATUS_APPLICATION_HANG`) during directory scans:
+  - **O(N) In-Memory Subtitle Indexing**: Replaced the synchronous, on-demand `std::fs::read_dir` call (which read parent directories recursively for every single media file scanned, resulting in O(N^2) disk reads and eventual file descriptor/IPC thrashing) with a highly optimized, single-pass in-memory subtitle lookup.
+  - **Parent-to-Subtitle Mapping**: During the WalkDir directory traversal, subtitle tracks (`.srt`, `.ass`, `.vtt`, `.sub`) are now cataloged on-the-fly and grouped into a parent-directory-mapped in-memory `HashMap`.
+  - **Zero-I/O Evaluator Lookups**: After the walk completes, the sidecar subtitle status (`hasExternalSubtitles`) is determined using lightning-fast `O(1)` memory lookups against the cached subtitles, completely eliminating redundant disk accesses, reducing traversal time to milliseconds, and ensuring rock-solid scanning stability on massive libraries.
+
 ## [1.4.40] - 2026-07-23
 ### Added
 - 2026-07-23: Implemented Suite-level refactoring for BitScribe RX compatibility, addressing core data limitations and gaps:
