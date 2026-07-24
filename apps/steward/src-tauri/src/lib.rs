@@ -151,9 +151,28 @@ fn walk_dir(path: String) -> Result<Vec<FileEntry>, String> {
     }
 
     let mut files = Vec::new();
-    for entry_res in WalkDir::new(&path).follow_links(true).into_iter() {
+    let mut iterator = WalkDir::new(&path).follow_links(true).into_iter();
+    loop {
+        let entry_res = match iterator.next() {
+            Some(res) => res,
+            None => break,
+        };
         match entry_res {
             Ok(entry) => {
+                let file_name = entry.file_name().to_string_lossy();
+                if entry.file_type().is_dir() {
+                    if file_name.starts_with('.') 
+                        || file_name.eq_ignore_ascii_case("node_modules")
+                        || file_name.eq_ignore_ascii_case("$RECYCLE.BIN")
+                        || file_name.eq_ignore_ascii_case("System Volume Information")
+                        || file_name.eq_ignore_ascii_case(".git")
+                        || file_name.eq_ignore_ascii_case("target")
+                    {
+                        iterator.skip_current_dir();
+                    }
+                    continue;
+                }
+
                 if entry.file_type().is_file() {
                     let path_ref = entry.path();
                     let ext = path_ref.extension()

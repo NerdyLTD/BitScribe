@@ -1,3 +1,12 @@
+## [1.4.38] - 2026-07-23
+### Optimized
+- 2026-07-23: Implemented 5 major scanning pipeline optimizations across the full stack (Rust, SQLite, and JS/TS):
+  - **Optimization 1 (SQLite Write Tuning)**: Enabled high-performance SQLite connection pragmas (`journal_mode = WAL`, `synchronous = NORMAL`, `cache_size = -64000`, `temp_store = MEMORY`) in `db.rs` to minimize lock latency and dramatically accelerate write transaction speeds.
+  - **Optimization 2 (Rust WalkDir Directory Pruning)**: Implemented early system, build, and hidden directory pruning inside the Rust `walk_dir` command using `.skip_current_dir()`, avoiding walking thousands of irrelevant files in `.git`, `node_modules`, `target`, `$RECYCLE.BIN`, etc.
+  - **Optimization 3 (ffprobe Sidecar Streamlining)**: Switched ffprobe arguments to use selective stream/format property filtering via `-show_entries`. Reduced `-analyzeduration` and `-probesize` to `500000` to speed up remote and slow drive media parsing without accuracy loss.
+  - **Optimization 4 (Dynamic Write-Buffer Enlargement)**: Increased database batch update sizing (`BATCH_SIZE`) from `50` to `250` records to dramatically reduce the frequency of SQLite writes, lock calls, and Tauri IPC thread communication overhead.
+  - **Optimization 5 (Parallel Path Walking)**: Parallelized multi-path scanning directory walks in JS using `Promise.all` instead of awaiting them sequentially, utilizing all CPU cores concurrently for multi-library scanning walks.
+
 ## [1.4.37] - 2026-07-23
 ### Optimized
 - 2026-07-23: Implemented Rust-side WalkDir extension filtering optimization:

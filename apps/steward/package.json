@@ -2,7 +2,7 @@
   "name": "bitscribe-dmls",
   "description": "BitScribe Steward Application",
   "private": true,
-  "version": "1.4.37",
+  "version": "1.4.38",
   "type": "module",
   "scripts": {
     "dev": "vite",

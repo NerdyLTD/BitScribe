@@ -8,6 +8,12 @@ pub fn init_db(data_dir: &PathBuf) -> Result<Connection> {
     
     let conn = Connection::open(db_path)?;
     
+    // Optimize SQLite connection performance
+    let _ = conn.execute("PRAGMA journal_mode = WAL;", []);
+    let _ = conn.execute("PRAGMA synchronous = NORMAL;", []);
+    let _ = conn.execute("PRAGMA cache_size = -64000;", []); // 64MB cache size
+    let _ = conn.execute("PRAGMA temp_store = MEMORY;", []);
+    
     // Check if the table exists with `id` as the primary key
     let has_id_pk: Result<String, _> = conn.query_row(
         "SELECT name FROM pragma_table_info('scanned_files') WHERE pk = 1 AND name = 'id'",

@@ -294,11 +294,12 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
     const allowedExtensionsSet = new Set(allowedExtensions);
     
     let allFiles: {path: string, hash: string}[] = [];
-    for (const p of paths) {
-        if (signal?.aborted) {
-            onLog("Scan aborted by user during directory walk.");
-            return;
-        }
+    
+    // Walk all directories concurrently to fully utilize CPU cores and overlapping filesystem IO
+    onLog(`Walking ${paths.length} director${paths.length === 1 ? 'y' : 'ies'} in parallel...`);
+    
+    const walkPromises = paths.map(async (p) => {
+        if (signal?.aborted) return;
         onLog(`Walking directory: ${p}`);
         try {
             const files = isTauri()
@@ -309,14 +310,16 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                     const pathWithSlash = normPath.endsWith('/') ? normPath : normPath + '/';
                     return normFile.startsWith(pathWithSlash) || normFile === normPath;
                   }).map(m => ({ path: m.filePath, size: Math.round((m.sizeGB || 0) * 1024 * 1024 * 1024), fileHash: "mock-" + m.id }));
+            
             let validCount = 0;
+            const dirFiles: {path: string, hash: string}[] = [];
             for (const fileObj of files) {
                 const file = fileObj.path;
                 const lower = file.toLowerCase();
                 const lastDotIdx = lower.lastIndexOf('.');
                 const ext = lastDotIdx !== -1 ? lower.substring(lastDotIdx) : "";
                 if (allowedExtensionsSet.has(ext)) {
-                    allFiles.push({path: file, hash: fileObj.fileHash});
+                    dirFiles.push({path: file, hash: fileObj.fileHash});
                     const normPath = normalizePath(file);
                     // Temporarily store the physical size in the map so we can use it later
                     existingFilesMap.set(normPath + "_physical_size", fileObj.size as any);
@@ -324,6 +327,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 }
             }
             onLog(`Found ${validCount} valid media files in ${p}`);
+            return dirFiles;
         } catch (err: any) {
             let errorMsg = err.message || String(err);
             onLog(`ERROR walking directory "${p}": ${errorMsg}`);
@@ -338,6 +342,21 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
             }
             throw new Error(errorMsg);
         }
+    });
+
+    try {
+        const results = await Promise.all(walkPromises);
+        if (signal?.aborted) {
+            onLog("Scan aborted by user during directory walk.");
+            return;
+        }
+        for (const res of results) {
+            if (res) {
+                allFiles.push(...res);
+            }
+        }
+    } catch (err: any) {
+        throw err;
     }
 
     if (!isResume) {
@@ -474,7 +493,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
     // but safely capped at a maximum of 20 to prevent Tauri/WebView2 thread pool exhaustion and native heap corruption.
     const logicalCores = typeof navigator !== 'undefined' && navigator.hardwareConcurrency ? navigator.hardwareConcurrency : 4;
     const CONCURRENCY = Math.min(20, Math.max(8, logicalCores));
-    const BATCH_SIZE = 50;
+    const BATCH_SIZE = 250;
     
     // ITEM 2: Concurrency & Database Write Safety.
     // Each worker has a local `batch` array to write records to SQLite in chunks of `BATCH_SIZE`.
@@ -620,17 +639,17 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
             try {
                 // Securely execute ffprobe sidecar with a strict 15-second timeout safeguard to prevent hangs
                 // Optimize ffprobe arguments by skipping chapters lookup on audio-only files
+                // Streamline output with -show_entries to fetch only the exact format, stream and tag fields needed
                 const isAudioFile = ['.mp3', '.flac', '.m4a', '.wav', '.aac', '.ogg', '.wma', '.alac', '.m4b', '.ape', '.opus', '.mka'].some(ext => file.toLowerCase().endsWith(ext));
                 const ffprobeArgs = [
                     '-v', 'quiet',
                     '-print_format', 'json',
-                    '-show_format',
-                    '-show_streams'
+                    '-show_entries', 'format=size,duration,bit_rate,tags:stream=codec_name,codec_type,width,height,channels,sample_rate,bits_per_raw_sample,pix_fmt,bit_rate,tags'
                 ];
                 if (!isAudioFile) {
                     ffprobeArgs.push('-show_chapters');
                 }
-                ffprobeArgs.push('-analyzeduration', '1000000', '-probesize', '1000000', file);
+                ffprobeArgs.push('-analyzeduration', '500000', '-probesize', '500000', file);
 
                 const probePromise = Command.sidecar('bin/ffprobe', ffprobeArgs).execute();
 
