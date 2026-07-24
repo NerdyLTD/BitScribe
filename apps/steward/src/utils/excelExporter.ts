@@ -610,6 +610,7 @@ export async function exportMediaLibraryToExcel(
           "Container",
           "Video Codec",
           "Resolution",
+          "Frame Rate",
           "Video Bitrate",
           "HDR Format",
           "Audio Tracks",
@@ -626,6 +627,7 @@ export async function exportMediaLibraryToExcel(
           "Container",
           "Video Codec",
           "Resolution",
+          "Frame Rate",
           "Video Bitrate",
           "HDR Format",
           "Audio Tracks",
@@ -643,6 +645,7 @@ export async function exportMediaLibraryToExcel(
           "Container",
           "Video Codec",
           "Resolution",
+          "Frame Rate",
           "Video Bitrate",
           "HDR Format",
           "Audio Tracks",
@@ -684,6 +687,7 @@ export async function exportMediaLibraryToExcel(
           "File Name",
           "Video Codec",
           "Resolution",
+          "Frame Rate",
           "Video Bitrate",
           "Audio Codecs",
           "Audio Bitrate",
@@ -1179,6 +1183,9 @@ export async function exportMediaLibraryToExcel(
             "File Name": item.filename,
             "Video Codec": getPrimaryVideoCodec(item),
             Resolution: formatResolutionForExcel(item.videoResolution),
+            "Frame Rate": isMusicCategory(item.category) || !item.videoFrameRate
+              ? ""
+              : `${item.videoFrameRate} fps`,
             "Video Bitrate": item.videoBitrateMbps
               ? item.videoBitrateMbps.toFixed(2) + " Mbps"
               : "",

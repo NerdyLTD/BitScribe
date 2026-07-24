@@ -85,6 +85,7 @@ export async function exportMediaLibraryToCSV(
     "Container",
     "Video Codec",
     "Resolution",
+    "Frame Rate",
     "Audio Tracks",
     "Audio Codecs",
     "Subtitles",
@@ -283,6 +284,9 @@ export async function exportMediaLibraryToCSV(
           Resolution: isMusicCategory(item.category)
             ? ""
             : formatResolutionForExcel(item.videoResolution),
+          "Frame Rate": isMusicCategory(item.category) || !item.videoFrameRate
+            ? ""
+            : `${item.videoFrameRate} fps`,
           "Audio Tracks": (item.audioTracks || []).length,
           "Audio Codecs": audioStr,
           Subtitles: subStr,
@@ -508,6 +512,7 @@ export async function exportMediaLibraryToHTML(
     "Container",
     "Video Codec",
     "Resolution",
+    "Frame Rate",
     "Audio Tracks",
     "Audio Codecs",
     "Subtitles",
@@ -707,6 +712,9 @@ export async function exportMediaLibraryToHTML(
         
         const res = isMusicCategory(item.category) ? "" : formatResolutionForExcel(item.videoResolution);
         if (res) rowData["Resolution"] = res;
+        
+        const fps = isMusicCategory(item.category) || !item.videoFrameRate ? "" : `${item.videoFrameRate} fps`;
+        if (fps) rowData["Frame Rate"] = fps;
         
         if ((item.audioTracks || []).length > 0) rowData["Audio Tracks"] = item.audioTracks.length;
         if (audioStr) rowData["Audio Codecs"] = audioStr;

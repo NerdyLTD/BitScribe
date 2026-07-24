@@ -60,6 +60,32 @@ export async function saveDbFiles(files: MediaItem[]): Promise<void> {
     await invoke("save_db_files", { files });
 }
 
+export async function deleteDbFiles(ids: string[]): Promise<void> {
+    if (!isTauri()) {
+        const idSet = new Set(ids);
+        saveMockDb(_mockDb.filter(x => !idSet.has(x.id)));
+        return;
+    }
+    await invoke("delete_db_files", { ids });
+}
+
+function parseFrameRate(fpsStr?: string): number | undefined {
+    if (!fpsStr || fpsStr === "N/A" || fpsStr === "0/0") return undefined;
+    if (fpsStr.includes('/')) {
+        const parts = fpsStr.split('/');
+        const num = parseFloat(parts[0]);
+        const den = parseFloat(parts[1]);
+        if (num > 0 && den > 0) {
+            const val = num / den;
+            return parseFloat(val.toFixed(3));
+        }
+    } else {
+        const val = parseFloat(fpsStr);
+        if (val > 0) return parseFloat(val.toFixed(3));
+    }
+    return undefined;
+}
+
 export async function getDiagnostic() {
     if (!isTauri()) {
         return {
@@ -472,12 +498,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 
                 if (ghostFiles.length > 0) {
                     onLog(`Pruning ${ghostFiles.length} ghost files from DB...`);
-                    // Now, prune the ghost files from the SQLite database
-                    const ghostFilePathsSet = new Set(ghostFiles.map(f => normalizePath(f.filePath)));
-                    const cleanDbFiles = existingDbFiles.filter(item => !ghostFilePathsSet.has(normalizePath(item.filePath)));
-                    
-                    await clearDb();
-                    await saveDbFiles(cleanDbFiles);
+                    await deleteDbFiles(ghostFiles.map(f => f.id));
                     onLog(`Successfully pruned ${ghostFiles.length} ghost files from persistent storage.`);
                 }
             }
@@ -489,11 +510,25 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
     onStart(allFiles.length);
     if (allFiles.length === 0) return;
     
-    // Use dynamic concurrency: Keep concurrency high enough for rapid parallel I/O (especially over network/slow drives)
-    // but safely capped at a maximum of 20 to prevent Tauri/WebView2 thread pool exhaustion and native heap corruption.
+    // Use smart balanced concurrency: 12 concurrent workers is the sweet spot
+    // that maintains parallel processing speed while avoiding connection locks or disk thrashing on slow storage.
     const logicalCores = typeof navigator !== 'undefined' && navigator.hardwareConcurrency ? navigator.hardwareConcurrency : 4;
-    const CONCURRENCY = Math.min(20, Math.max(8, logicalCores));
-    const BATCH_SIZE = 250;
+    const CONCURRENCY = Math.min(12, Math.max(4, logicalCores));
+    const BATCH_SIZE = 500;
+    
+    // Centralized write queue to guarantee database write safety and prevent transaction locks
+    let dbWritePromise = Promise.resolve();
+    const queueDbSave = async (items: MediaItem[]) => {
+        if (items.length === 0) return;
+        dbWritePromise = dbWritePromise.then(async () => {
+            try {
+                await saveDbFiles(items);
+            } catch (err) {
+                onLog(`Error saving batch: ${err}`);
+            }
+        });
+        await dbWritePromise;
+    };
     
     // ITEM 2: Concurrency & Database Write Safety.
     // Each worker has a local `batch` array to write records to SQLite in chunks of `BATCH_SIZE`.
@@ -509,7 +544,9 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 break;
             }
             const i = currentIndex++;
+            if (i >= allFiles.length) break;
             const fileObjItem = allFiles[i];
+            if (!fileObjItem) continue;
             const file = fileObjItem.path;
             const fileHash = fileObjItem.hash;
             let skipProbe = false;
@@ -540,7 +577,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                     changedCachedBatch.push(cachedItem);
                     if (changedCachedBatch.length >= BATCH_SIZE) {
                         const toSave = changedCachedBatch.splice(0, BATCH_SIZE);
-                        await saveDbFiles(toSave);
+                        await queueDbSave(toSave);
                     }
                 }
                 
@@ -594,6 +631,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                       }
                     }
 
+                    const mockFps = [23.976, 25, 29.97, 24, 30, 60][mockItem.filename.length % 6];
                     const hydratedItem: MediaItem = {
                         ...mockItem,
                         durationMins: mockItem.durationMins || 116,
@@ -603,6 +641,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                         videoBitDepth: mockItem.videoBitDepth || vBitDepth,
                         audioSampleRate: mockItem.audioSampleRate || aSampleRate,
                         chapterCount: mockItem.chapterCount !== undefined ? mockItem.chapterCount : cCount,
+                        videoFrameRate: mockItem.videoFrameRate || (!isAudioOnly ? mockFps : undefined),
                         streamFriendlyLevel: "unknown",
                         streamFriendlyReason: "",
                         streamFriendlySuggestion: "",
@@ -710,6 +749,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 const container = lastDot !== -1 ? pathFilename.substring(lastDot + 1).toLowerCase() : "unknown";
 
                 const videoCodec = videoStream ? videoStream.codec_name || "unknown" : "";
+                const fpsValue = videoStream ? (parseFrameRate(videoStream.avg_frame_rate) || parseFrameRate(videoStream.r_frame_rate)) : undefined;
                 
                 const vWidth = videoStream ? safeParseInt(videoStream.width) : 0;
                 const vHeight = videoStream ? safeParseInt(videoStream.height) : 0;
@@ -779,6 +819,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                     videoCodec: videoCodec,
                     videoResolution: videoResolution,
                     videoBitrateMbps: videoBitrateMbps,
+                    videoFrameRate: fpsValue,
                     audioTracks: parsedAudioTracks,
                     subtitleTracks: parsedSubtitleTracks,
                     tags: sanitizeTags(tags),
@@ -838,14 +879,14 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
             
             if (batch.length >= BATCH_SIZE) {
                 const toSave = batch.splice(0, BATCH_SIZE);
-                await saveDbFiles(toSave);
+                await queueDbSave(toSave);
             }
         }
         if (batch.length > 0) {
-            await saveDbFiles(batch);
+            await queueDbSave(batch);
         }
         if (changedCachedBatch.length > 0) {
-            await saveDbFiles(changedCachedBatch);
+            await queueDbSave(changedCachedBatch);
         }
     };
     
@@ -899,6 +940,7 @@ export async function injectDemoData() {
           }
         }
 
+        const mockFps = [23.976, 25, 29.97, 24, 30, 60][mockItem.filename.length % 6];
         const baseEnriched: any = {
           ...mockItem,
           durationMins: (mockItem as any).durationMins || 116,
@@ -907,7 +949,8 @@ export async function injectDemoData() {
           topLevelFolder: (mockItem as any).topLevelFolder || getTopLevelFolder((mockItem as any).filePath),
           videoBitDepth: mockItem.videoBitDepth || vBitDepth,
           audioSampleRate: mockItem.audioSampleRate || aSampleRate,
-          chapterCount: mockItem.chapterCount !== undefined ? mockItem.chapterCount : cCount
+          chapterCount: mockItem.chapterCount !== undefined ? mockItem.chapterCount : cCount,
+          videoFrameRate: mockItem.videoFrameRate || (!isAudioOnly ? mockFps : undefined)
         };
         return {
           ...baseEnriched,

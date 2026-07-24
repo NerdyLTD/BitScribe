@@ -1,3 +1,17 @@
+## [1.4.39] - 2026-07-23
+### Optimized
+- 2026-07-23: Implemented massive full-stack scanning pipeline performance, safety, and capability enhancements:
+  - **Dynamic Buffer Enlargement**: Bumped the database write-buffer (`BATCH_SIZE`) from `250` to `500` records in `api.ts` as requested by the user, dramatically reducing SQLite transaction frequencies.
+  - **Adaptive Scan Concurrency**: Adjusted scan concurrency (`CONCURRENCY`) to a balanced cap of `12` concurrent workers. This prevents disk read thrashing and network bandwidth choke on slower external hard drives and networked NAS/SMB shares, ensuring consistent scan speeds.
+  - **Direct Ghost File Pruning (Massive Speedup)**: Replaced the slow complete database truncation and rewrite routine with a dedicated Rust Tauri command `delete_db_files` which performs target file deletions (`DELETE FROM scanned_files WHERE id = ?1`) instantly, reducing subsequent scan times from minutes to seconds.
+  - **Transactional DB Write Queue**: Implemented a serialized promise queue (`queueDbSave`) in the TS frontend to serialize bulk database writes, eliminating SQLite transaction overlap and "database is locked" (5) errors.
+  - **Durable DB Indexing**: Added a database index `idx_scanned_files_filePath` on SQLite startup to optimize file paths queries and fast-skipping lookups.
+  - **Video Frame Rate Tracking**: Fully implemented video frame rate tracking (`videoFrameRate`):
+    - Added floating-point frame rate extraction from ffprobe streams (`avg_frame_rate`/`r_frame_rate`) with fallback fraction parsing.
+    - Added `videoFrameRate` to the SQLite schema and Tauri `ScannedFile` Rust models.
+    - Integrated "Frame Rate" column reporting to HTML, CSV and Excel spreadsheet exporters.
+    - Added `FPS` column support to the TV Shows and Movies dashboard grids.
+
 ## [1.4.38] - 2026-07-23
 ### Optimized
 - 2026-07-23: Implemented 5 major scanning pipeline optimizations across the full stack (Rust, SQLite, and JS/TS):

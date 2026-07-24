@@ -193,7 +193,7 @@ export default memo(function Dashboard({
     stream: true, title: true, seriesTitle: true, season: true, episode: true, epTitle: true, filename: false, videoCodec: true,
     audioCodec: true, container: false, path: false, artist: true, album: true,
     songTitle: true, format: true, bitrate: false,
-    videoBitDepth: false, audioSampleRate: false, chapterCount: false
+    videoBitDepth: false, audioSampleRate: false, chapterCount: false, videoFrameRate: true
   });
   
   const toggleColumn = (key: string) => {
@@ -2439,6 +2439,7 @@ const handleCategoryToggle = (cat: string) => {
       {label: 'Episode Title', key: 'epTitle', width: '200px'},
       {label: 'Filename', key: 'filename', width: '250px'},
       {label: 'Video Codec', key: 'videoCodec', center: true, width: '100px'},
+      {label: 'FPS', key: 'videoFrameRate', center: true, width: '80px'},
       {label: 'Video Depth', key: 'videoBitDepth', center: true, width: '90px'},
       {label: 'Audio Codec', key: 'audioCodec', center: true, width: '120px'},
       {label: 'Container', key: 'container', center: true, width: '90px'},
@@ -2451,6 +2452,7 @@ const handleCategoryToggle = (cat: string) => {
       {label: 'Title', key: 'title', width: '200px'},
       {label: 'Filename', key: 'filename', width: '250px'},
       {label: 'Video Codec', key: 'videoCodec', center: true, width: '100px'},
+      {label: 'FPS', key: 'videoFrameRate', center: true, width: '80px'},
       {label: 'Video Depth', key: 'videoBitDepth', center: true, width: '90px'},
       {label: 'Audio Codec', key: 'audioCodec', center: true, width: '120px'},
       {label: 'Container', key: 'container', center: true, width: '90px'},
@@ -2625,6 +2627,7 @@ const handleCategoryToggle = (cat: string) => {
                     {visibleColumns.epTitle && <td className={cStyle} title={parsed.epTitle}>{parsed.epTitle || '-'}</td>}
                     {visibleColumns.filename && <td className={cStyle} title={item.filename}>{item.filename}</td>}
                     {visibleColumns.videoCodec && <td className={cCenter}>{getPrimaryVideoCodec(item)}</td>}
+                    {visibleColumns.videoFrameRate && <td className={cCenter}>{item.videoFrameRate ? `${item.videoFrameRate} fps` : '-'}</td>}
                     {visibleColumns.videoBitDepth && <td className={cCenter}>{item.videoBitDepth || '-'}</td>}
                     {visibleColumns.audioCodec && <td className={cCenter}>{getFormattedAudioTracks(item)}</td>}
                     {visibleColumns.container && <td className={cCenter}>{getContainerFormat(item)}</td>}
@@ -2639,6 +2642,7 @@ const handleCategoryToggle = (cat: string) => {
                     {visibleColumns.title && <td className={cStyle} title={parsed.title}>{parsed.title || '-'}</td>}
                     {visibleColumns.filename && <td className={cStyle} title={item.filename}>{item.filename}</td>}
                     {visibleColumns.videoCodec && <td className={cCenter}>{getPrimaryVideoCodec(item)}</td>}
+                    {visibleColumns.videoFrameRate && <td className={cCenter}>{item.videoFrameRate ? `${item.videoFrameRate} fps` : '-'}</td>}
                     {visibleColumns.videoBitDepth && <td className={cCenter}>{item.videoBitDepth || '-'}</td>}
                     {visibleColumns.audioCodec && <td className={cCenter}>{getFormattedAudioTracks(item)}</td>}
                     {visibleColumns.container && <td className={cCenter}>{getContainerFormat(item)}</td>}

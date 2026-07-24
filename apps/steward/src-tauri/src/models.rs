@@ -69,6 +69,10 @@ pub struct ScannedFile {
     #[serde(default)]
     pub video_bit_depth: String,
     
+    #[serde(rename = "videoFrameRate")]
+    #[serde(default)]
+    pub video_frame_rate: f64,
+    
     #[serde(rename = "audioSampleRate")]
     #[serde(default)]
     pub audio_sample_rate: i32,

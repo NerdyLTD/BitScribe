@@ -28,6 +28,7 @@ export interface MediaItem {
   videoResolution: string; // 4K, 1080p, 720p, SD
   videoBitrateMbps: number;
   hdrFormat?: string; // SDR, HDR10, HDR10+, Dolby Vision, HLG
+  videoFrameRate?: number; // average/r_frame_rate of the primary video stream (e.g. 23.976, 30, 60)
   audioTracks: AudioTrack[];
   subtitleTracks: SubtitleTrack[];
   tags?: Record<string, string>;

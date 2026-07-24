@@ -55,6 +55,9 @@ pub fn init_db(data_dir: &PathBuf) -> Result<Connection> {
         )",
         [],
     )?;
+
+    // Add index on filePath to speed up lookups and path-based operations
+    let _ = conn.execute("CREATE INDEX IF NOT EXISTS idx_scanned_files_filePath ON scanned_files(filePath);", []);
     
     // Schema upgrades - safe to run sequentially as they will be ignored if the column exists
     let new_columns = vec![
@@ -73,7 +76,8 @@ pub fn init_db(data_dir: &PathBuf) -> Result<Connection> {
         "bookSeries TEXT DEFAULT ''",
         "seriesIndex REAL DEFAULT 0",
         "isbn TEXT DEFAULT ''",
-        "pageCount INTEGER DEFAULT 0"
+        "pageCount INTEGER DEFAULT 0",
+        "videoFrameRate REAL DEFAULT 0"
     ];
 
     for col_def in new_columns {
