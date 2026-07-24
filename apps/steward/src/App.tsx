@@ -196,6 +196,10 @@ export default function App() {
 
           const originalConsoleWarn = console.warn;
           console.warn = (...args) => {
+             const msg = String(args[0] || "");
+             if (msg.includes("width(-1) and height(-1)") || msg.includes("The width(") && msg.includes("and height(")) {
+                 return; // Ignore Recharts sizing spam
+             }
              originalConsoleWarn(...args);
              appendLog('WARN', ...args);
           };
@@ -2406,6 +2410,7 @@ export default function App() {
               flushUiUpdates(true);
           },
           (msg) => {
+              console.log("[ScanLog]", msg);
               logsBuffer.unshift(msg);
               currentFile = msg;
               flushUiUpdates();

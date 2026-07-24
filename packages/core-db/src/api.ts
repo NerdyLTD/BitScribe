@@ -736,19 +736,26 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                     timeoutId = setTimeout(() => reject(new Error("ffprobe probe execution timed out after 15 seconds")), 15000);
                 });
 
+                let abortListener: (() => void) | null = null;
                 const abortPromise = new Promise<never>((_, reject) => {
                     if (signal?.aborted) {
                         reject(new Error("Scan aborted by user"));
                     } else if (signal) {
-                        signal.addEventListener('abort', () => reject(new Error("Scan aborted by user")));
+                        abortListener = () => reject(new Error("Scan aborted by user"));
+                        signal.addEventListener('abort', abortListener);
                     }
                 });
 
                 const output = await Promise.race([outputPromise, timeoutPromise, abortPromise]).catch(err => {
-                    child.kill().catch(() => {});
+                    // Intentionally not calling child.kill() because tauri-plugin-shell has a known 
+                    // Windows panic (0xcfffffff) when attempting to kill an already-exited or exiting sidecar process.
+                    // The JS listeners remain attached so the pipe won't block, and ffprobe will exit naturally.
                     throw err;
                 });
                 clearTimeout(timeoutId);
+                if (signal && abortListener) {
+                    signal.removeEventListener('abort', abortListener);
+                }
                 
                 if (output.code !== 0) {
                     throw new Error("ffprobe returned non-zero code");
