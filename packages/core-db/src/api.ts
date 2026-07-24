@@ -701,14 +701,16 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 // Optimize ffprobe arguments by skipping chapters lookup on audio-only files
                 // Streamline output with -show_entries to fetch only the exact format, stream and tag fields needed
                 const isAudioFile = ['.mp3', '.flac', '.m4a', '.wav', '.aac', '.ogg', '.wma', '.alac', '.m4b', '.ape', '.opus', '.mka'].some(ext => file.toLowerCase().endsWith(ext));
+                let showEntries = 'format=size,duration,bit_rate,tags:stream=codec_name,codec_type,width,height,channels,sample_rate,bits_per_raw_sample,pix_fmt,bit_rate,tags';
                 const ffprobeArgs = [
                     '-v', 'quiet',
-                    '-print_format', 'json',
-                    '-show_entries', 'format=size,duration,bit_rate,tags:stream=codec_name,codec_type,width,height,channels,sample_rate,bits_per_raw_sample,pix_fmt,bit_rate,tags'
+                    '-print_format', 'json'
                 ];
                 if (!isAudioFile) {
                     ffprobeArgs.push('-show_chapters');
+                    showEntries += ':chapter=start';
                 }
+                ffprobeArgs.push('-show_entries', showEntries);
                 ffprobeArgs.push('-analyzeduration', '500000', '-probesize', '500000', file);
 
                 const probePromise = Command.sidecar('bin/ffprobe', ffprobeArgs).execute();

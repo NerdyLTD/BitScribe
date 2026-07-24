@@ -103,8 +103,8 @@ fn save_db_files(state: State<'_, DbState>, files: Vec<ScannedFile>) -> Result<(
     let mut conn = state.conn.lock().unwrap();
     let tx = conn.transaction().map_err(|e| e.to_string())?;
     
-    for item in files {
-        tx.execute(
+    {
+        let mut stmt = tx.prepare(
             "INSERT INTO scanned_files (
                 id, filename, filePath, category, container, sizeGB, durationMins, year,
                 videoCodec, videoResolution, videoBitrateMbps, audioTracks, subtitleTracks, tags, audioBitrate, isCorrupted, errorMessage, hasEmbeddedPoster, bitrateAnomaly, bitrateAnomalyReason, topLevelFolder,
@@ -117,15 +117,20 @@ fn save_db_files(state: State<'_, DbState>, files: Vec<ScannedFile>) -> Result<(
                 videoCodec=excluded.videoCodec, videoResolution=excluded.videoResolution, videoBitrateMbps=excluded.videoBitrateMbps, audioTracks=excluded.audioTracks, subtitleTracks=excluded.subtitleTracks, tags=excluded.tags, audioBitrate=excluded.audioBitrate, isCorrupted=excluded.isCorrupted, errorMessage=excluded.errorMessage, hasEmbeddedPoster=excluded.hasEmbeddedPoster, bitrateAnomaly=excluded.bitrateAnomaly, bitrateAnomalyReason=excluded.bitrateAnomalyReason, topLevelFolder=excluded.topLevelFolder,
                 streamFriendlyLevel=excluded.streamFriendlyLevel, streamFriendlyReason=excluded.streamFriendlyReason, streamFriendlySuggestion=excluded.streamFriendlySuggestion, streamFriendlyEvaluated=excluded.streamFriendlyEvaluated,
                 videoBitDepth=excluded.videoBitDepth, audioSampleRate=excluded.audioSampleRate, chapterCount=excluded.chapterCount, rawAudioCodec=excluded.rawAudioCodec, physicalAudioChannels=excluded.physicalAudioChannels, matchedOnlineId=excluded.matchedOnlineId, fileUuid=excluded.fileUuid, hasExternalSubtitles=excluded.hasExternalSubtitles, embeddedSubtitleLanguages=excluded.embeddedSubtitleLanguages,
-                author=excluded.author, narrator=excluded.narrator, publisher=excluded.publisher, bookSeries=excluded.bookSeries, seriesIndex=excluded.seriesIndex, isbn=excluded.isbn, pageCount=excluded.pageCount, videoFrameRate=excluded.videoFrameRate",
-            params![
-                item.id, item.filename, item.file_path, item.category, item.container, item.size_gb, item.duration_mins, item.year,
-                item.video_codec, item.video_resolution, item.video_bitrate_mbps, item.audio_tracks.to_string(), item.subtitle_tracks.to_string(), item.tags.to_string(), item.audio_bitrate, item.is_corrupted, item.error_message, item.has_embedded_poster, item.bitrate_anomaly, item.bitrate_anomaly_reason, item.top_level_folder,
-                item.stream_friendly_level, item.stream_friendly_reason, item.stream_friendly_suggestion, item.stream_friendly_evaluated,
-                item.video_bit_depth, item.audio_sample_rate, item.chapter_count, item.raw_audio_codec, item.physical_audio_channels, item.matched_online_id, item.file_uuid, item.has_external_subtitles, item.embedded_subtitle_languages,
-                item.author, item.narrator, item.publisher, item.book_series, item.series_index, item.isbn, item.page_count, item.video_frame_rate
-            ],
+                author=excluded.author, narrator=excluded.narrator, publisher=excluded.publisher, bookSeries=excluded.bookSeries, seriesIndex=excluded.seriesIndex, isbn=excluded.isbn, pageCount=excluded.pageCount, videoFrameRate=excluded.videoFrameRate"
         ).map_err(|e| e.to_string())?;
+
+        for item in files {
+            stmt.execute(
+                params![
+                    item.id, item.filename, item.file_path, item.category, item.container, item.size_gb, item.duration_mins, item.year,
+                    item.video_codec, item.video_resolution, item.video_bitrate_mbps, item.audio_tracks.to_string(), item.subtitle_tracks.to_string(), item.tags.to_string(), item.audio_bitrate, item.is_corrupted, item.error_message, item.has_embedded_poster, item.bitrate_anomaly, item.bitrate_anomaly_reason, item.top_level_folder,
+                    item.stream_friendly_level, item.stream_friendly_reason, item.stream_friendly_suggestion, item.stream_friendly_evaluated,
+                    item.video_bit_depth, item.audio_sample_rate, item.chapter_count, item.raw_audio_codec, item.physical_audio_channels, item.matched_online_id, item.file_uuid, item.has_external_subtitles, item.embedded_subtitle_languages,
+                    item.author, item.narrator, item.publisher, item.book_series, item.series_index, item.isbn, item.page_count, item.video_frame_rate
+                ]
+            ).map_err(|e| e.to_string())?;
+        }
     }
     
     tx.commit().map_err(|e| e.to_string())?;
