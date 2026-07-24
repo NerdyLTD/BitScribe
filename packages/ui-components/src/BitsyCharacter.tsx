@@ -104,14 +104,41 @@ export default function BitsyCharacter({
           25% { transform: rotate(-15deg); }
         }
         @keyframes dance {
-          0%, 100% { transform: translateY(0) rotate(0deg); }
-          25% { transform: translateY(-5px) rotate(-5deg); }
-          50% { transform: translateY(0) rotate(0deg); }
-          75% { transform: translateY(-5px) rotate(5deg); }
+          0% { transform: translateX(0) translateY(0) rotate(0deg); }
+          /* Quick step bops */
+          5% { transform: translateY(-5px) rotate(-3deg); }
+          10% { transform: translateY(0) rotate(3deg); }
+          15% { transform: translateY(-5px) rotate(-3deg); }
+          20% { transform: translateY(0) rotate(0deg); }
+          
+          /* Moonwalk left */
+          25% { transform: translateX(-6px) translateY(-2px) rotate(2deg); }
+          30% { transform: translateX(-12px) translateY(0) rotate(-2deg); }
+          35% { transform: translateX(-18px) translateY(-2px) rotate(2deg); }
+          40% { transform: translateX(-24px) translateY(0) rotate(0deg); }
+          
+          /* Anti-gravity lean */
+          44% { transform: translateX(-24px) rotate(0deg); }
+          48% { transform: translateX(-24px) rotate(25deg); }
+          52% { transform: translateX(-24px) rotate(25deg); }
+          56% { transform: translateX(-24px) rotate(0deg); }
+          
+          /* Moonwalk right */
+          60% { transform: translateX(-16px) translateY(-2px) rotate(-2deg); }
+          65% { transform: translateX(-8px) translateY(0) rotate(2deg); }
+          70% { transform: translateX(0px) translateY(-2px) rotate(-2deg); }
+          75% { transform: translateX(8px) translateY(0) rotate(2deg); }
+          80% { transform: translateX(16px) translateY(-2px) rotate(-2deg); }
+          85% { transform: translateX(24px) translateY(0) rotate(0deg); }
+
+          /* Spin/Jump back to center */
+          90% { transform: translateX(12px) translateY(-15px) rotate(-15deg); }
+          95% { transform: translateX(0) translateY(0) rotate(10deg); }
+          100% { transform: translateX(0) translateY(0) rotate(0deg); }
         }
         .dancing-bitsy {
-          animation: dance 1s ease-in-out infinite;
-          transform-origin: center bottom;
+          animation: dance 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+          transform-origin: 50% 95%; /* Center bottom, at the wheels */
         }
         .clappy-eyes {
           animation: blink 4s infinite;
