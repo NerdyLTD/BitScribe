@@ -1,4 +1,5 @@
 import { formatCodecString, getPrimaryAudioCodec, getPrimaryVideoCodec, getContainerFormat, getFormattedAudioTracks } from '@bitscribe/core-eval';
+import { BitsyCharacter } from "@bitscribe/ui-components";
 import { createPortal } from "react-dom";
 import React, { useState, useEffect, useMemo, memo, useTransition } from "react";
 import { MediaItem, RuleCriteria, sortCategories, getCategoryGroup, isMusicCategory } from '@bitscribe/core-types';
@@ -1319,7 +1320,7 @@ const handleCategoryToggle = (cat: string) => {
             <div className="relative flex flex-col gap-3">
               <div className="flex justify-between items-center">
                 <h3 className="text-sm font-bold text-blue-400 flex items-center gap-2 tracking-wider">
-                  <Search className="w-4 h-4 animate-spin text-blue-500" />
+                  <BitsyCharacter className="w-6 h-6 text-blue-500 shrink-0" dancing={scanProgress < 100} pose={scanProgress === 100 ? "tada" : "default"} talking={scanProgress < 100} mood={scanProgress === 100 ? "excited" : "happy"} />
                   {scanProgress === 0 ? (isQuickRefresh ? "CHECKING FOR MODIFIED FILES (Quick scan)..." : "PROBING FILES (Large directories may take several minutes)...") : "ANALYZING METADATA..."}
                 </h3>
                 <div className="flex items-center gap-2 lg:gap-4 shrink-0">
