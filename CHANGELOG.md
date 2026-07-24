@@ -406,3 +406,6 @@ Update changelog
 - 2026-07-19: Upgraded database schema to use a high-performance content hash (`fileHash`) as the primary key instead of the file path, solving tracking issues when media files are renamed by BitScribe RX or other tools. Removed `fileUuid` in favor of the deterministic content hash.
 ## CHANGELOG.md Update
 - Replaced the scanning UI's generic loading icon with an animated Bitsy character that dances while the scan processes and strikes a celebratory 'Ta-da!' pose when finished.
+## CHANGELOG.md Update
+- Updated the Help Section to reflect 400+ combined hours of development, corrected out-of-date tutorial references (Audio Only -> Music Only), and added a button to view the open-source Apache 2.0 license.
+- Implemented a complete App Reset Modal featuring an animated Bitsy character holding her breath and exploding, followed by a true application cache, local storage, and database wipe.
