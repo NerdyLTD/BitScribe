@@ -98,6 +98,14 @@ export async function getDiagnostic() {
     return await invoke("get_diagnostic");
 }
 
+function parseOnlineId(filename: string): string {
+    const match = filename.match(/\[?(tmdb|tvdb|imdb|anidb)(?:id)?[\-=_]?([a-zA-Z0-9]+)\]?/i);
+    if (match) {
+        return `${match[1].toLowerCase()}-${match[2].toLowerCase()}`;
+    }
+    return "";
+}
+
 function inferCategory(baseDirName: string, fileName: string, extName: string, filePath?: string, tags?: Record<string, string>): string {
     const dirName = baseDirName;
     const lowerCat = baseDirName.toLowerCase();
@@ -319,7 +327,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
     const allowedExtensions = ['.mkv', '.mp4', '.avi', '.mov', '.wmv', '.flv', '.webm', '.m4v', '.mpg', '.mpeg', '.m2ts', '.ts', '.vob', '.mxf', '.mp3', '.flac', '.m4a', '.wav', '.aac', '.ogg', '.wma', '.alac', '.m4b', '.ape', '.opus', '.mka'];
     const allowedExtensionsSet = new Set(allowedExtensions);
     
-    let allFiles: {path: string, hash: string}[] = [];
+    let allFiles: {path: string, hash: string, hasExternalSubtitles?: boolean}[] = [];
     
     // Walk all directories concurrently to fully utilize CPU cores and overlapping filesystem IO
     onLog(`Walking ${paths.length} director${paths.length === 1 ? 'y' : 'ies'} in parallel...`);
@@ -329,23 +337,32 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
         onLog(`Walking directory: ${p}`);
         try {
             const files = isTauri()
-                ? await invoke<{path: string, size: number, fileHash: string}[]>("walk_dir", { path: p })
+                ? await invoke<{path: string, size: number, fileHash: string, hasExternalSubtitles: boolean}[]>("walk_dir", { path: p })
                 : MOCK_MEDIA_LIBRARY.filter(m => {
                     const normFile = m.filePath.replace(/\\/g, '/').toLowerCase();
                     const normPath = p.replace(/\\/g, '/').toLowerCase();
                     const pathWithSlash = normPath.endsWith('/') ? normPath : normPath + '/';
                     return normFile.startsWith(pathWithSlash) || normFile === normPath;
-                  }).map(m => ({ path: m.filePath, size: Math.round((m.sizeGB || 0) * 1024 * 1024 * 1024), fileHash: "mock-" + m.id }));
+                  }).map(m => ({ 
+                      path: m.filePath, 
+                      size: Math.round((m.sizeGB || 0) * 1024 * 1024 * 1024), 
+                      fileHash: "mock-" + m.id,
+                      hasExternalSubtitles: false
+                  }));
             
             let validCount = 0;
-            const dirFiles: {path: string, hash: string}[] = [];
+            const dirFiles: {path: string, hash: string, hasExternalSubtitles?: boolean}[] = [];
             for (const fileObj of files) {
                 const file = fileObj.path;
                 const lower = file.toLowerCase();
                 const lastDotIdx = lower.lastIndexOf('.');
                 const ext = lastDotIdx !== -1 ? lower.substring(lastDotIdx) : "";
                 if (allowedExtensionsSet.has(ext)) {
-                    dirFiles.push({path: file, hash: fileObj.fileHash});
+                    dirFiles.push({
+                        path: file, 
+                        hash: fileObj.fileHash,
+                        hasExternalSubtitles: fileObj.hasExternalSubtitles
+                    });
                     const normPath = normalizePath(file);
                     // Temporarily store the physical size in the map so we can use it later
                     existingFilesMap.set(normPath + "_physical_size", fileObj.size as any);
@@ -549,6 +566,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
             if (!fileObjItem) continue;
             const file = fileObjItem.path;
             const fileHash = fileObjItem.hash;
+            const hasExternalSubtitles = fileObjItem.hasExternalSubtitles || false;
             let skipProbe = false;
             const normPath = normalizePath(file);
             const cachedItem = existingFilesMap.get(normPath);
@@ -563,16 +581,19 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 const prevLevel = cachedItem.streamFriendlyLevel;
                 const prevReason = cachedItem.streamFriendlyReason;
                 const prevSuggestion = cachedItem.streamFriendlySuggestion;
+                const prevExternalSubs = cachedItem.hasExternalSubtitles || false;
 
                 const hasChanged = prevLevel !== evalResult.level ||
                                    prevReason !== evalResult.reason ||
-                                   prevSuggestion !== evalResult.suggestion;
+                                   prevSuggestion !== evalResult.suggestion ||
+                                   prevExternalSubs !== hasExternalSubtitles;
 
                 if (hasChanged) {
                     cachedItem.streamFriendlyLevel = evalResult.level as any;
                     cachedItem.streamFriendlyReason = evalResult.reason;
                     cachedItem.streamFriendlySuggestion = evalResult.suggestion;
                     cachedItem.streamFriendlyEvaluated = Date.now();
+                    cachedItem.hasExternalSubtitles = hasExternalSubtitles;
                     
                     changedCachedBatch.push(cachedItem);
                     if (changedCachedBatch.length >= BATCH_SIZE) {
@@ -800,13 +821,24 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 
                 const chapterCount = Array.isArray(metadata.chapters) ? metadata.chapters.length : 0;
                 
-                const pathParts = file.replace(/\\/g, '/').split('/');
+                 const pathParts = file.replace(/\\/g, '/').split('/');
                 const filename = pathParts[pathParts.length - 1];
                 const baseDirName = pathParts.length > 1 ? pathParts[pathParts.length - 2] : "";
                 const category = inferCategory(baseDirName, filename, '.' + container, file, tags);
                 if (category === 'Ignore') continue;
                 const topLevelFolder = getTopLevelFolder(file, paths);
                 
+                const filenameOnlineId = parseOnlineId(filename);
+                let matchedOnlineId = filenameOnlineId;
+                if (!matchedOnlineId && tags) {
+                    const tmdb = tags.tmdb || tags.TMDB || tags.metadata_id?.match(/tmdb:\/\/(\d+)/)?.[1];
+                    const tvdb = tags.tvdb || tags.TVDB || tags.metadata_id?.match(/tvdb:\/\/(\d+)/)?.[1];
+                    const imdb = tags.imdb || tags.IMDB || tags.metadata_id?.match(/imdb:\/\/(tt\d+)/)?.[1];
+                    if (tmdb) matchedOnlineId = `tmdb-${tmdb}`;
+                    else if (tvdb) matchedOnlineId = `tvdb-${tvdb}`;
+                    else if (imdb) matchedOnlineId = `imdb-${imdb}`;
+                }
+
                 const hydratedItem: MediaItem = {
                     id: fileHash,
                     filename: filename,
@@ -839,9 +871,9 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                     chapterCount: chapterCount,
                     rawAudioCodec: firstAudioStream ? (firstAudioStream.codec_name || "") : "",
                     physicalAudioChannels: firstAudioStream && firstAudioStream.channels ? safeParseInt(firstAudioStream.channels) : 0,
-                    matchedOnlineId: "",
+                    matchedOnlineId: matchedOnlineId,
                     
-                    hasExternalSubtitles: false,
+                    hasExternalSubtitles: hasExternalSubtitles,
                     embeddedSubtitleLanguages: parsedSubtitleTracks.map((t: any) => t.language).filter(Boolean).join(","),
                     author: tags.author || tags.AUTHOR || tags.artist || "",
                     narrator: tags.narrator || tags.NARRATOR || "",

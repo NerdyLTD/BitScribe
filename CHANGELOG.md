@@ -1,3 +1,10 @@
+## [1.4.40] - 2026-07-23
+### Added
+- 2026-07-23: Implemented Suite-level refactoring for BitScribe RX compatibility, addressing core data limitations and gaps:
+  - **Online Match Keys (Feature 1 compatibility)**: Created a robust regex-based `parseOnlineId` helper inside `packages/core-db` to parse TMDB, TVDB, IMDB, and AniDB identifiers (e.g. `[tmdbid-12345]`, `[imdb-tt12345]`) directly from filenames. Additionally, added fallback extraction to query metadata tags (`tags.tmdb`, `tags.imdb`, etc.) if matching identifiers are present, saving the result to `matchedOnlineId`.
+  - **External Subtitle Awareness (Feature 7 compatibility)**: Implemented highly optimized Rust-side sidecar subtitle detection in the `walk_dir` Tauri command. It checks parent folders for matching `.srt`, `.ass`, `.vtt`, and `.sub` sidecars (including language-tagged versions like `.en.srt` or `.zh.ass`) using standard directory reads, passing `hasExternalSubtitles` dynamically to the TS frontend.
+  - **Dynamic Fast-Skip Cache Updates**: Updated the TS scanning engine so that if a file's binary hash has not changed, the scanner updates and commits changes to `hasExternalSubtitles` dynamically without needing to re-ffprobe, enabling instant database updates on quick refresh scans.
+
 ## [1.4.39] - 2026-07-23
 ### Optimized
 - 2026-07-23: Implemented massive full-stack scanning pipeline performance, safety, and capability enhancements:

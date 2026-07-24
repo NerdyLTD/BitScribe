@@ -143,12 +143,46 @@ fn generate_file_hash(_path: &std::path::Path, metadata: &std::fs::Metadata) -> 
     format!("{:016x}", hasher.finish())
 }
 
+fn has_sidecar_subtitles(video_path: &std::path::Path) -> bool {
+    let parent = match video_path.parent() {
+        Some(p) => p,
+        None => return false,
+    };
+    let file_stem = match video_path.file_stem() {
+        Some(s) => s.to_string_lossy().to_lowercase(),
+        None => return false,
+    };
+    
+    if let Ok(entries) = std::fs::read_dir(parent) {
+        for entry_res in entries {
+            if let Ok(entry) = entry_res {
+                let path = entry.path();
+                if path.is_file() {
+                    let name = path.file_name().unwrap_or_default().to_string_lossy().to_lowercase();
+                    if name.starts_with(&file_stem) {
+                        if let Some(ext) = path.extension().and_then(|s| s.to_str()).map(|s| s.to_lowercase()) {
+                            if ext == "srt" || ext == "ass" || ext == "vtt" || ext == "sub" {
+                                let suffix = &name[file_stem.len()..];
+                                if suffix.starts_with('.') && (suffix.ends_with(".srt") || suffix.ends_with(".ass") || suffix.ends_with(".vtt") || suffix.ends_with(".sub")) {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    false
+}
+
 #[derive(serde::Serialize)]
 #[allow(non_snake_case)]
 struct FileEntry {
     path: String,
     size: u64,
     fileHash: String,
+    hasExternalSubtitles: bool,
 }
 
 #[tauri::command]
@@ -217,10 +251,12 @@ fn walk_dir(path: String) -> Result<Vec<FileEntry>, String> {
                     let meta = metadata.unwrap();
                     let size = meta.len();
                     let file_hash = generate_file_hash(entry.path(), &meta);
+                    let has_ext_subs = has_sidecar_subtitles(entry.path());
                     files.push(FileEntry {
                         path: path_str,
                         size,
                         fileHash: file_hash,
+                        hasExternalSubtitles: has_ext_subs,
                     });
                 }
             }
