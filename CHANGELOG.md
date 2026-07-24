@@ -404,3 +404,5 @@ Update changelog
 - 2026-07-19: Expanded database schema with extended metadata fields: `videoBitDepth`, `audioSampleRate`, `chapterCount`, `rawAudioCodec`, `physicalAudioChannels`, `matchedOnlineId`, `fileUuid`, `hasExternalSubtitles`, `embeddedSubtitleLanguages`, `author`, `narrator`, `publisher`, `bookSeries`, `seriesIndex`, `isbn`, and `pageCount`.
 - 2026-07-19: Updated UI columns to support expanded metadata fields (Video Depth, Chapters, Sample Rate).
 - 2026-07-19: Upgraded database schema to use a high-performance content hash (`fileHash`) as the primary key instead of the file path, solving tracking issues when media files are renamed by BitScribe RX or other tools. Removed `fileUuid` in favor of the deterministic content hash.
+## CHANGELOG.md Update
+- Replaced the scanning UI's generic loading icon with an animated Bitsy character that dances while the scan processes and strikes a celebratory 'Ta-da!' pose when finished.
