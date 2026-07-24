@@ -144,6 +144,10 @@ export default function App() {
           let isWriting = false;
 
           const flushLogs = async () => {
+            if (flushTimeout) {
+              clearTimeout(flushTimeout);
+              flushTimeout = null;
+            }
             if (logBuffer.length === 0 || isWriting) return;
             isWriting = true;
             const chunk = logBuffer.join("");
@@ -155,8 +159,9 @@ export default function App() {
             } finally {
               isWriting = false;
               if (logBuffer.length > 0) {
-                if (flushTimeout) clearTimeout(flushTimeout);
                 flushTimeout = setTimeout(flushLogs, 250);
+              } else {
+                flushTimeout = null;
               }
             }
           };
