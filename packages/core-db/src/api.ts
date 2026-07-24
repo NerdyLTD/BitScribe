@@ -519,6 +519,9 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                     onLog(`Successfully pruned ${ghostFiles.length} ghost files from persistent storage.`);
                 }
             }
+            if (isQuickRefresh) {
+                allFiles = newFilesOnDisk;
+            }
         } catch (e: any) {
             onLog(`Warning: Failed to prune database: ${e.message}`);
         }
@@ -603,7 +606,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                     }
                 }
                 
-                onProgress({ current: i + 1, total: allFiles.length, item: cachedItem });
+                onProgress({ current: i + 1, total: allFiles.length, item: hasChanged ? cachedItem : undefined });
                 continue;
             }
             
@@ -702,10 +705,16 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 // Optimize ffprobe arguments by skipping chapters lookup on audio-only files
                 // Streamline output with -show_entries to fetch only the exact format, stream and tag fields needed
                 const isAudioFile = ['.mp3', '.flac', '.m4a', '.wav', '.aac', '.ogg', '.wma', '.alac', '.m4b', '.ape', '.opus', '.mka'].some(ext => file.toLowerCase().endsWith(ext));
+                
+                let showEntries = 'format=size,duration,bit_rate,tags:stream=codec_name,codec_type,width,height,channels,sample_rate,bits_per_raw_sample,pix_fmt,bit_rate,r_frame_rate,avg_frame_rate,tags';
+                if (!isAudioFile) {
+                    showEntries += ':chapter=start';
+                }
+
                 const ffprobeArgs = [
                     '-v', 'quiet',
                     '-print_format', 'json',
-                    '-show_entries', 'format=size,duration,bit_rate,tags:stream=codec_name,codec_type,width,height,channels,sample_rate,bits_per_raw_sample,pix_fmt,bit_rate,tags'
+                    '-show_entries', showEntries
                 ];
                 if (!isAudioFile) {
                     ffprobeArgs.push('-show_chapters');
