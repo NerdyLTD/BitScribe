@@ -1,3 +1,10 @@
+## [1.4.42] - 2026-07-23
+### Updated
+- 2026-07-23: Refactored suite nomenclature, corrected compatibility definitions, and updated agent standards:
+  - **Suite Branding Alignment**: Renamed `BitScribe_DMLS_Evaluation_Reference.md` to `BitScribe_Evaluation_Reference.md` and replaced all occurrences of "Digital Media Lifecycle Suite (DMLS)" and "DMLS" with "BitScribe Digital Media Suite" to avoid overlapping acronyms and resolve confusion with the "BitScribe Digital Media Library Steward".
+  - **Bleeding Edge Definition Correction**: Re-aligned the "bleeding" compatibility level definition with the actual software configuration. Corrected the rating from "Ultra High Compatibility" to "Bleeding Edge Preset / Advanced High-Fidelity Standards" to accurately reflect that while offering peak codec efficiency and high-fidelity output, advanced next-generation formats (AV1, VVC, VP9, TrueHD, DTS-HD, Opus, FLAC, PCM) carry significant transcode and buffering risks in typical, widespread playback environments.
+  - **Agent Interaction Guidelines**: Added rule 12 to `AGENTS.md` requiring all development agents to verify past answers before formulating subsequent responses to prevent repetitive phrasing and redundant explanations.
+
 ## [1.4.41] - 2026-07-23
 ### Fixed
 - 2026-07-23: Resolved a severe scanning pipeline freeze and Windows application crash (exit code `0xcfffffff` / `STATUS_HEAP_CORRUPTION` / `STATUS_APPLICATION_HANG`) during directory scans:
