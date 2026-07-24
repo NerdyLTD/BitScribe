@@ -155,6 +155,25 @@ fn walk_dir(path: String) -> Result<Vec<FileEntry>, String> {
         match entry_res {
             Ok(entry) => {
                 if entry.file_type().is_file() {
+                    let path_ref = entry.path();
+                    let ext = path_ref.extension()
+                        .and_then(|s| s.to_str())
+                        .map(|s| s.to_lowercase());
+                    
+                    const ALLOWED_EXTENSIONS: &[&str] = &[
+                        "mkv", "mp4", "avi", "mov", "wmv", "flv", "webm", "m4v", "mpg", "mpeg", "m2ts", "ts", "vob", "mxf",
+                        "mp3", "flac", "m4a", "wav", "aac", "ogg", "wma", "alac", "m4b", "ape", "opus", "mka"
+                    ];
+                    
+                    let is_allowed = match ext {
+                        Some(ref e) => ALLOWED_EXTENSIONS.contains(&e.as_str()),
+                        None => false,
+                    };
+                    
+                    if !is_allowed {
+                        continue;
+                    }
+
                     let path_str = if let Some(p_str) = entry.path().to_str() {
                         p_str.to_string()
                     } else {

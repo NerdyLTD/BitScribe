@@ -1,3 +1,9 @@
+## [1.4.37] - 2026-07-23
+### Optimized
+- 2026-07-23: Implemented Rust-side WalkDir extension filtering optimization:
+  - Added native extension filtering directly in the Rust `walk_dir` command. Files that do not have allowed media/audio extensions (such as image files, `.nfo` metadata, and hidden files) are now skipped before file hashing, memory allocation, and serialization.
+  - This drastically reduces disk metadata API overhead, memory usage, and the size of the JSON payload transmitted over the Tauri IPC/WebView bridge, resulting in significantly faster traversal speeds and lower CPU overhead on folders containing numerous artwork images or mixed files.
+
 ## [1.4.36] - 2026-07-23
 ### Optimized
 - 2026-07-23: Implemented massive scanning performance optimizations to reduce overall scan times dramatically:
