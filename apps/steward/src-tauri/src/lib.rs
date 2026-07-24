@@ -15,7 +15,13 @@ struct DbState {
 #[tauri::command]
 fn get_db_files(state: State<'_, DbState>) -> Result<Vec<ScannedFile>, String> {
     let conn = state.conn.lock().unwrap();
-    let mut stmt = conn.prepare("SELECT * FROM scanned_files").map_err(|e| e.to_string())?;
+    let mut stmt = conn.prepare("SELECT \
+        id, filename, filePath, category, container, sizeGB, durationMins, year, \
+        videoCodec, videoResolution, videoBitrateMbps, audioTracks, subtitleTracks, tags, audioBitrate, isCorrupted, errorMessage, hasEmbeddedPoster, bitrateAnomaly, bitrateAnomalyReason, topLevelFolder, \
+        streamFriendlyLevel, streamFriendlyReason, streamFriendlySuggestion, streamFriendlyEvaluated, \
+        videoBitDepth, audioSampleRate, chapterCount, rawAudioCodec, physicalAudioChannels, matchedOnlineId, fileUuid, hasExternalSubtitles, embeddedSubtitleLanguages, \
+        author, narrator, publisher, bookSeries, seriesIndex, isbn, pageCount, videoFrameRate \
+        FROM scanned_files").map_err(|e| e.to_string())?;
     
     let file_iter = stmt.query_map([], |row| {
         Ok(ScannedFile {
@@ -179,15 +185,32 @@ fn walk_dir(path: String) -> Result<Vec<FileEntry>, String> {
         };
         match entry_res {
             Ok(entry) => {
-                let file_name = entry.file_name().to_string_lossy();
+                let os_name = entry.file_name();
                 if entry.file_type().is_dir() {
-                    if file_name.starts_with('.') 
-                        || file_name.eq_ignore_ascii_case("node_modules")
-                        || file_name.eq_ignore_ascii_case("$RECYCLE.BIN")
-                        || file_name.eq_ignore_ascii_case("System Volume Information")
-                        || file_name.eq_ignore_ascii_case(".git")
-                        || file_name.eq_ignore_ascii_case("target")
-                    {
+                    let mut should_skip = false;
+                    if let Some(file_name) = os_name.to_str() {
+                        if file_name.starts_with('.') 
+                            || file_name.eq_ignore_ascii_case("node_modules")
+                            || file_name.eq_ignore_ascii_case("$RECYCLE.BIN")
+                            || file_name.eq_ignore_ascii_case("System Volume Information")
+                            || file_name.eq_ignore_ascii_case(".git")
+                            || file_name.eq_ignore_ascii_case("target")
+                        {
+                            should_skip = true;
+                        }
+                    } else {
+                        let file_name = os_name.to_string_lossy();
+                        if file_name.starts_with('.') 
+                            || file_name.eq_ignore_ascii_case("node_modules")
+                            || file_name.eq_ignore_ascii_case("$RECYCLE.BIN")
+                            || file_name.eq_ignore_ascii_case("System Volume Information")
+                            || file_name.eq_ignore_ascii_case(".git")
+                            || file_name.eq_ignore_ascii_case("target")
+                        {
+                            should_skip = true;
+                        }
+                    }
+                    if should_skip {
                         iterator.skip_current_dir();
                     }
                     continue;
@@ -195,19 +218,27 @@ fn walk_dir(path: String) -> Result<Vec<FileEntry>, String> {
 
                 if entry.file_type().is_file() {
                     let path_ref = entry.path();
-                    let ext = path_ref.extension()
-                        .and_then(|s| s.to_str())
-                        .map(|s| s.to_lowercase());
+                    let ext_opt = path_ref.extension().and_then(|s| s.to_str());
 
-                    if let Some(ref e) = ext {
-                        if e == "srt" || e == "ass" || e == "vtt" || e == "sub" {
-                            if let Some(parent) = path_ref.parent() {
-                                subtitles_map.entry(parent.to_path_buf())
-                                    .or_default()
-                                    .push(file_name.to_lowercase());
-                            }
-                            continue;
+                    let mut is_sub = false;
+                    if let Some(ext) = ext_opt {
+                        if ext.eq_ignore_ascii_case("srt") 
+                            || ext.eq_ignore_ascii_case("ass") 
+                            || ext.eq_ignore_ascii_case("vtt") 
+                            || ext.eq_ignore_ascii_case("sub") 
+                        {
+                            is_sub = true;
                         }
+                    }
+
+                    if is_sub {
+                        if let Some(parent) = path_ref.parent() {
+                            let sub_name_lower = os_name.to_string_lossy().to_lowercase();
+                            subtitles_map.entry(parent.to_path_buf())
+                                .or_default()
+                                .push(sub_name_lower);
+                        }
+                        continue;
                     }
                     
                     const ALLOWED_EXTENSIONS: &[&str] = &[
@@ -215,10 +246,15 @@ fn walk_dir(path: String) -> Result<Vec<FileEntry>, String> {
                         "mp3", "flac", "m4a", "wav", "aac", "ogg", "wma", "alac", "m4b", "ape", "opus", "mka"
                     ];
                     
-                    let is_allowed = match ext {
-                        Some(ref e) => ALLOWED_EXTENSIONS.contains(&e.as_str()),
-                        None => false,
-                    };
+                    let mut is_allowed = false;
+                    if let Some(ext) = ext_opt {
+                        for allowed in ALLOWED_EXTENSIONS {
+                            if ext.eq_ignore_ascii_case(allowed) {
+                                is_allowed = true;
+                                break;
+                            }
+                        }
+                    }
                     
                     if !is_allowed {
                         continue;

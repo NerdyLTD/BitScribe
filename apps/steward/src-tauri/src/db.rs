@@ -13,6 +13,8 @@ pub fn init_db(data_dir: &PathBuf) -> Result<Connection> {
     let _ = conn.execute("PRAGMA synchronous = NORMAL;", []);
     let _ = conn.execute("PRAGMA cache_size = -64000;", []); // 64MB cache size
     let _ = conn.execute("PRAGMA temp_store = MEMORY;", []);
+    let _ = conn.execute("PRAGMA mmap_size = 268435456;", []); // 256MB memory-mapped I/O for lightning-fast reads
+    let _ = conn.execute("PRAGMA threads = 4;", []); // Enable multi-threaded operations where supported
     
     // Check if the table exists with `id` as the primary key
     let has_id_pk: Result<String, _> = conn.query_row(

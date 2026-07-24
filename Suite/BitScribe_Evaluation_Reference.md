@@ -1,7 +1,7 @@
-# BitScribe DMLS: Unified Design, Structure, and Evaluation Reference
-## Digital Media Lifecycle Suite (DMLS) Specification & Evaluation Guide
+# BitScribe: Unified Design, Structure, and Evaluation Reference
+## BitScribe Digital Media Suite Specification & Evaluation Guide
 
-This document is the **Single Source of Truth** for the **BitScribe Digital Media Lifecycle Suite (DMLS)**. It compiles the architectural design, directory scanning lifecycle, database specifications, evaluation rules, and compliance standards into a single, comprehensive reference.
+This document is the **Single Source of Truth** for the **BitScribe Digital Media Suite**. It compiles the architectural design, directory scanning lifecycle, database specifications, evaluation rules, and compliance standards into a single, comprehensive reference.
 
 This file is designed to be dropped directly into any **App Evaluation System** to enable full comprehension, automated review, and scoring of the BitScribe codebase.
 
@@ -9,7 +9,7 @@ This file is designed to be dropped directly into any **App Evaluation System** 
 
 ## 1. Executive Summary & Core Suite Components
 
-The **BitScribe Digital Media Lifecycle Suite (DMLS)** is an offline-first, professional media auditing and remediation pipeline designed to manage, catalog, and optimize local movie, television, music, audiobook, and e-book libraries. It comprises three specialized modules:
+The **BitScribe Digital Media Suite** is an offline-first, professional media auditing and remediation pipeline designed to manage, catalog, and optimize local movie, television, music, audiobook, and e-book libraries. It comprises three specialized modules:
 
 1. **BitScribe Steward** (The Scanner/Auditor): 
    A high-performance, read-only desktop application that walks user-selected directories, extracts deep media streams and tags via sidecar binaries, writes state to a shared database, and computes streaming compatibility scores.
@@ -208,20 +208,20 @@ export type PlexFriendlyLevel = 'bleeding' | 'modern' | 'legacy' | 'unfriendly' 
 The compatibility evaluator (`core-eval`) grades movie and TV files based on their direct direct-play suitability across modern streaming backends (like Plex, Jellyfin, and Emby).
 
 ### Compatibility Levels Definition
-1. **`bleeding` (Ultra High Compatibility):**
-   * **Trigger:** Video is `AV1` or `HEVC` (H.265) wrapped in `mp4` or `mkv` containers; Audio is stereo `AAC` or `Opus`; Subtitles are soft `.srt` or sidecar external SRT.
-   * **Justification:** Can direct-play on almost any modern mobile device, smart TV, or browser without incurring server-side transcoding.
-2. **`modern` (Direct Play Standard):**
-   * **Trigger:** Video is `H.264` (AVC) or `HEVC`; Audio is Dolby Digital (`AC3` / `E-AC3` 5.1 surround); Subtitles are soft text-based formats (SRT, WebVTT).
-   * **Justification:** Standard direct-play for home theaters. May trigger client-side audio transcoding on web browsers lacking AC3 decoders, but highly compatible overall.
-3. **`legacy` (Safe Direct-Stream):**
-   * **Trigger:** Older video formats (MPEG-4, VC1) or audio formats (MP3 stereo, AAC 5.1); containers like `avi` or `wmv`.
-   * **Justification:** Often requires direct-stream remuxing (wrapping audio/video inside a modern container on-the-fly) but rarely triggers full video transcode.
-4. **`unfriendly` (Transcode Warning):**
-   * **Trigger:** Image-based subtitles (`PGS` / `HDMV`, `VOBSUB` / `IDX`) embedded inside an `MKV` container, or stylized subtitle scripts (`ASS`/`SSA`) played on client devices lacking rendering engines. Video bitrates exceeding resolution safety envelopes (e.g. 1080p video > 40 Mbps).
-   * **Justification:** Forcing the client to burn image-based or heavy ASS subtitles over high-bitrate video forces the Plex server to transcode the video stream on-the-fly, thrashing server CPU/GPU resources.
+1. **`bleeding` (Bleeding Edge Preset / Advanced High-Fidelity Standards):**
+   * **Trigger:** Video is encoded with next-generation codecs like `AV1`, `VVC`, or `VP9`; Audio tracks feature lossless surround or high-fidelity/modern streaming codecs such as `TrueHD`, `DTS-HD`, `Opus`, `FLAC`, or `PCM`.
+   * **Justification:** High transcode & buffering risk for standard/widespread environments. While offering maximum compression and pristine audio-visual fidelity, these files require the absolute latest and most advanced decoder hardware. Widespread or legacy client hardware often lacks native support, meaning they will frequently trigger resource-intensive server-side transcoding and streaming bottlenecks on ordinary playback devices.
+2. **`modern` (Modern Preset / Direct Play Standard):**
+   * **Trigger:** Video is compressed using highly efficient standard codecs like `HEVC` (H.265) or standard `H.264` (AVC); Audio is standard digital surround (`AC3` / `E-AC3` 5.1 channel) or highly compatible stereo formats (`AAC`, `MP3`).
+   * **Justification:** Perfect standard Direct-Play on modern (2015+) hardware. This configuration is highly optimized for modern home theater setups and devices, though older web browsers or low-end mobile clients lacking native AC3 decoders may require minor client-side audio transcoding.
+3. **`legacy` (Legacy Preset / Broad Direct-Stream & Direct-Play):**
+   * **Trigger:** Video is standard `H.264` (AVC); Audio is standard stereo `AAC`, `MP3`, or Dolby Digital `AC3`.
+   * **Justification:** Broadest and safest direct-play compatibility across all generations of hardware, including low-power, legacy, and mobile streaming devices. It guarantees smooth playback without transcoding, though it misses out on the modern file-size savings provided by HEVC/AV1.
+4. **`unfriendly` (Transcode Warning / Severe Compatibility Blockers):**
+   * **Trigger:** Files featuring image-based subtitles (like PGS/HDMV, VOBSUB/IDX) inside `MKV` containers, or complex, stylized subtitle scripts (`ASS`/`SSA`) played on client devices without specialized subtitle rendering chips. Also triggered by files whose video bitrates exceed resolution safety envelopes (such as 1080p files with bitrates exceeding 40 Mbps).
+   * **Justification:** Burning image-based subtitles or complex text effects onto high-bitrate video streams cannot be done natively on most clients. This forces the media server to transcode the video stream in real-time, resulting in real-time server spikes, buffering pauses, and performance degradation.
 5. **`corrupted` (Parser Failure):**
-   * **Trigger:** `isCorrupted` is true, indicating an unreadable media file, a missing video stream, or a native ffprobe crash.
+   * **Trigger:** `isCorrupted` is set to true (typically caused by unreadable headers, 0-byte or truncated files, or sidecar utility failures).
 
 ---
 

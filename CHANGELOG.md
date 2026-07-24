@@ -1,3 +1,10 @@
+## [1.4.44] - 2026-07-24
+### Optimized
+- 2026-07-24: Implemented high-performance SQLite profiling optimizations and allocation-free Rust directory walking to accelerate library scanning:
+  - **Zero-Allocation Rust-Side walk_dir Logic**: Reconstructed folder exclusions and media extension checking in `walk_dir` to use allocation-free case-insensitive matches (`eq_ignore_ascii_case`) on existing `&str` references, preventing thousands of transient lowercase string allocations and heap heap-churn cycles for ignored/non-media files.
+  - **SQLite Performance Tuning (mmap_size & threads)**: Configured memory-mapped I/O (`PRAGMA mmap_size = 268435456;` for 256MB) and parallel query threads (`PRAGMA threads = 4;`) during connection initialization in `db.rs` to bypass user-space system call overheads and accelerate bulk data transfer.
+  - **Explicit-Column SELECT Mapping**: Replaced the wildcard `SELECT *` in `get_db_files` with an explicit, schema-ordered list of exact columns, ensuring strict index-mapping stability and immunizing the query parser against out-of-order schema additions or database upgrades.
+
 ## [1.4.43] - 2026-07-24
 ### Fixed
 - 2026-07-24: Fixed a layout shifting bug in the exported HTML reports where enabling the "All Metrics Dashboard" (Metrics Only mode) would push the main navigation/filter menu below the charts:
