@@ -721,14 +721,33 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 }
                 ffprobeArgs.push('-analyzeduration', '500000', '-probesize', '500000', file);
 
-                const probePromise = Command.sidecar('bin/ffprobe', ffprobeArgs).execute();
+                const cmd = Command.sidecar('bin/ffprobe', ffprobeArgs);
+                const child = await cmd.spawn();
+
+                const outputPromise = new Promise<any>((resolve, reject) => {
+                    let stdoutStr = "";
+                    child.stdout.on('data', (line) => stdoutStr += line);
+                    child.on('close', (data) => resolve({ code: data.code, stdout: stdoutStr }));
+                    child.on('error', (err) => reject(err));
+                });
 
                 let timeoutId: any;
                 const timeoutPromise = new Promise<never>((_, reject) => {
                     timeoutId = setTimeout(() => reject(new Error("ffprobe probe execution timed out after 15 seconds")), 15000);
                 });
 
-                const output = await Promise.race([probePromise, timeoutPromise]);
+                const abortPromise = new Promise<never>((_, reject) => {
+                    if (signal?.aborted) {
+                        reject(new Error("Scan aborted by user"));
+                    } else if (signal) {
+                        signal.addEventListener('abort', () => reject(new Error("Scan aborted by user")));
+                    }
+                });
+
+                const output = await Promise.race([outputPromise, timeoutPromise, abortPromise]).catch(err => {
+                    child.kill().catch(() => {});
+                    throw err;
+                });
                 clearTimeout(timeoutId);
                 
                 if (output.code !== 0) {
@@ -906,6 +925,9 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 batch.push(hydratedItem);
                 
             } catch (e: any) {
+                if (signal?.aborted || e.message === "Scan aborted by user") {
+                    break;
+                }
                 const corrupted: MediaItem = {
                     id: fileHash, filename: file.split(/[\\\/]/).pop()!, filePath: file, category: 'Corrupted' as any,
                     container: 'unknown', sizeGB: 0, durationMins: 0, year: 0, videoCodec: '', videoResolution: '',

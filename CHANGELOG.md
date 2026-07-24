@@ -413,3 +413,5 @@ Update changelog
 - Fixed a critical infinite render loop within the BitsyCharacter component where `requestAnimationFrame` was constantly generating new object references for eye tracking, causing the React scheduler to flood and crash the application during scanning.
 ## CHANGELOG.md Update
 - Enhanced Bitsy's scan dance animation with Michael Jackson-inspired moves, including a moonwalk and an anti-gravity lean.
+
+- Fixed a severe crash (exit code 0xcfffffff) and application freeze when stopping a scan in progress. Orphaned Tauri `Command.sidecar` processes (`ffprobe`) were accumulating because their promises were abandoned on abort. Now explicitly uses `.spawn()` and captures the `AbortSignal` to immediately `.kill()` all active background `ffprobe` processes when a scan is stopped, completely resolving the zombie process resource exhaustion. Modified: `packages/core-db/src/api.ts`.
