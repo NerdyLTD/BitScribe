@@ -1,3 +1,9 @@
+## [1.4.36] - 2026-07-23
+### Optimized
+- 2026-07-23: Implemented massive scanning performance optimizations to reduce overall scan times dramatically:
+  - Eliminated redundant SQLite writes and Tauri IPC calls for unchanged cached media files. The scanner now only saves cached items if their newly evaluated compatibility status has changed, cutting database writes for cached files from thousands to virtually zero.
+  - Eliminated an O(N^2) linear search bottleneck in the frontend scan progress handler. Removed high-frequency `findIndex` list-mutation operations on the main thread, freeing up WebView CPU cycles and speeding up scan processing.
+
 ## [1.4.35] - 2026-07-23
 ### Optimized
 - 2026-07-23: Restored scanning performance by increasing the dynamic concurrency limit.

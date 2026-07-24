@@ -2369,22 +2369,6 @@ export default function App() {
     }
     try {
       const activePaths = scanPaths.filter((p) => p.enabled).map(p => p.path);
-      const finalItems: MediaItem[] = [];
-      const corruptItems: MediaItem[] = [];
-      if (localStorage.getItem("bitscribe_scan_in_progress") === "true") {
-          try {
-              const existingFiles = await getDbFiles();
-              existingFiles.forEach(f => {
-                  if (f.category === "Corrupted" || (f.category && f.category.toLowerCase().includes("corrupt"))) {
-                      corruptItems.push(f);
-                  } else {
-                      finalItems.push(f);
-                  }
-              });
-          } catch (e) {
-              console.warn("Failed to load existing files for resume", e);
-          }
-      }
       let scannedCount = 0;
 
       let lastLogUpdateTime = Date.now();
@@ -2426,17 +2410,8 @@ export default function App() {
                   setScanProgress(roundedPct);
                   lastProgress = roundedPct;
               }
-              if (prog.item) {
-                  if (prog.error) {
-                      const idx = corruptItems.findIndex(i => i.id === prog.item.id);
-                      if (idx >= 0) corruptItems[idx] = prog.item;
-                      else corruptItems.push(prog.item);
-                  } else {
-                      const idx = finalItems.findIndex(i => i.id === prog.item.id);
-                      if (idx >= 0) finalItems[idx] = prog.item;
-                      else finalItems.push(prog.item);
-                      scannedCount++;
-                  }
+              if (prog.item && !prog.error) {
+                  scannedCount++;
               }
           }
       , isResumingScan, isQ, abortControllerRef.current?.signal || undefined);

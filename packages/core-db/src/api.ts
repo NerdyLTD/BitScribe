@@ -484,6 +484,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
     
     const worker = async () => {
         let batch: MediaItem[] = [];
+        let changedCachedBatch: MediaItem[] = [];
         while (currentIndex < allFiles.length) {
             if (signal?.aborted) {
                 break;
@@ -503,18 +504,28 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
             if (skipProbe && cachedItem) {
                 // Re-evaluate Plex compatibility based on latest rules without calling ffprobe
                 const evalResult = evaluatePlexCompatibility(cachedItem, rules, false, true);
-                cachedItem.streamFriendlyLevel = evalResult.level as any;
-                cachedItem.streamFriendlyReason = evalResult.reason;
-                cachedItem.streamFriendlySuggestion = evalResult.suggestion;
-                cachedItem.streamFriendlyEvaluated = Date.now();
+                const prevLevel = cachedItem.streamFriendlyLevel;
+                const prevReason = cachedItem.streamFriendlyReason;
+                const prevSuggestion = cachedItem.streamFriendlySuggestion;
+
+                const hasChanged = prevLevel !== evalResult.level ||
+                                   prevReason !== evalResult.reason ||
+                                   prevSuggestion !== evalResult.suggestion;
+
+                if (hasChanged) {
+                    cachedItem.streamFriendlyLevel = evalResult.level as any;
+                    cachedItem.streamFriendlyReason = evalResult.reason;
+                    cachedItem.streamFriendlySuggestion = evalResult.suggestion;
+                    cachedItem.streamFriendlyEvaluated = Date.now();
+                    
+                    changedCachedBatch.push(cachedItem);
+                    if (changedCachedBatch.length >= BATCH_SIZE) {
+                        const toSave = changedCachedBatch.splice(0, BATCH_SIZE);
+                        await saveDbFiles(toSave);
+                    }
+                }
                 
                 onProgress({ current: i + 1, total: allFiles.length, item: cachedItem });
-                batch.push(cachedItem);
-                
-                if (batch.length >= BATCH_SIZE) {
-                    const toSave = batch.splice(0, BATCH_SIZE);
-                    await saveDbFiles(toSave);
-                }
                 continue;
             }
             
@@ -813,6 +824,9 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
         }
         if (batch.length > 0) {
             await saveDbFiles(batch);
+        }
+        if (changedCachedBatch.length > 0) {
+            await saveDbFiles(changedCachedBatch);
         }
     };
     
