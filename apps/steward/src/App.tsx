@@ -144,10 +144,6 @@ export default function App() {
           let isWriting = false;
 
           const flushLogs = async () => {
-            if (flushTimeout) {
-              clearTimeout(flushTimeout);
-              flushTimeout = null;
-            }
             if (logBuffer.length === 0 || isWriting) return;
             isWriting = true;
             const chunk = logBuffer.join("");
@@ -159,9 +155,8 @@ export default function App() {
             } finally {
               isWriting = false;
               if (logBuffer.length > 0) {
+                if (flushTimeout) clearTimeout(flushTimeout);
                 flushTimeout = setTimeout(flushLogs, 250);
-              } else {
-                flushTimeout = null;
               }
             }
           };
@@ -196,10 +191,6 @@ export default function App() {
 
           const originalConsoleWarn = console.warn;
           console.warn = (...args) => {
-             const msg = String(args[0] || "");
-             if (msg.includes("width(-1) and height(-1)") || msg.includes("The width(") && msg.includes("and height(")) {
-                 return; // Ignore Recharts sizing spam
-             }
              originalConsoleWarn(...args);
              appendLog('WARN', ...args);
           };
@@ -2410,11 +2401,7 @@ export default function App() {
               flushUiUpdates(true);
           },
           (msg) => {
-              console.log("[ScanLog]", msg);
               logsBuffer.unshift(msg);
-              if (logsBuffer.length > 5000) {
-                  logsBuffer.pop();
-              }
               currentFile = msg;
               flushUiUpdates();
           },
