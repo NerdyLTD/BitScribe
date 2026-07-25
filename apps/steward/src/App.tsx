@@ -2412,6 +2412,9 @@ export default function App() {
           (msg) => {
               console.log("[ScanLog]", msg);
               logsBuffer.unshift(msg);
+              if (logsBuffer.length > 5000) {
+                  logsBuffer.pop();
+              }
               currentFile = msg;
               flushUiUpdates();
           },
