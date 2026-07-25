@@ -191,6 +191,10 @@ export default function App() {
 
           const originalConsoleWarn = console.warn;
           console.warn = (...args) => {
+             const msg = String(args[0] || "");
+             if (msg.includes("width(-1) and height(-1)") || (msg.includes("The width(") && msg.includes("and height("))) {
+                 return; // Ignore Recharts sizing spam
+             }
              originalConsoleWarn(...args);
              appendLog('WARN', ...args);
           };
@@ -2398,10 +2402,16 @@ export default function App() {
       await scanDirectories(activePaths, customRules, 
           (total) => {
               logsBuffer.unshift(`Found ${total} files. Probing started...`);
+              if (logsBuffer.length > 5000) {
+                  logsBuffer.pop();
+              }
               flushUiUpdates(true);
           },
           (msg) => {
               logsBuffer.unshift(msg);
+              if (logsBuffer.length > 5000) {
+                  logsBuffer.pop();
+              }
               currentFile = msg;
               flushUiUpdates();
           },

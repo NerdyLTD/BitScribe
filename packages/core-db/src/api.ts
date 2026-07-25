@@ -407,19 +407,18 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
         try {
             const existingDbFiles = await getDbFiles();
 
-            const isUnderPath = (file: string, activePath: string) => {
-                const normFile = normalizePath(file);
-                const normActive = normalizePath(activePath);
-                const apWithSlash = normActive.endsWith('/') ? normActive : normActive + '/';
-                return normFile.startsWith(apWithSlash) || normFile === normActive;
-            };
+            const normalizedActivePaths = paths.map(ap => {
+                const norm = normalizePath(ap);
+                return norm.endsWith('/') ? norm : norm + '/';
+            });
 
             const allFilesSet = new Set(allFiles.map(f => normalizePath(f.path)));
             
             // Find which DB files are under the active scan paths
             const dbFilesUnderActivePaths = existingDbFiles.filter(item => {
                 if (!item.filePath) return false;
-                return paths.some(ap => isUnderPath(item.filePath, ap));
+                const normFile = normalizePath(item.filePath);
+                return normalizedActivePaths.some(ap => normFile.startsWith(ap) || normFile === ap.slice(0, -1));
             });
             
             // Ghost files: in DB under active path, but not found on disk
@@ -501,16 +500,20 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 } catch (e) {}
                 
                 const updatedChanges = [...storedChanges];
+                const existingKeys = new Set(updatedChanges.map(uc => `${uc.filename}|${uc.path}|${uc.changeFound}`));
+                
                 changes.forEach(c => {
-                    const exists = updatedChanges.some(uc => 
-                        uc.filename === c.filename && 
-                        uc.path === c.path && 
-                        uc.changeFound === c.changeFound
-                    );
-                    if (!exists) {
+                    const key = `${c.filename}|${c.path}|${c.changeFound}`;
+                    if (!existingKeys.has(key)) {
+                        existingKeys.add(key);
                         updatedChanges.push(c);
                     }
                 });
+                
+                // Bound size to prevent localStorage QuotaExceededError when scanning massive collections
+                if (updatedChanges.length > 5000) {
+                    updatedChanges.splice(0, updatedChanges.length - 5000);
+                }
                 localStorage.setItem("bitscribe_media_changes", JSON.stringify(updatedChanges));
                 
                 if (ghostFiles.length > 0) {
@@ -530,10 +533,10 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
     onStart(allFiles.length);
     if (allFiles.length === 0) return;
     
-    // Use smart balanced concurrency: 12 concurrent workers is the sweet spot
+    // Use smart balanced concurrency: 20 concurrent workers is the sweet spot
     // that maintains parallel processing speed while avoiding connection locks or disk thrashing on slow storage.
     const logicalCores = typeof navigator !== 'undefined' && navigator.hardwareConcurrency ? navigator.hardwareConcurrency : 4;
-    const CONCURRENCY = Math.min(12, Math.max(4, logicalCores));
+    const CONCURRENCY = Math.min(20, Math.max(8, logicalCores));
     const BATCH_SIZE = 500;
     
     // Centralized write queue to guarantee database write safety and prevent transaction locks
@@ -736,19 +739,26 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                     timeoutId = setTimeout(() => reject(new Error("ffprobe probe execution timed out after 15 seconds")), 15000);
                 });
 
+                let abortListener: (() => void) | null = null;
                 const abortPromise = new Promise<never>((_, reject) => {
                     if (signal?.aborted) {
                         reject(new Error("Scan aborted by user"));
                     } else if (signal) {
-                        signal.addEventListener('abort', () => reject(new Error("Scan aborted by user")));
+                        abortListener = () => reject(new Error("Scan aborted by user"));
+                        signal.addEventListener('abort', abortListener);
                     }
                 });
 
                 const output = await Promise.race([outputPromise, timeoutPromise, abortPromise]).catch(err => {
-                    child.kill().catch(() => {});
+                    // Intentionally not calling child.kill() because tauri-plugin-shell has a known 
+                    // Windows panic (0xcfffffff) when attempting to kill an already-exited or exiting sidecar process.
+                    // The JS listeners remain attached so the pipe won't block, and ffprobe will exit naturally.
                     throw err;
                 });
                 clearTimeout(timeoutId);
+                if (signal && abortListener) {
+                    signal.removeEventListener('abort', abortListener);
+                }
                 
                 if (output.code !== 0) {
                     throw new Error("ffprobe returned non-zero code");
