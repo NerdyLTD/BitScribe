@@ -406,25 +406,28 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
         onLog("Pruning database and detecting file moves/deletions...");
         try {
             const existingDbFiles = await getDbFiles();
-
-            const isUnderPath = (file: string, activePath: string) => {
-                const normFile = normalizePath(file);
-                const normActive = normalizePath(activePath);
-                const apWithSlash = normActive.endsWith('/') ? normActive : normActive + '/';
-                return normFile.startsWith(apWithSlash) || normFile === normActive;
-            };
+            
+            const normPaths = paths.map(p => {
+                const normActive = normalizePath(p);
+                return {
+                    exact: normActive,
+                    withSlash: normActive.endsWith('/') ? normActive : normActive + '/'
+                };
+            });
 
             const allFilesSet = new Set(allFiles.map(f => normalizePath(f.path)));
             
             // Find which DB files are under the active scan paths
             const dbFilesUnderActivePaths = existingDbFiles.filter(item => {
                 if (!item.filePath) return false;
-                return paths.some(ap => isUnderPath(item.filePath, ap));
+                const normFile = normalizePath(item.filePath);
+                item._normPath = normFile; // cache for next steps
+                return normPaths.some(ap => normFile.startsWith(ap.withSlash) || normFile === ap.exact);
             });
             
             // Ghost files: in DB under active path, but not found on disk
             const ghostFiles = dbFilesUnderActivePaths.filter(item => {
-                return !allFilesSet.has(normalizePath(item.filePath));
+                return !allFilesSet.has(item._normPath);
             });
             
             // New files: on disk, but not in existing DB
@@ -501,13 +504,12 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 } catch (e) {}
                 
                 const updatedChanges = [...storedChanges];
+                const existingChangesSet = new Set(updatedChanges.map(uc => `${uc.filename}|${uc.path}|${uc.changeFound}`));
+                
                 changes.forEach(c => {
-                    const exists = updatedChanges.some(uc => 
-                        uc.filename === c.filename && 
-                        uc.path === c.path && 
-                        uc.changeFound === c.changeFound
-                    );
-                    if (!exists) {
+                    const key = `${c.filename}|${c.path}|${c.changeFound}`;
+                    if (!existingChangesSet.has(key)) {
+                        existingChangesSet.add(key);
                         updatedChanges.push(c);
                     }
                 });
@@ -720,6 +722,9 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                     '-print_format', 'json',
                     '-show_entries', showEntries
                 ];
+                if (!isAudioFile) {
+                    ffprobeArgs.push('-show_chapters');
+                }
                 ffprobeArgs.push('-analyzeduration', '500000', '-probesize', '500000', file);
 
                 const probePromise = Command.sidecar('bin/ffprobe', ffprobeArgs).execute();
