@@ -511,6 +511,10 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                         updatedChanges.push(c);
                     }
                 });
+                // Bound size to prevent localStorage QuotaExceededError when scanning massive collections
+                if (updatedChanges.length > 5000) {
+                    updatedChanges.splice(0, updatedChanges.length - 5000);
+                }
                 localStorage.setItem("bitscribe_media_changes", JSON.stringify(updatedChanges));
                 
                 if (ghostFiles.length > 0) {
@@ -530,10 +534,10 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
     onStart(allFiles.length);
     if (allFiles.length === 0) return;
     
-    // Use smart balanced concurrency: 12 concurrent workers is the sweet spot
+    // Use smart balanced concurrency: 20 concurrent workers is the sweet spot
     // that maintains parallel processing speed while avoiding connection locks or disk thrashing on slow storage.
     const logicalCores = typeof navigator !== 'undefined' && navigator.hardwareConcurrency ? navigator.hardwareConcurrency : 4;
-    const CONCURRENCY = Math.min(12, Math.max(4, logicalCores));
+    const CONCURRENCY = Math.min(20, Math.max(8, logicalCores));
     const BATCH_SIZE = 500;
     
     // Centralized write queue to guarantee database write safety and prevent transaction locks
@@ -716,9 +720,6 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                     '-print_format', 'json',
                     '-show_entries', showEntries
                 ];
-                if (!isAudioFile) {
-                    ffprobeArgs.push('-show_chapters');
-                }
                 ffprobeArgs.push('-analyzeduration', '500000', '-probesize', '500000', file);
 
                 const probePromise = Command.sidecar('bin/ffprobe', ffprobeArgs).execute();
@@ -728,8 +729,26 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                     timeoutId = setTimeout(() => reject(new Error("ffprobe probe execution timed out after 15 seconds")), 15000);
                 });
 
-                const output = await Promise.race([probePromise, timeoutPromise]);
-                clearTimeout(timeoutId);
+                let abortListener: (() => void) | null = null;
+                const abortPromise = new Promise<never>((_, reject) => {
+                    if (signal?.aborted) {
+                        reject(new Error("Scan aborted by user"));
+                    } else if (signal) {
+                        abortListener = () => reject(new Error("Scan aborted by user"));
+                        signal.addEventListener('abort', abortListener);
+                    }
+                });
+
+                const output = await Promise.race([probePromise, timeoutPromise, abortPromise]).catch(err => {
+                    // Intentionally NOT calling child.kill() to prevent Tauri Windows panic 0xcfffffff.
+                    // The JS promise chain will cleanly reject and ffprobe will exit natively.
+                    throw err;
+                }).finally(() => {
+                    clearTimeout(timeoutId);
+                    if (signal && abortListener) {
+                        signal.removeEventListener('abort', abortListener);
+                    }
+                });
                 
                 if (output.code !== 0) {
                     throw new Error("ffprobe returned non-zero code");
