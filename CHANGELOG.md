@@ -418,3 +418,8 @@ Update changelog
 
 - Reverted explicit `child.kill()` calls during scan abort sequences because the Tauri `plugin-shell` backend on Windows suffers from an intermittent fatal crash (`STATUS_APPLICATION_HANG`, exit code 0xcfffffff) when attempting to kill processes that have recently or concurrently exited. To prevent both resource accumulation and hard crashes, `api.ts` now preserves the `AbortSignal` cleanup but delegates child process termination to natural early exits, while maintaining stdout listeners to prevent pipe buffers from blocking the sidecar. Modified: `packages/core-db/src/api.ts`.
 - Fixed a regression in `App.tsx` where Recharts sizing warnings (`width(-1) and height(-1)`) were incorrectly debounced, spamming the local physical debug log file and causing minor UI freezing due to high I/O volume. A filter was added to completely suppress these specific harmless React sizing warnings before they reach the file writer. Modified: `apps/steward/src/App.tsx`.
+
+- Fixed an O(N^2) scan performance bottleneck in `api.ts` where the local change-tracking array (`bitscribe_media_changes`) was doing a `.some()` loop against every existing change for every newly discovered file. Replaced with an O(1) `Set` string-key lookup.
+- Optimized path evaluation in `api.ts` for database pruning by pre-computing normalized scan directory strings outside the filter loops, eliminating up to `O(N*M)` regex operations for `normalizePath`.
+- Capped `logsBuffer` growth in `App.tsx` directly inside the `onLog` callback to prevent infinite array allocation and expensive `unshift()` operations when dealing with collections over 5,000 files.
+- Raised maximum worker concurrency from 12 to 20 per the specification in `BitScribe_Evaluation_Reference.md`.
