@@ -1,3 +1,4 @@
+-e - 2026-07-25: Improved scan performance by optimizing file deduplication mapping and hash comparisons during directory traversal (Option B). Set limits on localStorage quota for media changes, optimized concurrency limits based on hardware cores, and replaced arrays with Set/Map to remove quadratic behavior in file scans.
 ## [1.4.44] - 2026-07-24
 ### Optimized
 - 2026-07-24: Implemented high-performance SQLite profiling optimizations and allocation-free Rust directory walking to accelerate library scanning:
