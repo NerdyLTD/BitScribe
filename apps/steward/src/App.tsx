@@ -1938,7 +1938,7 @@ export default function App() {
     }, 2000);
   };
 
-  const cancelTour = () => {
+  const cancelTour = async () => {
     setShowTour(false);
     setActiveDemo(null);
     setDemoMessage(null);
@@ -1948,9 +1948,13 @@ export default function App() {
     setShowDiagnostic(false);
     localStorage.setItem("bitscribe_tour_status", JSON.stringify({ status: 'skipped' }));
     setCustomRules(resetToDiscoveryPreset);
+    const demoInserted = localStorage.getItem("bitscribe_demo_data_inserted");
+    if (demoInserted) {
+      await flushDemoDataOnly();
+    }
   };
 
-  const remindLaterTour = () => {
+  const remindLaterTour = async () => {
     setShowTour(false);
     setActiveDemo(null);
     setDemoMessage(null);
@@ -1961,6 +1965,10 @@ export default function App() {
     const oneWeek = new Date().getTime() + 7 * 24 * 60 * 60 * 1000;
     localStorage.setItem("bitscribe_tour_status", JSON.stringify({ status: 'remind', remindAt: oneWeek }));
     setCustomRules(resetToDiscoveryPreset);
+    const demoInserted = localStorage.getItem("bitscribe_demo_data_inserted");
+    if (demoInserted) {
+      await flushDemoDataOnly();
+    }
   };
 
   const goToTourStep = (step: number) => {

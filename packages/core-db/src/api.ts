@@ -421,13 +421,13 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
             const dbFilesUnderActivePaths = existingDbFiles.filter(item => {
                 if (!item.filePath) return false;
                 const normFile = normalizePath(item.filePath);
-                item._normPath = normFile; // cache for next steps
+                (item as any)._normPath = normFile; // cache for next steps
                 return normPaths.some(ap => normFile.startsWith(ap.withSlash) || normFile === ap.exact);
             });
             
             // Ghost files: in DB under active path, but not found on disk
             const ghostFiles = dbFilesUnderActivePaths.filter(item => {
-                return !allFilesSet.has(item._normPath);
+                return !allFilesSet.has((item as any)._normPath);
             });
             
             // New files: on disk, but not in existing DB

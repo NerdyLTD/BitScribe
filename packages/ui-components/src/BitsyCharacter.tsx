@@ -12,7 +12,7 @@ export default function BitsyCharacter({
   className?: string,
   pointing?: boolean,
   talking?: boolean,
-  mood?: 'happy' | 'thinking' | 'excited',
+  mood?: 'happy' | 'thinking' | 'excited' | 'concentrating',
   targetSelector?: string | null,
   dancing?: boolean,
   pose?: 'default' | 'tada'
@@ -95,6 +95,14 @@ export default function BitsyCharacter({
           0%, 100% { d: path('M 45 65 Q 50 65 55 65'); }
           50% { d: path('M 45 65 Q 50 72 55 65'); }
         }
+        
+        @keyframes tremble {
+          0%, 100% { transform: translate(0, 0); }
+          20% { transform: translate(-1px, 1px); }
+          40% { transform: translate(1px, -1px); }
+          60% { transform: translate(-1px, -1px); }
+          80% { transform: translate(1px, 1px); }
+        }
         @keyframes clappyTopTalk {
           0%, 100% { transform: rotate(-15deg); }
           5% { transform: rotate(-25deg); }
@@ -163,8 +171,16 @@ export default function BitsyCharacter({
       {/* Feet */}
       <path d="M35 92 L40 92 M65 92 L70 92" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
 
+      
       {/* Arms */}
-      {pose === 'tada' ? (
+      {mood === 'concentrating' ? (
+        <g style={{ animation: 'tremble 0.1s infinite' }}>
+          <path d="M20 55 Q5 50 15 65" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+          <circle cx="15" cy="65" r="4.5" fill="currentColor" />
+          <path d="M80 55 Q95 50 85 65" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+          <circle cx="85" cy="65" r="4.5" fill="currentColor" />
+        </g>
+      ) : pose === 'tada' ? (
         <>
           <path d="M20 55 Q5 50 -5 30" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
           <path d="M80 55 Q95 50 105 30" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
@@ -209,6 +225,16 @@ export default function BitsyCharacter({
 
       {/* Face */}
       <g className="clappy-eyes">
+        {mood === 'concentrating' ? (
+          <>
+            <path d="M 26 50 L 34 55 L 26 60" stroke="#1e232e" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M 74 50 L 66 55 L 74 60" stroke="#1e232e" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M 24 53 Q 32 43 43 51" stroke="#1e232e" strokeWidth="3.5" fill="none" strokeLinecap="round" />
+            <path d="M 57 51 Q 68 43 76 53" stroke="#1e232e" strokeWidth="3.5" fill="none" strokeLinecap="round" />
+          </>
+        ) : (
+          <>
+            
         {/* Left Eye */}
         <circle cx="34" cy="55" r="7.5" fill="white" stroke="#1e232e" strokeWidth="2" />
         <g style={{ transform: `translate(${eyeOffset.x}px, ${eyeOffset.y}px)` }}>
@@ -238,8 +264,10 @@ export default function BitsyCharacter({
         <path d="M 74 49 Q 78 43 79 46" stroke="#1e232e" strokeWidth="2" fill="none" strokeLinecap="round" />
         <path d="M 69 46 Q 72 39 73 41" stroke="#1e232e" strokeWidth="2" fill="none" strokeLinecap="round" />
         <path d="M 64 46 Q 65 38 66 40" stroke="#1e232e" strokeWidth="2" fill="none" strokeLinecap="round" />
+      
+          </>
+        )}
       </g>
-
       {/* Cheeks */}
       <ellipse cx="25" cy="62" rx="4" ry="2.5" fill="#ec4899" opacity="0.4" />
       <ellipse cx="75" cy="62" rx="4" ry="2.5" fill="#ec4899" opacity="0.4" />
