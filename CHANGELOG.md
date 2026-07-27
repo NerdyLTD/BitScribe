@@ -1,6 +1,10 @@
 ## [Unreleased]
 ### Fixed
 - **App Startup Crash**: Fixed a ReferenceError that caused the app to render a black screen on startup. The newly extracted `useBackupRestore` and `useDemoActions` hooks were accidentally placed above the React `useState` variables they relied on (e.g., `setScanPaths`, `setExcelColumns`), causing an initialization failure. Moved the hook calls below all state declarations in `App.tsx` to correct the order.\n\n### Added
+- **Diagnostic Logging Toggle**: Added a new global option in the Rule Editor to enable diagnostic logging. When enabled, the app immediately begins capturing application lifecycle events to a timestamped `_debuglog.txt` in the configured Export Directory upon subsequent launches, ensuring complete startup captures.
+
+### Fixed
+- **App Startup Crash & Error Handling**: Fixed a critical bug causing the application to render a persistent black screen on startup. Implemented a top-level React `ErrorBoundary` in `main.tsx` to catch and visibly display any future unhandled React crashes, rather than silently failing and trapping the user on a blank screen.\n\n### Added
 - **Interactive Reports**: Added an "All Media" category filter by default to Discovery scans for comprehensive viewing.
 - **Metrics Clickability**: Filter numbers in the HTML report metrics dashboard are now clickable/interactive.
 - **HTML Report Optimization**: Compressed HTML export sizes drastically by splitting embedded JSON data objects into separate arrays of keys and matching values, stripping out the repetitive string overhead.

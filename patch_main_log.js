@@ -1,37 +1,7 @@
-import {StrictMode} from 'react';
-import {createRoot} from 'react-dom/client';
+const fs = require('fs');
+let file = fs.readFileSync('apps/steward/src/main.tsx', 'utf8');
 
-import React from 'react';
-class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, error: any, info: any}> {
-  constructor(props: any) {
-    super(props);
-    this.state = { hasError: false, error: null, info: null };
-  }
-  static getDerivedStateFromError(error: any) {
-    return { hasError: true, error };
-  }
-  componentDidCatch(error: any, info: any) {
-    console.error("ErrorBoundary caught an error", error, info);
-    this.setState({ info });
-  }
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div style={{ color: 'red', padding: '20px', background: 'black', height: '100vh', boxSizing: 'border-box' }}>
-          <h1>Something went wrong.</h1>
-          <pre>{this.state.error && this.state.error.toString()}</pre>
-          <pre>{this.state.info && this.state.info.componentStack}</pre>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
-
-import App from './App';
-import './index.css';
-
-
+const loggingCode = `
 // Diagnostic Logging Initialization
 (async function initDiagnosticLogging() {
   try {
@@ -64,10 +34,10 @@ import './index.css';
         String(now.getMinutes()).padStart(2, '0') + '-' +
         String(now.getSeconds()).padStart(2, '0');
         
-      const logFile = await join(exportDir, `${safeTs}_debuglog.txt`);
+      const logFile = await join(exportDir, \`\${safeTs}_debuglog.txt\`);
       const timestamp = now.toISOString();
       const APP_VERSION = "1.4.8"; // Hardcoded for this script context
-      const logContent = `[${timestamp}] App launched successfully. \nVersion: ${APP_VERSION}\n`;
+      const logContent = \`[\${timestamp}] App launched successfully. \\nVersion: \${APP_VERSION}\\n\`;
       
       await writeTextFile(logFile, logContent);
       console.info("Diagnostic log started at: " + logFile);
@@ -107,7 +77,7 @@ import './index.css';
           return String(a);
         }).join(" ");
         const ts = new Date().toISOString();
-        logBuffer.push(`[${ts}] [${level}] ${msg}\n`);
+        logBuffer.push(\`[\${ts}] [\${level}] \${msg}\\n\`);
         
         if (!isWriting) {
           setTimeout(flushLogs, 500);
@@ -135,8 +105,7 @@ import './index.css';
     console.error("Failed to initialize diagnostic logging", err);
   }
 })();
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <ErrorBoundary><App /></ErrorBoundary>
-  </StrictMode>,
-);
+`;
+
+file = file.replace("createRoot(document.getElementById('root')!).render(", loggingCode + "\\n\\ncreateRoot(document.getElementById('root')!).render(");
+fs.writeFileSync('apps/steward/src/main.tsx', file);

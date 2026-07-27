@@ -104,6 +104,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
   setCorruptFiles,
   setHasCompletedScan,
 }) => {
+  const [isPathsExpanded, setIsPathsExpanded] = React.useState(false);
+  const [editingPathIdx, setEditingPathIdx] = React.useState<number | null>(null);
+  const [editPathInput, setEditPathInput] = React.useState("");
+  const [isAddingPathApp, setIsAddingPathApp] = React.useState(false);
+  const [newPathInputApp, setNewPathInputApp] = React.useState("");
+
   return (
     <aside
       className={

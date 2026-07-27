@@ -11,5 +11,9 @@
     "dev": "npm run dev --workspace=apps/steward",
     "lint": "npm run lint --workspace=apps/steward",
     "tauri": "npm run tauri --workspace=apps/steward"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "puppeteer": "^25.3.0"
   }
 }
