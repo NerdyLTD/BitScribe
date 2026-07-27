@@ -234,6 +234,7 @@ export default function App() {
             ...selected.map(p => ({ path: p, enabled: true }))
         ]);
         setIsAddingPathApp(false);
+        setIsPathsExpanded(false);
       } else if (selected && typeof selected === "string") {
         setNewPathInputApp(selected);
       }
