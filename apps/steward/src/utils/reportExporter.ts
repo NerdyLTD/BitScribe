@@ -188,7 +188,7 @@ export async function exportMediaLibraryToCSV(
         const missingFmt = (val: any) => {
           if (val === undefined || val === null) return "[MISSING]";
           let s = String(val).trim();
-          if (s.length > 32000) s = s.substring(0, 32000) + "... [TRUNCATED]";
+          if (s.length > 500) s = s.substring(0, 500) + "... [TRUNCATED]";
           if (s === "" || s === "-" || s === "0" || s === "None" || s === "Unknown") return "[MISSING]";
           return s;
         };
@@ -443,12 +443,27 @@ export async function exportMediaLibraryToJSON(
     if (rawParsed.episode && rawParsed.episode !== "-") parsedMetadata.episode = rawParsed.episode;
     if (rawParsed.epTitle && rawParsed.epTitle !== "-") parsedMetadata.epTitle = rawParsed.epTitle;
 
+    
+    if (restItem.audioTracks) {
+      restItem.audioTracks = restItem.audioTracks.map(t => ({
+        ...t,
+        title: t.title ? (t.title.length > 250 ? t.title.substring(0, 250) + "... [TRUNCATED]" : t.title) : undefined
+      }));
+    }
+    if (restItem.subtitleTracks) {
+      restItem.subtitleTracks = restItem.subtitleTracks.map(t => ({
+        ...t,
+        title: t.title ? (t.title.length > 250 ? t.title.substring(0, 250) + "... [TRUNCATED]" : t.title) : undefined
+      }));
+    }
+
     const baseObj: Record<string, any> = {
       ...restItem,
       tags: cleanTags,
       parsedMetadata,
       evaluation,
     };
+
 
     // Omit empty/default keys to prevent bloat across thousands of entries
     const exportedItem: Record<string, any> = {};
@@ -621,7 +636,7 @@ export async function exportMediaLibraryToHTML(
         const missingFmt = (val: any) => {
           if (val === undefined || val === null) return "[MISSING]";
           let s = String(val).trim();
-          if (s.length > 32000) s = s.substring(0, 32000) + "... [TRUNCATED]";
+          if (s.length > 500) s = s.substring(0, 500) + "... [TRUNCATED]";
           if (s === "" || s === "-" || s === "0" || s === "None" || s === "Unknown") return "[MISSING]";
           return s;
         };

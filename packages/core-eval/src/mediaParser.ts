@@ -584,9 +584,8 @@ export function sanitizeTags(rawTags: Record<string, string> | undefined | null)
 
   for (const [key, rawVal] of Object.entries(rawTags)) {
     if (!rawVal || typeof rawVal !== 'string') continue;
-    const val = rawVal.trim();
+    let val = rawVal.trim();
     if (!val) continue;
-    if (val.length > 32000) continue; // Skip massive tags like embedded base64 images outright
 
     const lowerKey = key.toLowerCase().trim();
 
@@ -624,9 +623,21 @@ export function sanitizeTags(rawTags: Record<string, string> | undefined | null)
     if (/^(\\x[0-9a-fA-F]{2})+/.test(val) || (val.startsWith('\\x') && val.length < 120 && (val.match(/\\x/g) || []).length > 3)) {
       continue;
     }
+    
+    // Aggressive Truncation Based on Field Type
+    const isLyrics = lowerKey.includes('lyrics') || lowerKey === 'uslt' || lowerKey === 'unsyncedlyrics' || lowerKey === 'syncedlyrics';
+    const isLongText = lowerKey === 'synopsis' || lowerKey === 'description' || lowerKey === 'comment';
+    
+    if (isLyrics) {
+      if (val.length > 5000) val = val.substring(0, 5000) + "... [TRUNCATED]";
+    } else if (isLongText) {
+      if (val.length > 1500) val = val.substring(0, 1500) + "... [TRUNCATED]";
+    } else {
+      if (val.length > 250) val = val.substring(0, 250) + "... [TRUNCATED]";
+    }
 
     // 3. Preserve lyrics (handling language variations like lyrics-eng, lyrics-XXX, unsyncedlyrics, etc.)
-    if (lowerKey.includes('lyrics') || lowerKey === 'uslt' || lowerKey === 'unsyncedlyrics' || lowerKey === 'syncedlyrics') {
+    if (isLyrics) {
       cleanTags['lyrics'] = val;
       continue;
     }
