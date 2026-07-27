@@ -1812,7 +1812,7 @@ const toggleBleedingEdgePreset = (checked: boolean) => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {/* Box 1: Fix Music Grouping */}\n            {/* Box 1.5: Diagnostic Logging */}
+            {/* Box 1: Fix Music Grouping */}            {/* Box 1.5: Diagnostic Logging */}
             <label className="flex flex-col p-3 bg-[#1E232E] border border-slate-700/30 rounded-xl cursor-pointer hover:bg-slate-700 transition-colors h-auto min-h-[7rem] justify-between">
               <div className="flex items-start gap-2.5">
                 <input
