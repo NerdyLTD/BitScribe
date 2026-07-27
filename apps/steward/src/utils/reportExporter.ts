@@ -1566,7 +1566,7 @@ export async function exportMediaLibraryToHTML(
         itemsHtml = '<div class="space-y-2.5 max-h-[190px] overflow-y-auto pr-1">';
         itemsList.forEach(item => {
           itemsHtml += '<div class="flex items-center justify-between py-1 border-b border-slate-800/40 last:border-0 cursor-pointer hover:bg-slate-800/50 transition-colors group px-1 rounded -mx-1" onclick="window.setCodecFilter(&quot;'+item.name+'&quot;)" title="Filter by this codec">' +
-            /'<span class="font-mono text-xs text-slate-200 font-medium group-hover:text-blue-400 group-hover:underline transition-all">'/g + item.name + '</span>' +
+            '<span class="font-mono text-xs text-slate-200 font-medium group-hover:text-blue-400 group-hover:underline transition-all">' + item.name + '</span>' +
             '<span class="px-2 py-0.5 text-[10px] font-bold rounded-full ' + badgeColorClass + ' group-hover:ring-1 group-hover:ring-blue-500">' + item.count + '</span>' +
           '</div>';
         });
