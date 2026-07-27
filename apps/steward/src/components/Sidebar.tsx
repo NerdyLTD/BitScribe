@@ -15,16 +15,6 @@ export interface SidebarProps {
   isFluidLayout: boolean;
   scanPaths: Array<{ path: string; enabled: boolean }>;
   setScanPaths: React.Dispatch<React.SetStateAction<Array<{ path: string; enabled: boolean }>>>;
-  isPathsExpanded: boolean;
-  setIsPathsExpanded: (val: boolean) => void;
-  editingPathIdx: number | null;
-  setEditingPathIdx: (idx: number | null) => void;
-  editPathInput: string;
-  setEditPathInput: (val: string) => void;
-  isAddingPathApp: boolean;
-  setIsAddingPathApp: (val: boolean) => void;
-  newPathInputApp: string;
-  setNewPathInputApp: (val: string) => void;
   handleBrowseFolder: () => void;
   setConfirmAction: (val: { message: string; onConfirm: () => void } | null) => void;
   isScanning: boolean;
@@ -72,16 +62,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isFluidLayout,
   scanPaths,
   setScanPaths,
-  isPathsExpanded,
-  setIsPathsExpanded,
-  editingPathIdx,
-  setEditingPathIdx,
-  editPathInput,
-  setEditPathInput,
-  isAddingPathApp,
-  setIsAddingPathApp,
-  newPathInputApp,
-  setNewPathInputApp,
   handleBrowseFolder,
   setConfirmAction,
   isScanning,

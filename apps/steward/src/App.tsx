@@ -13,12 +13,6 @@ import {
   evaluatePlexCompatibility, computeDuplicatesMap,
 } from '@bitscribe/core-eval';
 import { scrollToElement } from "./utils/domHelpers";
-import { exportMediaLibraryToExcel } from "./utils/excelExporter";
-import {
-  exportMediaLibraryToCSV,
-  exportMediaLibraryToHTML,
-  exportMediaLibraryToJSON,
-} from "./utils/reportExporter";
 import Dashboard from "./components/Dashboard";
 import RuleEditor from "./components/RuleEditor";
 import HelpSection from "./components/HelpSection";
@@ -235,8 +229,8 @@ export default function App() {
             ...prev,
             ...selected.map(p => ({ path: p, enabled: true }))
         ]);
-        setIsAddingPathApp(false);
-        setIsPathsExpanded(false);
+        
+        
       } else if (selected && typeof selected === "string") {
         setNewPathInputApp(selected);
       }
@@ -790,11 +784,6 @@ export default function App() {
     json: false,
   });
 
-  const [isAddingPathApp, setIsAddingPathApp] = useState(false);
-  const [isPathsExpanded, setIsPathsExpanded] = useState(false);
-  const [newPathInputApp, setNewPathInputApp] = useState("");
-  const [editingPathIdx, setEditingPathIdx] = useState<number | null>(null);
-  const [editPathInput, setEditPathInput] = useState("");
 
   const [isScanning, setIsScanning] = useState(false);
   const [isQuickRefreshMode, setIsQuickRefreshState] = useState(false);
@@ -2091,16 +2080,6 @@ const [isAppResetting, setIsAppResetting] = useState(false);
           isFluidLayout={isFluidLayout}
           scanPaths={scanPaths}
           setScanPaths={setScanPaths}
-          isPathsExpanded={isPathsExpanded}
-          setIsPathsExpanded={setIsPathsExpanded}
-          editingPathIdx={editingPathIdx}
-          setEditingPathIdx={setEditingPathIdx}
-          editPathInput={editPathInput}
-          setEditPathInput={setEditPathInput}
-          isAddingPathApp={isAddingPathApp}
-          setIsAddingPathApp={setIsAddingPathApp}
-          newPathInputApp={newPathInputApp}
-          setNewPathInputApp={setNewPathInputApp}
           handleBrowseFolder={handleBrowseFolder}
           setConfirmAction={setConfirmAction}
           isScanning={isScanning}
