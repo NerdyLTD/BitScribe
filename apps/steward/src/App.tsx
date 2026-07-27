@@ -34,7 +34,6 @@ import { BitsyCharacter } from '@bitscribe/ui-components';
 import { useTourSimulation } from './hooks/useTourSimulation';
 import { useBackupRestore } from './hooks/useBackupRestore';
 import { useDemoActions } from './hooks/useDemoActions';
-import { useDemoActions } from './hooks/useDemoActions';
 import { BitsyReel } from '@bitscribe/ui-components';
 import { readTextFile, writeFile, mkdir, exists } from "@tauri-apps/plugin-fs";
 import { join } from "@tauri-apps/api/path";
@@ -1525,14 +1524,6 @@ const [isAppResetting, setIsAppResetting] = useState(false);
   });
 
 
-  const { clearLocalCacheOnly, flushServerDatabase, flushDemoDataOnly, handlePopulateDemo } = useDemoActions({
-    setScanLogs,
-    setScannedFilesList,
-    setScannedFiles,
-    setCorruptFiles,
-    setHasCompletedScan,
-    setNotification,
-  });
 
 
   const { handleBackup, handleRestore } = useBackupRestore({
