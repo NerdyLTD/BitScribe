@@ -1006,7 +1006,17 @@ export async function exportMediaLibraryToHTML(
 </div>
 
 <script>
-  const ALL_DATA = __ALL_DATA__;
+  const RAW_KEYS = __KEYS__;
+  const RAW_COMPRESSED_DATA = __ALL_DATA__;
+  const ALL_DATA = RAW_COMPRESSED_DATA.map(arr => {
+    const obj = {};
+    for (let i = 0; i < RAW_KEYS.length; i++) {
+      if (arr[i] !== null && arr[i] !== undefined) {
+        obj[RAW_KEYS[i]] = arr[i];
+      }
+    }
+    return obj;
+  });
   const RAW_DATA = ALL_DATA;
   const INITIAL_COLUMNS = __COLUMNS__;
   const ALL_POSSIBLE_HEADERS = __HEADERS__;
@@ -1873,9 +1883,20 @@ export async function exportMediaLibraryToHTML(
 </body>
 </html>`;
 
+
+  const allKeysSet = new Set<string>();
+  allOptimizedItems.forEach(item => {
+    Object.keys(item).forEach(k => allKeysSet.add(k));
+  });
+  const allKeys = Array.from(allKeysSet);
+  const compressedItems = allOptimizedItems.map(item => {
+    return allKeys.map(k => item[k] !== undefined ? item[k] : null);
+  });
+
   const finalHtml = htmlTemplate
     .replace('__DATA__', () => '[]')
-    .replace('__ALL_DATA__', () => JSON.stringify(allOptimizedItems).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029'))
+    .replace('__KEYS__', () => JSON.stringify(allKeys).replace(/</g, '\\u003c'))
+    .replace('__ALL_DATA__', () => JSON.stringify(compressedItems).replace(/</g, '\\u003c').replace(/\\u2028/g, '\\u2028').replace(/\\u2029/g, '\\u2029'))
     .replace('__COLUMNS__', () => JSON.stringify(finalColumns).replace(/</g, '\\u003c'))
     .replace('__HEADERS__', () => JSON.stringify(allPossibleHeaders).replace(/</g, '\\u003c'))
     .replace('__SCAN_TYPE__', () => scanType)
