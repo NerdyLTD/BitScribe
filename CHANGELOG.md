@@ -471,3 +471,6 @@ Update changelog
 
 ### Environment Build Hotfix
 - **Vite Package Resolution**: Fixed a runtime crash caused by Vite being unable to resolve the newly extracted `@bitscribe/core-export` and `@bitscribe/desktop-api` packages. Added missing alias mappings to `apps/steward/vite.config.ts` so the ES Modules can be properly resolved during `npm run tauri dev` and production builds.
+
+### Visual / Style Hotfix
+- **White Border Line Issue**: Resolved a visual artifact where a bright white horizontal line appeared below the Header and above the Navigation tabs. The Tailwind v4 `@source` directive in `apps/steward/src/index.css` had an incorrect relative path to `packages/ui-components`, meaning custom hex colors (e.g. `border-[#1e2333]/80`, `bg-[#0F1117]`) within those shared components were silently stripped from the CSS build. This caused standard borders to fall back to the bright `text-slate-200` color. Corrected the path to include the shared workspace (`../../../packages/ui-components/src`), restoring all intended dark mode styles.
