@@ -232,7 +232,7 @@ export default function App() {
         
         
       } else if (selected && typeof selected === "string") {
-        setNewPathInputApp(selected);
+        setScanPaths(prev => [...prev, { path: selected, enabled: true }]);
       }
     } catch (err) {
       console.error("Failed to open dialog:", err);
