@@ -1,5 +1,5 @@
-@source "../../packages/ui-components/src";
 @import "tailwindcss";
+@source "../../packages/ui-components/src";
 
 ::-webkit-scrollbar {
   width: 6px;
