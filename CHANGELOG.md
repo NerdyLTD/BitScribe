@@ -101,6 +101,8 @@
 ### Refactored
 - Extracted global UI helpers (`scrollToElement`) into a `domHelpers.ts` utility file.
 - Decoupled the 1,160-line automated tour simulation loop into a dedicated `useTourSimulation.ts` React hook, significantly reducing the complexity of the main `App.tsx` file.
+- Extracted the entire Tauri IPC Scan Engine block (including event listeners, metrics updates, and pause/resume logic) into a dedicated `useScanEngine.ts` hook, further decoupling core functionality from `App.tsx`.
+
 
 ### Added
 - HTML Discovery Report: Codec metrics on the "All Metrics Dashboard" are now fully interactive. Clicking any codec name or count will filter the main table to show only matching files, allowing for rapid drill-down analysis without increasing report file size.
