@@ -952,6 +952,10 @@ export async function exportMediaLibraryToHTML(
   <div class="flex flex-col lg:flex-row gap-4 mb-4 justify-between items-start lg:items-center">
     <div class="flex flex-wrap gap-2 items-center gap-y-3" id="category-filters-container">
       <div class="flex flex-wrap gap-2" id="category-filters"></div>
+      <button id="clear-codec-filter" onclick="window.clearCodecFilter()" class="hidden px-4 py-1.5 bg-blue-900/40 hover:bg-red-900/60 text-blue-300 hover:text-red-300 rounded-full text-sm font-medium border border-blue-800/50 hover:border-red-800/80 transition-all items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        Clear Codec Filter: <span id="active-codec-label" class="font-bold"></span>
+      </button>
       <button id="all-metrics-toggle" onclick="toggleAllMetrics()" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-full text-sm font-medium border border-slate-700 transition-all flex items-center gap-2">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
         All Metrics Dashboard
@@ -1019,6 +1023,7 @@ export async function exportMediaLibraryToHTML(
   let currentPage = 1;
   let pageSize = 50;
   let activeDupFilter = "All";
+  let activeCodecFilter = null;
   let visibleColumns = { ...INITIAL_COLUMNS };
   let colWidths = {};
 
@@ -1538,9 +1543,9 @@ export async function exportMediaLibraryToHTML(
       } else {
         itemsHtml = '<div class="space-y-2.5 max-h-[190px] overflow-y-auto pr-1">';
         itemsList.forEach(item => {
-          itemsHtml += '<div class="flex items-center justify-between py-1 border-b border-slate-800/40 last:border-0">' +
-            '<span class="font-mono text-xs text-slate-200 font-medium">' + item.name + '</span>' +
-            '<span class="px-2 py-0.5 text-[10px] font-bold rounded-full ' + badgeColorClass + '">' + item.count + '</span>' +
+          itemsHtml += '<div class="flex items-center justify-between py-1 border-b border-slate-800/40 last:border-0 cursor-pointer hover:bg-slate-800/50 transition-colors group px-1 rounded -mx-1" onclick="window.setCodecFilter(&quot;'+item.name+'&quot;)" title="Filter by this codec">' +
+            '<span class="font-mono text-xs text-slate-200 font-medium group-hover:text-blue-400 transition-colors">' + item.name + '</span>' +
+            '<span class="px-2 py-0.5 text-[10px] font-bold rounded-full ' + badgeColorClass + ' group-hover:ring-1 group-hover:ring-blue-500">' + item.count + '</span>' +
           '</div>';
         });
         itemsHtml += '</div>';
@@ -1566,6 +1571,21 @@ export async function exportMediaLibraryToHTML(
       renderCard('Music Codecs', sortedMusic, 'bg-pink-500/10 text-pink-400 border border-pink-500/20')
     ].join('');
   }
+
+  
+  window.setCodecFilter = function(codecName) {
+    if (showAllMetricsMode) {
+      window.toggleAllMetrics();
+    }
+    activeCodecFilter = codecName;
+    currentPage = 1;
+    renderTable();
+  };
+  window.clearCodecFilter = function() {
+    activeCodecFilter = null;
+    currentPage = 1;
+    renderTable();
+  };
 
   function renderFilters() {
     const container = document.getElementById('category-filters');
@@ -1710,6 +1730,14 @@ export async function exportMediaLibraryToHTML(
         })
       : items.filter(i => (i.category || "Other") === activeCategory);
 
+    if (activeCodecFilter) {
+      filtered = filtered.filter(i => {
+        const vCodec = formatCodecString(i["Video Codec"] || i["File Format/Codec"] || "");
+        const aCodecs = i["Audio Codecs"] || "";
+        return vCodec.includes(activeCodecFilter) || aCodecs.toUpperCase().includes(activeCodecFilter);
+      });
+    }
+
     filtered.sort((a, b) => {
       let valA = a[sortCol] !== undefined && a[sortCol] !== null ? a[sortCol] : "";
       let valB = b[sortCol] !== undefined && b[sortCol] !== null ? b[sortCol] : "";
@@ -1729,6 +1757,18 @@ export async function exportMediaLibraryToHTML(
     });
 
     let baseHeaders = SCAN_TYPE === "Duplication Scan" ? ALL_POSSIBLE_HEADERS : getColsForCat(activeCategory);
+
+    const clearBtn = document.getElementById('clear-codec-filter');
+    if (clearBtn) {
+      if (activeCodecFilter) {
+        clearBtn.classList.remove('hidden');
+        clearBtn.classList.add('flex');
+        document.getElementById('active-codec-label').textContent = activeCodecFilter;
+      } else {
+        clearBtn.classList.add('hidden');
+        clearBtn.classList.remove('flex');
+      }
+    }
     const activeHeaders = ALL_POSSIBLE_HEADERS.filter(h => visibleColumns[h] !== false).sort((a,b) => {
       let ia = baseHeaders.indexOf(a);
       let ib = baseHeaders.indexOf(b);
