@@ -98,6 +98,10 @@
 - 2026-07-23: Phase 8 of Monorepo Refactoring: Extracted modal dialogs and tour overlays (`ConfirmModal.tsx`, `DemoCleanupModal.tsx`, and `TourRemoteControl.tsx`) out of `App.tsx` into dedicated components in `apps/steward/src/components/modals/`. Reduced `App.tsx` monolith complexity while preserving all interactive modal state handlers and tour remote control behavior.
 
 ## [1.4.30] - 2026-07-26
+### Refactored
+- Extracted global UI helpers (`scrollToElement`) into a `domHelpers.ts` utility file.
+- Decoupled the 1,160-line automated tour simulation loop into a dedicated `useTourSimulation.ts` React hook, significantly reducing the complexity of the main `App.tsx` file.
+
 ### Added
 - HTML Discovery Report: Codec metrics on the "All Metrics Dashboard" are now fully interactive. Clicking any codec name or count will filter the main table to show only matching files, allowing for rapid drill-down analysis without increasing report file size.
 
