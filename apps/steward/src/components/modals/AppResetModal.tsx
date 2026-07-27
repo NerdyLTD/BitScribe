@@ -68,36 +68,70 @@ export default function AppResetModal({ onComplete }: { onComplete: () => void }
             />
           </div>
         ) : (
-          <div className="relative flex items-center justify-center h-48">
+          <div className="relative flex items-center justify-center h-64 w-full max-w-3xl">
             <style>{`
               @keyframes popIn {
-                0% { transform: scale(0.1) rotate(-10deg); opacity: 0; }
-                50% { transform: scale(1.2) rotate(5deg); opacity: 1; }
-                100% { transform: scale(1) rotate(0deg); opacity: 1; }
+                0% { transform: scale(0.1); opacity: 0; }
+                60% { transform: scale(1.2); opacity: 1; }
+                100% { transform: scale(1); opacity: 1; }
               }
-              .kaboom-text {
+              @keyframes expandBurst {
+                0% { transform: scale(0); opacity: 0; }
+                30% { transform: scale(1.5) rotate(15deg); opacity: 1; }
+                100% { transform: scale(1.8) rotate(30deg); opacity: 0; }
+              }
+              .burst-bg {
+                animation: expandBurst 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+                transform-origin: center;
+              }
+              .kaboom-letter {
+                display: inline-block;
                 font-family: 'Impact', 'Bangers', system-ui, sans-serif;
-                font-size: 7rem;
+                font-size: 8rem;
                 font-weight: 900;
                 color: #ffeb3b;
                 text-transform: uppercase;
-                letter-spacing: 2px;
+                letter-spacing: -4px;
+                -webkit-text-stroke: 3px #d32f2f;
                 text-shadow: 
-                  4px 4px 0 #ff5722,
-                  -4px -4px 0 #ff5722,
-                  4px -4px 0 #ff5722,
-                  -4px 4px 0 #ff5722,
-                  8px 8px 0 #f44336,
-                  -8px -8px 0 #f44336,
-                  8px -8px 0 #f44336,
-                  -8px 8px 0 #f44336,
-                  0 0 40px rgba(255, 68, 0, 0.8),
-                  0 0 80px rgba(255, 0, 0, 0.6);
-                animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+                  6px 6px 0 #d32f2f,
+                  10px 10px 0 #b71c1c,
+                  0 0 30px rgba(255, 68, 0, 0.8);
+                animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
                 transform-origin: center;
               }
             `}</style>
-            <div className="kaboom-text">KABOOM!</div>
+            
+            {/* Comic Starburst SVG Background */}
+            <svg className="absolute inset-0 w-full h-full burst-bg pointer-events-none" viewBox="0 0 100 100" style={{ transform: 'scale(2.5)' }}>
+              <path d="M50 0 L58 35 L95 15 L70 45 L100 65 L65 70 L80 100 L50 75 L20 100 L35 70 L0 65 L30 45 L5 15 L42 35 Z" fill="#ff5722" />
+              <path d="M50 15 L55 38 L85 25 L65 48 L90 65 L62 65 L70 90 L50 68 L30 90 L38 65 L10 65 L35 48 L15 25 L45 38 Z" fill="#ffeb3b" />
+            </svg>
+            
+            {/* Staggered Arched Letters */}
+            <div className="flex items-center justify-center z-10">
+              <span className="inline-block" style={{ transform: 'translateY(30px) rotate(-18deg) scale(0.9)' }}>
+                <span className="kaboom-letter">K</span>
+              </span>
+              <span className="inline-block" style={{ transform: 'translateY(5px) rotate(-10deg) scale(1.1)' }}>
+                <span className="kaboom-letter">A</span>
+              </span>
+              <span className="inline-block" style={{ transform: 'translateY(-15px) rotate(-3deg) scale(1.2)' }}>
+                <span className="kaboom-letter">B</span>
+              </span>
+              <span className="inline-block" style={{ transform: 'translateY(-20px) rotate(3deg) scale(1.2)' }}>
+                <span className="kaboom-letter">O</span>
+              </span>
+              <span className="inline-block" style={{ transform: 'translateY(-10px) rotate(12deg) scale(1.1)' }}>
+                <span className="kaboom-letter">O</span>
+              </span>
+              <span className="inline-block" style={{ transform: 'translateY(15px) rotate(18deg) scale(0.9)' }}>
+                <span className="kaboom-letter">M</span>
+              </span>
+              <span className="inline-block" style={{ transform: 'translateY(35px) rotate(25deg) scale(0.8)' }}>
+                <span className="kaboom-letter">!</span>
+              </span>
+            </div>
           </div>
         )}
       </div>

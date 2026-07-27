@@ -2886,6 +2886,7 @@ export default function App() {
                 } catch(e) {}
             }
             if (shouldPopulate) {
+                setShowTour(true);
                 localStorage.setItem("bitscribe_tour_status", JSON.stringify({ status: "active", startStep: 0 }));
                 localStorage.setItem("bitscribe_demo_data_inserted", "true");
                 injectDemoData().then(async () => {
