@@ -15,6 +15,8 @@ export default defineConfig(() => {
     },
     resolve: {
       alias: {
+        '@bitscribe/core-export': path.resolve(__dirname, '../../packages/core-export/index.ts'),
+        '@bitscribe/desktop-api': path.resolve(__dirname, '../../packages/desktop-api/index.ts'),
         '@bitscribe/core-db': path.resolve(__dirname, '../../packages/core-db/index.ts'),
         '@bitscribe/ui-components': path.resolve(__dirname, '../../packages/ui-components/index.ts'),
         '@bitscribe/core-eval': path.resolve(__dirname, '../../packages/core-eval/index.ts'),

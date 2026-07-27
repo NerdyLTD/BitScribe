@@ -468,3 +468,6 @@ Update changelog
 ### UI Layout Hotfix
 - **Sidebar Constraints**: Fixed a critical issue where the Sidebar would stretch to take up 100% of the horizontal space on screens smaller than 1024px, completely hiding the main application area. Locked the sidebar width to 64px (`w-64`) and forced row-based flexing to guarantee visibility of the main scan content under responsive conditions.
 - **Tailwind Scanner Path**: Corrected `index.css` to properly source `@bitscribe/ui-components` for the Tailwind v4 compiler, ensuring newly moved components maintain their styling.
+
+### Environment Build Hotfix
+- **Vite Package Resolution**: Fixed a runtime crash caused by Vite being unable to resolve the newly extracted `@bitscribe/core-export` and `@bitscribe/desktop-api` packages. Added missing alias mappings to `apps/steward/vite.config.ts` so the ES Modules can be properly resolved during `npm run tauri dev` and production builds.
