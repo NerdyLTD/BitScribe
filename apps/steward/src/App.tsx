@@ -32,6 +32,9 @@ import { open, save } from "@tauri-apps/plugin-dialog";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { BitsyCharacter } from '@bitscribe/ui-components';
 import { useTourSimulation } from './hooks/useTourSimulation';
+import { useBackupRestore } from './hooks/useBackupRestore';
+import { useDemoActions } from './hooks/useDemoActions';
+import { useDemoActions } from './hooks/useDemoActions';
 import { BitsyReel } from '@bitscribe/ui-components';
 import { readTextFile, writeFile, mkdir, exists } from "@tauri-apps/plugin-fs";
 import { join } from "@tauri-apps/api/path";
@@ -837,6 +840,7 @@ export default function App() {
   const [exportProfile, setExportProfile] = useState<string>("Media Discovery");
   
   const abortControllerRef = React.useRef<AbortController | null>(null);
+
   const startTimeRef = React.useRef<number | null>(null);
 
   const handlePauseScan = () => {
@@ -930,87 +934,7 @@ export default function App() {
   };
 
   
-  const handleBackup = async (type: 'full' | 'data' | 'settings') => {
-      try {
-          let backup: any = { type, timestamp: new Date().toISOString() };
-          
-          if (type === 'full' || type === 'settings') {
-              backup.settings = {
-                  plex_scan_paths: localStorage.getItem("plex_scan_paths"),
-                  plex_excel_columns: localStorage.getItem("plex_excel_columns"),
-                  plex_compat_rules: localStorage.getItem("plex_compat_rules"),
-                  bitscribe_export_directory: localStorage.getItem("bitscribe_export_directory"),
-                  bitscribe_custom_block_presets: localStorage.getItem("bitscribe_custom_block_presets"),
-              };
-          }
-          
-          if (type === 'full' || type === 'data') {
-              const files = await invoke("get_db_files");
-              backup.data = files;
-          }
-
-          const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
-          await downloadOrSaveFile(`bitscribe_backup_${type}_${Date.now()}.json`, blob, exportDirectory || undefined);
-          localStorage.setItem("last_backup_timestamp", new Date().toISOString());
-          setNotification({ type: 'success', message: 'Backup saved successfully!' });
-          setTimeout(() => setNotification(null), 5000);
-      } catch (e: any) {
-          setNotification({ type: 'error', message: 'Backup failed: ' + e.toString() });
-          setTimeout(() => setNotification(null), 5000);
-      }
-  };
-
-  const handleRestore = async () => {
-      try {
-          const selected = await open({ filters: [{ name: 'JSON', extensions: ['json'] }], multiple: false });
-          if (!selected || typeof selected !== "string") return;
-          
-          const content = await readTextFile(selected);
-          const backup = JSON.parse(content);
-          
-          if (!backup.type) {
-              throw new Error("Invalid backup file format");
-          }
-          
-          if (backup.settings) {
-              if (backup.settings.plex_scan_paths) {
-                  localStorage.setItem("plex_scan_paths", backup.settings.plex_scan_paths);
-                  setScanPaths(JSON.parse(backup.settings.plex_scan_paths));
-              }
-              if (backup.settings.plex_excel_columns) {
-                  localStorage.setItem("plex_excel_columns", backup.settings.plex_excel_columns);
-                  setExcelColumns(JSON.parse(backup.settings.plex_excel_columns));
-              }
-              if (backup.settings.plex_compat_rules) {
-                  localStorage.setItem("plex_compat_rules", backup.settings.plex_compat_rules);
-                  setCustomRules(JSON.parse(backup.settings.plex_compat_rules));
-              }
-              if (backup.settings.bitscribe_export_directory) {
-                  localStorage.setItem("bitscribe_export_directory", backup.settings.bitscribe_export_directory);
-                  setExportDirectory(backup.settings.bitscribe_export_directory);
-              }
-              if (backup.settings.bitscribe_custom_block_presets) {
-                  localStorage.setItem("bitscribe_custom_block_presets", backup.settings.bitscribe_custom_block_presets);
-                  window.dispatchEvent(new Event("restore_custom_presets"));
-              }
-          }
-          
-          if (backup.data) {
-              await invoke("clear_db");
-              await invoke("save_db_files", { files: backup.data });
-              const reloaded = await invoke("get_db_files");
-              setScannedFilesList(reloaded as MediaItem[]);
-
-          }
-          
-          setNotification({ type: 'success', message: 'Restore completed successfully!' });
-          setTimeout(() => setNotification(null), 8000);
-      } catch (e: any) {
-          setNotification({ type: 'error', message: 'Restore failed: ' + e.toString() });
-          setTimeout(() => setNotification(null), 8000);
-      }
-  };
-
+  
   const handleStartScan = async (isQuickRefresh: boolean = false) => {
     handleTabChange("scan");
     const isQ = isQuickRefresh === true;
@@ -1242,87 +1166,7 @@ export default function App() {
     }
   };
 
-  const clearLocalCacheOnly = () => {
-    const confirmed = true;
-    if (!confirmed) return;
-
-    localStorage.removeItem("bitscribe_scan_logs");
-    setScanLogs([]);
-    setScannedFiles([]);
-    setScannedFilesList([]);
-    setCorruptFiles([]);
-    setHasCompletedScan(false);
-    setNotification("Local display cache cleared successfully.");
-  };
-
-  const flushServerDatabase = async () => {
-    const confirmed = true;
-    if (!confirmed) return;
-
-    localStorage.removeItem("bitscribe_scan_logs");
-    try {
-      await clearDb(); const res = { ok: true };
-      if (res.ok) {
-        setScanLogs(["Persistent SQL database completely flushed and wiped."]);
-        setNotification("Server SQL database flushed successfully.");
-      } else {
-        setScanLogs(["Failed to wipe database on server."]);
-        setNotification({ type: 'error', message: "Failed to wipe database on server." });
-      }
-    } catch (e) {
-      console.error("Failed to clear database on server:", e);
-      setScanLogs(["Failed to connect to server database."]);
-      setNotification({ type: 'error', message: "Failed to connect to server database." });
-    }
-    setScannedFiles([]);
-    setScannedFilesList([]);
-    setCorruptFiles([]);
-    setHasCompletedScan(false);
-  };
-
-  const flushDemoDataOnly = async () => {
-    localStorage.removeItem("bitscribe_demo_data_inserted");
-    try {
-      await clearDemoData();
-      const reloaded = await getDbFiles();
-      setScannedFilesList(reloaded);
-      
-      const nonCorrupt = reloaded.filter(f => !(f.category === "Corrupted" || (f.category && f.category.toLowerCase().includes("corrupt"))));
-      const corrupt = reloaded.filter(f => f.category === "Corrupted" || (f.category && f.category.toLowerCase().includes("corrupt")));
-      setScannedFiles(nonCorrupt);
-      setCorruptFiles(corrupt);
-      
-      if (reloaded.length === 0) {
-        setHasCompletedScan(false);
-      }
-      setScanLogs(["Demo media files removed from local database."]);
-      setNotification("Demo media files cleared successfully.");
-    } catch (e) {
-      console.error("Failed to clear demo data:", e);
-      setNotification({ type: 'error', message: "Failed to clear demo data." });
-    }
-  };
-
-  const handlePopulateDemo = async () => {
-    localStorage.setItem("bitscribe_demo_data_inserted", "true");
-    try {
-      await injectDemoData();
-      const reloaded = await getDbFiles();
-      setScannedFilesList(reloaded);
-      
-      const nonCorrupt = reloaded.filter(f => !(f.category === "Corrupted" || (f.category && f.category.toLowerCase().includes("corrupt"))));
-      const corrupt = reloaded.filter(f => f.category === "Corrupted" || (f.category && f.category.toLowerCase().includes("corrupt")));
-      setScannedFiles(nonCorrupt);
-      setCorruptFiles(corrupt);
-      setHasCompletedScan(true);
-      setScanLogs((prev) => [`Populated demo database with mock items.`, ...prev]);
-      setNotification({ type: 'success', message: 'Demo data populated successfully.' });
-    } catch (e) {
-      console.error("Failed to inject demo data:", e);
-      setNotification({ type: 'error', message: "Failed to inject demo data." });
-    }
-  };
-
+  
   const [scanPaths, setScanPaths] = useState<
     { path: string; enabled: boolean }[]
   >(() => {
@@ -1670,6 +1514,37 @@ export default function App() {
   const [confirmAction, setConfirmAction] = useState<{message: string, onConfirm: () => void} | null>(null);
 const [isAppResetting, setIsAppResetting] = useState(false);
   const [showDemoCleanupModal, setShowDemoCleanupModal] = useState(false);
+
+  const { clearLocalCacheOnly, flushServerDatabase, flushDemoDataOnly, handlePopulateDemo } = useDemoActions({
+    setScanLogs,
+    setScannedFilesList,
+    setScannedFiles,
+    setCorruptFiles,
+    setHasCompletedScan,
+    setNotification,
+  });
+
+
+  const { clearLocalCacheOnly, flushServerDatabase, flushDemoDataOnly, handlePopulateDemo } = useDemoActions({
+    setScanLogs,
+    setScannedFilesList,
+    setScannedFiles,
+    setCorruptFiles,
+    setHasCompletedScan,
+    setNotification,
+  });
+
+
+  const { handleBackup, handleRestore } = useBackupRestore({
+    exportDirectory,
+    setNotification,
+    setScanPaths,
+    setExcelColumns,
+    setCustomRules,
+    setExportDirectory,
+    setScannedFilesList,
+  });
+
   const [isReelEndingAnimation, setIsReelEndingAnimation] = useState(false);
 
   const handleHeaderModeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
