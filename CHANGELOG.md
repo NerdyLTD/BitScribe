@@ -97,7 +97,10 @@
 ### Refactored
 - 2026-07-23: Phase 8 of Monorepo Refactoring: Extracted modal dialogs and tour overlays (`ConfirmModal.tsx`, `DemoCleanupModal.tsx`, and `TourRemoteControl.tsx`) out of `App.tsx` into dedicated components in `apps/steward/src/components/modals/`. Reduced `App.tsx` monolith complexity while preserving all interactive modal state handlers and tour remote control behavior.
 
-## [1.4.30] - 2026-07-23
+## [1.4.30] - 2026-07-26
+### Fixed
+- 2026-07-26: Truncated massive embedded tag values (e.g. base64 image data mistakenly placed in lyrics or title tags) across HTML, CSV, Excel, and JSON report exporters to prevent unexpected 8MB+ file size bloat when generating reports for libraries containing mis-tagged files.
+
 ### Fixed
 - 2026-07-23: Preserved raw embedded metadata alongside cleaned titles in all report exporters (`reportExporter.ts` and `excelExporter.ts`). Added `Cleaned Title` column support for Music metadata exports across CSV, Excel, and HTML reports, ensuring both cleaned parsed titles and raw embedded metadata tags remain fully inspectable and visible for remediation/RX workflows.
 
