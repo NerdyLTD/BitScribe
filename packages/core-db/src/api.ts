@@ -1,5 +1,5 @@
-import { stat } from '@tauri-apps/plugin-fs';
-import { invoke } from "@tauri-apps/api/core";
+import { stat } from '@bitscribe/desktop-api';
+import { invoke } from "@bitscribe/desktop-api";
 const isTauri = () => typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__ !== undefined;
 
 let _mockDb: MediaItem[] = [];
@@ -15,7 +15,7 @@ function saveMockDb(items: MediaItem[]) {
   } catch (e) {}
 }
 
-import { Command } from "@tauri-apps/plugin-shell";
+import { Command } from "@bitscribe/desktop-api";
 import { MediaItem } from '@bitscribe/core-types';
 import { evaluatePlexCompatibility, sanitizeTags } from '@bitscribe/core-eval';
 import { MOCK_MEDIA_LIBRARY } from "./data/mockMediaData";

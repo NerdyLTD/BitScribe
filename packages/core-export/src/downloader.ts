@@ -1,6 +1,6 @@
-import { save } from '@tauri-apps/plugin-dialog';
-import { join } from '@tauri-apps/api/path';
-import { writeFile } from '@tauri-apps/plugin-fs';
+import { save } from '@bitscribe/desktop-api';
+import { join } from '@bitscribe/desktop-api';
+import { writeFile } from '@bitscribe/desktop-api';
 
 export async function downloadOrSaveFile(fileName: string, blob: Blob, explicitPath?: string) {
     let wasSavedNatively = false;

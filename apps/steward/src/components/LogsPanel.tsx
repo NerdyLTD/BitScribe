@@ -1,6 +1,6 @@
 import React from "react";
 import { Terminal, Download } from "lucide-react";
-import { downloadOrSaveFile } from "../utils/downloader";
+import { downloadOrSaveFile } from "@bitscribe/core-export";
 
 export default function LogsPanel({ logs }: { logs: string[] }) {
   const exportLogs = async () => {

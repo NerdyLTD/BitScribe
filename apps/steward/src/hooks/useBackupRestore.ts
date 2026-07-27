@@ -1,7 +1,7 @@
-import { invoke } from "@tauri-apps/api/core";
-import { open } from "@tauri-apps/plugin-dialog";
-import { readTextFile } from "@tauri-apps/plugin-fs";
-import { downloadOrSaveFile } from "../utils/downloader";
+import { invoke } from "@bitscribe/desktop-api";
+import { open } from "@bitscribe/desktop-api";
+import { readTextFile } from "@bitscribe/desktop-api";
+import { downloadOrSaveFile } from "@bitscribe/core-export";
 import { MediaItem, RuleCriteria } from "@bitscribe/core-types";
 
 interface UseBackupRestoreProps {

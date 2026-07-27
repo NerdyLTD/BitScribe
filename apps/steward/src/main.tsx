@@ -42,8 +42,8 @@ import './index.css';
       if ((window as any).__BITSCRIBE_LOG_INITIALIZED__) return;
       (window as any).__BITSCRIBE_LOG_INITIALIZED__ = true;
       
-      const { downloadDir, join } = await import('@tauri-apps/api/path');
-      const { writeTextFile, mkdir, exists } = await import('@tauri-apps/plugin-fs');
+      const { downloadDir, join } = await import('@bitscribe/desktop-api');
+      const { writeTextFile, mkdir, exists } = await import('@bitscribe/desktop-api');
       
       let exportDir = localStorage.getItem("bitscribe_export_directory") || "";
       if (!exportDir) {
@@ -87,7 +87,7 @@ import './index.css';
         const chunk = logBuffer.join("");
         logBuffer = [];
         try {
-          const currentContent = await import('@tauri-apps/plugin-fs').then(m => m.readTextFile(logFile).catch(() => ""));
+          const currentContent = await import('@bitscribe/desktop-api').then(m => m.readTextFile(logFile).catch(() => ""));
           await writeTextFile(logFile, currentContent + chunk);
         } catch(e) {
           // Fallback silence

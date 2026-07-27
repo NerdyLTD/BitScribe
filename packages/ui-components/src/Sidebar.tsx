@@ -1,14 +1,14 @@
 import React from "react";
 import { MediaItem, RuleCriteria } from "@bitscribe/core-types";
 import { computeDuplicatesMap, evaluatePlexCompatibility, filterItemsForReport } from "@bitscribe/core-eval";
-import { exportMediaLibraryToExcel } from "../utils/excelExporter";
+import { exportMediaLibraryToExcel } from "@bitscribe/core-export";
 import {
   exportMediaLibraryToCSV,
   exportMediaLibraryToHTML,
   exportMediaLibraryToJSON,
-} from "../utils/reportExporter";
+} from "@bitscribe/core-export";
 import { FolderOpen, Sliders } from "lucide-react";
-import { open } from "@tauri-apps/plugin-dialog";
+import { open } from "@bitscribe/desktop-api";
 import { injectDemoData, getDbFiles } from "@bitscribe/core-db";
 
 export interface SidebarProps {

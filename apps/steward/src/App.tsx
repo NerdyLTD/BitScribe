@@ -1,3 +1,4 @@
+import { useScanState } from './hooks/useScanState';
 import confetti from "canvas-confetti";
 /**
  * @license
@@ -17,9 +18,9 @@ import Dashboard from "./components/Dashboard";
 import RuleEditor from "./components/RuleEditor";
 import HelpSection from "./components/HelpSection";
 import LogsPanel from "./components/LogsPanel";
-import Header from "./components/Header";
-import NavigationTabs from "./components/NavigationTabs";
-import Sidebar from "./components/Sidebar";
+import { Header } from "@bitscribe/ui-components";
+import { NavigationTabs } from "@bitscribe/ui-components";
+import { Sidebar } from "@bitscribe/ui-components";
 import ConfirmModal from "./components/modals/ConfirmModal";
 import AppResetModal from "./components/modals/AppResetModal";
 import DemoCleanupModal from "./components/modals/DemoCleanupModal";
@@ -28,17 +29,17 @@ import { ProductTour, TOUR_STEPS } from "./components/ProductTour";
 import { EVENTS, STATUS, ACTIONS, EventData } from 'react-joyride';
 
 import { Play, Pause, Sparkles, ChevronLeft, ChevronRight, X as CloseIcon, List, ChevronUp, ChevronDown, GripHorizontal, Sliders, Check, Film, Trash2, Database, Clapperboard, FolderOpen, AlertCircle, AlertTriangle, Download, CheckCircle, Maximize, Minimize } from "lucide-react";
-import { open, save } from "@tauri-apps/plugin-dialog";
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { open, save } from "@bitscribe/desktop-api";
+import { getCurrentWindow } from "@bitscribe/desktop-api";
 import { BitsyCharacter } from '@bitscribe/ui-components';
 import { useTourSimulation } from './hooks/useTourSimulation';
 import { useBackupRestore } from './hooks/useBackupRestore';
 import { useDemoActions } from './hooks/useDemoActions';
 import { BitsyReel } from '@bitscribe/ui-components';
-import { readTextFile, writeFile, mkdir, exists } from "@tauri-apps/plugin-fs";
-import { join } from "@tauri-apps/api/path";
-import { invoke } from "@tauri-apps/api/core";
-import { downloadOrSaveFile } from "./utils/downloader";
+import { readTextFile, writeFile, mkdir, exists } from "@bitscribe/desktop-api";
+import { join } from "@bitscribe/desktop-api";
+import { invoke } from "@bitscribe/desktop-api";
+import { downloadOrSaveFile } from "@bitscribe/core-export";
 
 // Helper function to reset all active presets and sub-scans, returning rules safely to standard Discovery Mode
 const resetToDiscoveryPreset = (prev: RuleCriteria): RuleCriteria => ({
@@ -60,6 +61,16 @@ const resetToDiscoveryPreset = (prev: RuleCriteria): RuleCriteria => ({
 });
 
 export default function App() {
+  const {
+    isScanning, setIsScanning,
+    isQuickRefreshMode, setIsQuickRefreshState,
+    scanProgress, setScanProgress,
+    currentScanFile, setCurrentScanFile,
+    hasCompletedScan, setHasCompletedScan,
+    isResumeState, setIsResumeState,
+    lastScanDuration, setLastScanDuration,
+    scanLogs, setScanLogs
+  } = useScanState();
 
   
 
@@ -679,22 +690,11 @@ export default function App() {
   });
 
 
-  const [isScanning, setIsScanning] = useState(false);
-  const [isQuickRefreshMode, setIsQuickRefreshState] = useState(false);
-  const [scanProgress, setScanProgress] = useState(0);
-  const [currentScanFile, setCurrentScanFile] = useState("");
-  const [scanLogs, setScanLogs] = useState<string[]>(() => {
-    const saved = localStorage.getItem("bitscribe_scan_logs");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
-      } catch (e) {
-        // Fallback
-      }
-    }
-    return [];
-  });
+
+
+
+
+  
   const [scannedFiles, setScannedFiles] = useState<MediaItem[]>([]);
   const [corruptFiles, setCorruptFiles] = useState<MediaItem[]>([]);
   const [notification, setNotification] = useState<string | { type: string; message: string } | null>(null);
@@ -717,16 +717,8 @@ export default function App() {
     }
   };
 
-  const [lastScanDuration, setLastScanDuration] = useState<number | null>(() => {
-    try {
-      const val = localStorage.getItem("bitscribe_last_scan_duration");
-      return val ? Number(val) : null;
-    } catch (e) {
-      return null;
-    }
-  });
-  const [hasCompletedScan, setHasCompletedScan] = useState(false);
-  const [isResumeState, setIsResumeState] = useState(() => localStorage.getItem("bitscribe_scan_in_progress") === "true");
+
+
 
   const [exportProfile, setExportProfile] = useState<string>("Media Discovery");
   

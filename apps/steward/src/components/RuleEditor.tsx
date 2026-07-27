@@ -1872,7 +1872,7 @@ const toggleBleedingEdgePreset = (checked: boolean) => {
                 <button 
                   onClick={async () => {
                     if (typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__) {
-                      const { open } = await import('@tauri-apps/plugin-dialog');
+                      const { open } = await import('@bitscribe/desktop-api');
                       const selected = await open({ directory: true, multiple: false });
                       if (selected && typeof selected === "string" && setExportDirectory) {
                         setExportDirectory(selected);

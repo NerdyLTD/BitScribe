@@ -1,6 +1,7 @@
 import { useState, useRef, useTransition, MutableRefObject } from 'react';
-import { listen, UnlistenFn } from "@tauri-apps/api/event";
-import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@bitscribe/desktop-api";
+import type { UnlistenFn } from "@tauri-apps/api/event";
+import { invoke } from "@bitscribe/desktop-api";
 import { MediaItem } from '@bitscribe/core-types';
 
 export interface ScanStats {

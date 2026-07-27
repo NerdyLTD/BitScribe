@@ -459,3 +459,8 @@ Update changelog
 
 - 2026-07-27: Fixed a string literal formatting bug in the HTML Report Codec Distribution metrics rendering where `/'...'/g` was incorrectly used instead of a standard string format. The HTML reports now render correctly.
 - 2026-07-27: Fixed a string literal formatting bug in the HTML Report Codec Distribution metrics rendering where `/'...'/g` was incorrectly used instead of a standard string format. The HTML reports now render correctly.
+### Suite Refactoring
+- **Dismantled Monoliths**: Abstracted scan-related state from `App.tsx` into the custom `useScanState` hook. Abstracted the Library table and file mapping logic from `Dashboard.tsx` into a dedicated `LibraryView.tsx` component.
+- **Extracted Exporters**: Moved `excelExporter.ts`, `reportExporter.ts`, and `downloader.ts` from `apps/steward/src/utils/` into a dedicated `@bitscribe/core-export` package.
+- **Lifted Shared Layouts**: Migrated `Header.tsx`, `Sidebar.tsx`, and `NavigationTabs.tsx` into the `@bitscribe/ui-components` package for suite-wide reusability.
+- **Decoupled Desktop APIs**: Abstracted Tauri-specific calls (`invoke`, `open`, `save`, `readTextFile`, etc.) into a new `@bitscribe/desktop-api` package, adding environment checks to fall back gracefully in web contexts.

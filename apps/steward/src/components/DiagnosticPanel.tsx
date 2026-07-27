@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { getDiagnostic } from '@bitscribe/core-db';
 import { Cpu, Server, HardDrive, AlertCircle, CheckCircle2, ServerCog, Activity, Database, FileJson } from "lucide-react";
-import { downloadOrSaveFile } from "../utils/downloader";
+import { downloadOrSaveFile } from "@bitscribe/core-export";
 
 interface DiagnosticInfo {
   status: string;
