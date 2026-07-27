@@ -1069,6 +1069,11 @@ export async function exportMediaLibraryToHTML(
   };
 
   const getColsForCat = (cat) => {
+    if (cat === "All Media") {
+      if (isStreaming || isDiscovery) return ["Alert Level", "Stream Audit", "File Name", "Container", "Video Codec", "Resolution", "Audio Codecs", "Subtitles"];
+      if (isQuality) return ["Alert Level", "File Name", "Container", "Video Bitrate", "Resolution", "Audio Codecs", "Anomaly Details"];
+      return ["File Name", "Container", "File Format/Codec", "Video Codec", "Audio Codecs", "File Path"];
+    }
     const isVideo = ["Movies", "Movie", "Documentaries", "TV Shows", "TV", "Docuseries", "Documentary Series", "Extras", "Shorts", "Plays", "Specials", "Music Videos"].includes(cat);
     const isMusic = ["Music Albums", "Soundtracks", "Music Compilations", "Music"].includes(cat);
     
@@ -1175,6 +1180,7 @@ export async function exportMediaLibraryToHTML(
       return a.localeCompare(b);
     });
     
+    orderedCats.unshift("All Media");
     if (orderedCats.length > 0) {
       activeCategory = orderedCats[0];
       applyCategoryColumns(activeCategory);
@@ -1249,7 +1255,7 @@ export async function exportMediaLibraryToHTML(
 
     const targetItems = showAllMetricsMode 
       ? baseItems 
-      : baseItems.filter(i => SCAN_TYPE === "Duplication Scan" || (i.category || "Other") === activeCategory);
+      : baseItems.filter(i => SCAN_TYPE === "Duplication Scan" || activeCategory === "All Media" || (i.category || "Other") === activeCategory);
 
     const total = targetItems.length;
     let html = '';
@@ -1544,7 +1550,7 @@ export async function exportMediaLibraryToHTML(
         itemsHtml = '<div class="space-y-2.5 max-h-[190px] overflow-y-auto pr-1">';
         itemsList.forEach(item => {
           itemsHtml += '<div class="flex items-center justify-between py-1 border-b border-slate-800/40 last:border-0 cursor-pointer hover:bg-slate-800/50 transition-colors group px-1 rounded -mx-1" onclick="window.setCodecFilter(&quot;'+item.name+'&quot;)" title="Filter by this codec">' +
-            '<span class="font-mono text-xs text-slate-200 font-medium group-hover:text-blue-400 transition-colors">' + item.name + '</span>' +
+            /'<span class="font-mono text-xs text-slate-200 font-medium group-hover:text-blue-400 group-hover:underline transition-all">'/g + item.name + '</span>' +
             '<span class="px-2 py-0.5 text-[10px] font-bold rounded-full ' + badgeColorClass + ' group-hover:ring-1 group-hover:ring-blue-500">' + item.count + '</span>' +
           '</div>';
         });
@@ -1577,8 +1583,13 @@ export async function exportMediaLibraryToHTML(
     if (showAllMetricsMode) {
       window.toggleAllMetrics();
     }
+    if (orderedCats.includes("All Media")) {
+      activeCategory = "All Media";
+    }
     activeCodecFilter = codecName;
     currentPage = 1;
+    applyCategoryColumns(activeCategory);
+    renderFilters();
     renderTable();
   };
   window.clearCodecFilter = function() {
@@ -1728,7 +1739,7 @@ export async function exportMediaLibraryToHTML(
           if (activeDupFilter === "Video") return !isMusic;
           return true;
         })
-      : items.filter(i => (i.category || "Other") === activeCategory);
+      : items.filter(i => activeCategory === "All Media" || (i.category || "Other") === activeCategory);
 
     if (activeCodecFilter) {
       filtered = filtered.filter(i => {
