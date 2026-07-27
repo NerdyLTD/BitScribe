@@ -1538,7 +1538,7 @@ const toggleBleedingEdgePreset = (checked: boolean) => {
         </div>
         
 
-{/* Subtitle Audit */}
+{/* Deep A/V Stream Audit */}
         <div
           className="space-y-4 p-4 bg-[#1E232E] border border-slate-700/30 rounded-xl flex flex-col justify-start"
           id="subtitle-scan-settings"
@@ -1558,7 +1558,7 @@ const toggleBleedingEdgePreset = (checked: boolean) => {
                     htmlFor="toggle-subtitle-scan"
                     className="text-xs font-bold text-purple-400 uppercase tracking-wider cursor-pointer"
                   >
-                    Subtitle Audit
+                    Deep A/V Stream Audit
                   </label>
                   <button
                     className="w-4 h-4 ml-2 rounded-full border border-purple-500/50 text-purple-400 bg-purple-500/10 flex items-center justify-center cursor-pointer hover:bg-purple-500 hover:text-white transition-colors"
@@ -1574,7 +1574,7 @@ const toggleBleedingEdgePreset = (checked: boolean) => {
                   </button>
                 </div>
                 <span className="text-[10px] text-slate-500 font-normal mt-0.5">
-                  Identifies missing subtitles and format compatibilities.
+                  Deep auditing of Audio Tracks, Subtitle formats, languages, and external sidecars.
                 </span>
               </div>
             </div>
@@ -1588,7 +1588,7 @@ const toggleBleedingEdgePreset = (checked: boolean) => {
             className={`transition ${rules.useSubtitleScan ? "opacity-100" : "opacity-40 pointer-events-none"}`}
           >
             <p className="text-xs text-slate-400 leading-relaxed">
-              Identifies which files have missing subtitles AND classifies subtitle formats (such as SRT, PGS, or VOB) for files that do have them. This data is critical for evaluating streaming compatibility, as certain image-based subtitle formats can force high-CPU server transcoding.
+              Identifies which files have missing subtitles, details every embedded/external language track, and maps complex audio streams (channels, languages, raw codecs). This deep extraction exposes hidden container contents that force high-CPU server transcoding.
             </p>
           </div>
         </div>

@@ -181,6 +181,8 @@ export interface RuleCriteria {
   useLegacyPreset: boolean;
   useDiscoveryPreset: boolean;
   useSubtitleScan?: boolean;
+  useDeepSubtitleScan?: boolean;
+  useDeepAudioScan?: boolean;
   useDuplicationScan?: boolean;
   useDuplicationVideoScan?: boolean;
   useDuplicationMusicScan?: boolean;

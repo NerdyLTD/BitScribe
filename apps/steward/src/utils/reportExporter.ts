@@ -1155,7 +1155,7 @@ export async function exportMediaLibraryToHTML(
     }
     
     if (isSubtitle) {
-      return ["Alert Level", "File Name", "Subtitles", "Subtitle Type", "Analysis Notes", "Remediation Action", "File Path"];
+      return ["Alert Level", "File Name", "Audio Codecs", "Subtitles", "Subtitle Type", "Analysis Notes", "Remediation Action", "File Path"];
     }
 
     if (cat === "Corrupted") return ["File Name", "Container", "Corruption Type", "Recommendation", "File Path"];
