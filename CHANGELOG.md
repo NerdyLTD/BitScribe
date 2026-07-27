@@ -456,3 +456,6 @@ Update changelog
 - Fixed a critical infinite render loop within the BitsyCharacter component where `requestAnimationFrame` was constantly generating new object references for eye tracking, causing the React scheduler to flood and crash the application during scanning.
 ## CHANGELOG.md Update
 - Enhanced Bitsy's scan dance animation with Michael Jackson-inspired moves, including a moonwalk and an anti-gravity lean.
+
+- 2026-07-27: Fixed a string literal formatting bug in the HTML Report Codec Distribution metrics rendering where `/'...'/g` was incorrectly used instead of a standard string format. The HTML reports now render correctly.
+- 2026-07-27: Fixed a string literal formatting bug in the HTML Report Codec Distribution metrics rendering where `/'...'/g` was incorrectly used instead of a standard string format. The HTML reports now render correctly.
