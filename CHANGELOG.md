@@ -1,3 +1,9 @@
+## [Unreleased]
+### Added
+- **Interactive Reports**: Added an "All Media" category filter by default to Discovery scans for comprehensive viewing.
+- **Metrics Clickability**: Filter numbers in the HTML report metrics dashboard are now clickable/interactive.
+- **HTML Report Optimization**: Compressed HTML export sizes drastically by splitting embedded JSON data objects into separate arrays of keys and matching values, stripping out the repetitive string overhead.
+
 -e - 2026-07-25: Improved scan performance by optimizing file deduplication mapping and hash comparisons during directory traversal (Option B). Set limits on localStorage quota for media changes, optimized concurrency limits based on hardware cores, and replaced arrays with Set/Map to remove quadratic behavior in file scans.
 ## [1.4.44] - 2026-07-24
 ### Optimized
