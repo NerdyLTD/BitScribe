@@ -98,6 +98,12 @@
 - 2026-07-23: Phase 8 of Monorepo Refactoring: Extracted modal dialogs and tour overlays (`ConfirmModal.tsx`, `DemoCleanupModal.tsx`, and `TourRemoteControl.tsx`) out of `App.tsx` into dedicated components in `apps/steward/src/components/modals/`. Reduced `App.tsx` monolith complexity while preserving all interactive modal state handlers and tour remote control behavior.
 
 ## [1.4.30] - 2026-07-26
+### Fixed (Follow-up)
+- Fixed an issue where the demo database would still be populated automatically after an App Reset, because the tour state was reset without automatically showing the welcome tour.
+
+### Changed (Follow-up)
+- Stylized the "KABOOM!" comic graphic further with an arched, staggered letter layout and a layered starburst SVG background for a more authentic comic book feel.
+
 ### Fixed
 - Fixed an issue where the Demo Database would persistently remain if a user clicked "Skip permanently" or "Pause for 1 week" on the welcome tour.
 
