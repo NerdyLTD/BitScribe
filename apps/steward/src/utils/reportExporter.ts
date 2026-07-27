@@ -187,7 +187,8 @@ export async function exportMediaLibraryToCSV(
 
         const missingFmt = (val: any) => {
           if (val === undefined || val === null) return "[MISSING]";
-          const s = String(val).trim();
+          let s = String(val).trim();
+          if (s.length > 32000) s = s.substring(0, 32000) + "... [TRUNCATED]";
           if (s === "" || s === "-" || s === "0" || s === "None" || s === "Unknown") return "[MISSING]";
           return s;
         };
@@ -619,7 +620,8 @@ export async function exportMediaLibraryToHTML(
 
         const missingFmt = (val: any) => {
           if (val === undefined || val === null) return "[MISSING]";
-          const s = String(val).trim();
+          let s = String(val).trim();
+          if (s.length > 32000) s = s.substring(0, 32000) + "... [TRUNCATED]";
           if (s === "" || s === "-" || s === "0" || s === "None" || s === "Unknown") return "[MISSING]";
           return s;
         };

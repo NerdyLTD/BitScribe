@@ -586,6 +586,7 @@ export function sanitizeTags(rawTags: Record<string, string> | undefined | null)
     if (!rawVal || typeof rawVal !== 'string') continue;
     const val = rawVal.trim();
     if (!val) continue;
+    if (val.length > 32000) continue; // Skip massive tags like embedded base64 images outright
 
     const lowerKey = key.toLowerCase().trim();
 
