@@ -228,6 +228,7 @@ export async function exportMediaLibraryToCSV(
           data["Writer"] = missingFmt(item.tags?.writer || item.tags?.WRITER);
           data["Year"] = missingFmt(yearVal);
           data["Cast"] = missingFmt(item.tags?.cast || item.tags?.CAST || item.tags?.actors || item.tags?.ACTORS);
+          data["Online ID"] = missingFmt(item.matchedOnlineId);
           data["Studio"] = missingFmt(item.tags?.studio || item.tags?.STUDIO || item.tags?.publisher || item.tags?.PUBLISHER || item.tags?.network || item.tags?.NETWORK);
           data["Video Bit Depth"] = missingFmt(item.videoBitDepth);
           data["Audio Sample Rate"] = item.audioSampleRate ? `${item.audioSampleRate / 1000} kHz` : "[MISSING]";
@@ -244,6 +245,7 @@ export async function exportMediaLibraryToCSV(
           data["Writer"] = missingFmt(item.tags?.writer || item.tags?.WRITER);
           data["Year"] = missingFmt(yearVal);
           data["Cast"] = missingFmt(item.tags?.cast || item.tags?.CAST || item.tags?.actors || item.tags?.ACTORS);
+          data["Online ID"] = missingFmt(item.matchedOnlineId);
           data["Studio"] = missingFmt(item.tags?.studio || item.tags?.STUDIO || item.tags?.publisher || item.tags?.PUBLISHER || item.tags?.network || item.tags?.NETWORK);
           data["Video Bit Depth"] = missingFmt(item.videoBitDepth);
           data["Audio Sample Rate"] = item.audioSampleRate ? `${item.audioSampleRate / 1000} kHz` : "[MISSING]";
@@ -682,6 +684,7 @@ export async function exportMediaLibraryToHTML(
           rowData["Writer"] = missingFmt(item.tags?.writer || item.tags?.WRITER);
           rowData["Year"] = missingFmt(yearVal);
           rowData["Cast"] = missingFmt(item.tags?.cast || item.tags?.CAST || item.tags?.actors || item.tags?.ACTORS);
+          rowData["Online ID"] = missingFmt(item.matchedOnlineId);
           rowData["Studio"] = missingFmt(item.tags?.studio || item.tags?.STUDIO || item.tags?.publisher || item.tags?.PUBLISHER || item.tags?.network || item.tags?.NETWORK);
           rowData["Poster"] = posterFmt(item.hasEmbeddedPoster, item.hasExternalPoster);
           rowData["File Path"] = item.filePath;
@@ -696,6 +699,7 @@ export async function exportMediaLibraryToHTML(
           rowData["Writer"] = missingFmt(item.tags?.writer || item.tags?.WRITER);
           rowData["Year"] = missingFmt(yearVal);
           rowData["Cast"] = missingFmt(item.tags?.cast || item.tags?.CAST || item.tags?.actors || item.tags?.ACTORS);
+          rowData["Online ID"] = missingFmt(item.matchedOnlineId);
           rowData["Studio"] = missingFmt(item.tags?.studio || item.tags?.STUDIO || item.tags?.publisher || item.tags?.PUBLISHER || item.tags?.network || item.tags?.NETWORK);
           rowData["Poster"] = posterFmt(item.hasEmbeddedPoster, item.hasExternalPoster);
           rowData["File Path"] = item.filePath;
@@ -1130,6 +1134,7 @@ export async function exportMediaLibraryToHTML(
           "Writer",
           "Year",
           "Cast",
+          "Online ID",
           "Studio",
           "Poster",
           "File Path"
@@ -1143,6 +1148,7 @@ export async function exportMediaLibraryToHTML(
         "Writer",
         "Year",
         "Cast",
+        "Online ID",
         "Studio",
         "Poster",
         "File Path"

@@ -1075,6 +1075,7 @@ export async function exportMediaLibraryToExcel(
           rowValues["Writer"] = missingFmt(item.tags?.writer || item.tags?.WRITER);
           rowValues["Year"] = missingFmt(yearVal);
           rowValues["Cast"] = missingFmt(item.tags?.cast || item.tags?.CAST || item.tags?.actors || item.tags?.ACTORS);
+          rowValues["Online ID"] = missingFmt(item.matchedOnlineId);
           rowValues["Studio"] = missingFmt(item.tags?.studio || item.tags?.STUDIO || item.tags?.publisher || item.tags?.PUBLISHER || item.tags?.network || item.tags?.NETWORK);
           rowValues["Video Bit Depth"] = missingFmt(item.videoBitDepth);
           rowValues["Audio Sample Rate"] = item.audioSampleRate ? `${item.audioSampleRate / 1000} kHz` : "[MISSING]";
@@ -1093,6 +1094,7 @@ export async function exportMediaLibraryToExcel(
           rowValues["Writer"] = missingFmt(item.tags?.writer || item.tags?.WRITER);
           rowValues["Year"] = missingFmt(yearVal);
           rowValues["Cast"] = missingFmt(item.tags?.cast || item.tags?.CAST || item.tags?.actors || item.tags?.ACTORS);
+          rowValues["Online ID"] = missingFmt(item.matchedOnlineId);
           rowValues["Studio"] = missingFmt(item.tags?.studio || item.tags?.STUDIO || item.tags?.publisher || item.tags?.PUBLISHER || item.tags?.network || item.tags?.NETWORK);
           rowValues["Video Bit Depth"] = missingFmt(item.videoBitDepth);
           rowValues["Audio Sample Rate"] = item.audioSampleRate ? `${item.audioSampleRate / 1000} kHz` : "[MISSING]";
