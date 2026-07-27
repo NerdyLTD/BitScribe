@@ -1,5 +1,6 @@
 ## [Unreleased]
-### Added
+### Fixed
+- **App Startup Crash**: Fixed a ReferenceError that caused the app to render a black screen on startup. The newly extracted `useBackupRestore` and `useDemoActions` hooks were accidentally placed above the React `useState` variables they relied on (e.g., `setScanPaths`, `setExcelColumns`), causing an initialization failure. Moved the hook calls below all state declarations in `App.tsx` to correct the order.\n\n### Added
 - **Interactive Reports**: Added an "All Media" category filter by default to Discovery scans for comprehensive viewing.
 - **Metrics Clickability**: Filter numbers in the HTML report metrics dashboard are now clickable/interactive.
 - **HTML Report Optimization**: Compressed HTML export sizes drastically by splitting embedded JSON data objects into separate arrays of keys and matching values, stripping out the repetitive string overhead.
