@@ -133,7 +133,7 @@ export default function App() {
             String(now.getSeconds()).padStart(2, '0');
           const logFile = await join(bitScribeDir, `${safeTs}_debuglog.txt`);
           const timestamp = now.toISOString();
-          const logContent = `[\n\n${timestamp}] App launched successfully.\nVersion: ${APP_VERSION}\n`;
+          const logContent = `[${timestamp}] App launched successfully.Version: ${APP_VERSION}`;
           
           await writeTextFile(logFile, logContent, { append: true });
           
@@ -169,7 +169,7 @@ export default function App() {
                 return String(a);
               }).join(' ');
               const ts = new Date().toISOString();
-              logBuffer.push(`[${ts}] [${level}] ${msg}\n`);
+              logBuffer.push(`[${ts}] [${level}] ${msg}`);
               
               if (logBuffer.length >= 100) {
                 flushLogs();
@@ -1514,18 +1514,10 @@ export default function App() {
 const [isAppResetting, setIsAppResetting] = useState(false);
   const [showDemoCleanupModal, setShowDemoCleanupModal] = useState(false);
 
-  const { clearLocalCacheOnly, flushServerDatabase, flushDemoDataOnly, handlePopulateDemo } = useDemoActions({
-    setScanLogs,
-    setScannedFilesList,
-    setScannedFiles,
-    setCorruptFiles,
-    setHasCompletedScan,
-    setNotification,
-  });
 
 
 
-
+  const [isReelEndingAnimation, setIsReelEndingAnimation] = useState(false);
   const { handleBackup, handleRestore } = useBackupRestore({
     exportDirectory,
     setNotification,
@@ -1536,7 +1528,15 @@ const [isAppResetting, setIsAppResetting] = useState(false);
     setScannedFilesList,
   });
 
-  const [isReelEndingAnimation, setIsReelEndingAnimation] = useState(false);
+  const { clearLocalCacheOnly, flushServerDatabase, flushDemoDataOnly, handlePopulateDemo } = useDemoActions({
+    setScanLogs,
+    setScannedFilesList,
+    setScannedFiles,
+    setCorruptFiles,
+    setHasCompletedScan,
+    setNotification,
+  });
+
 
   const handleHeaderModeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
