@@ -114,7 +114,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <aside
       className={
         isFluidLayout
-          ? "w-full lg:w-64 bg-[#0F1117] border-b lg:border-b-0 lg:border-r border-[#1e232e] flex flex-col shrink-0 select-none overflow-hidden min-h-0"
+          ? "w-64 bg-[#0F1117] border-r border-[#1e232e] flex flex-col shrink-0 select-none overflow-hidden min-h-0"
           : "w-64 bg-[#0F1117] border-r border-[#1e232e] flex flex-col shrink-0 select-none overflow-hidden min-h-0"
       }
     >

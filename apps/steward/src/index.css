@@ -1,3 +1,4 @@
+@source "../../packages/ui-components/src";
 @import "tailwindcss";
 
 ::-webkit-scrollbar {

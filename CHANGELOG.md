@@ -464,3 +464,7 @@ Update changelog
 - **Extracted Exporters**: Moved `excelExporter.ts`, `reportExporter.ts`, and `downloader.ts` from `apps/steward/src/utils/` into a dedicated `@bitscribe/core-export` package.
 - **Lifted Shared Layouts**: Migrated `Header.tsx`, `Sidebar.tsx`, and `NavigationTabs.tsx` into the `@bitscribe/ui-components` package for suite-wide reusability.
 - **Decoupled Desktop APIs**: Abstracted Tauri-specific calls (`invoke`, `open`, `save`, `readTextFile`, etc.) into a new `@bitscribe/desktop-api` package, adding environment checks to fall back gracefully in web contexts.
+
+### UI Layout Hotfix
+- **Sidebar Constraints**: Fixed a critical issue where the Sidebar would stretch to take up 100% of the horizontal space on screens smaller than 1024px, completely hiding the main application area. Locked the sidebar width to 64px (`w-64`) and forced row-based flexing to guarantee visibility of the main scan content under responsive conditions.
+- **Tailwind Scanner Path**: Corrected `index.css` to properly source `@bitscribe/ui-components` for the Tailwind v4 compiler, ensuring newly moved components maintain their styling.

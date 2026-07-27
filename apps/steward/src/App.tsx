@@ -1824,7 +1824,7 @@ const [isAppResetting, setIsAppResetting] = useState(false);
       />
 
       {/* Main Split Layout */}
-      <div className={isFluidLayout ? "flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0" : "flex-1 flex overflow-hidden min-h-0"}>
+      <div className={isFluidLayout ? "flex-1 flex overflow-hidden min-h-0" : "flex-1 flex overflow-hidden min-h-0"}>
         {/* Left Side Navigation & Health Panel */}
         <Sidebar
           isFluidLayout={isFluidLayout}
