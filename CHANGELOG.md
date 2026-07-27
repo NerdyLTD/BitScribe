@@ -99,6 +99,9 @@
 
 ## [1.4.30] - 2026-07-26
 ### Fixed
+- 2026-07-26: Increased aggressiveness of metadata tag truncation. Standard text tags are now safely capped at 250 characters, synopsis/description at 1500, and lyrics at 5000. This permanently eliminates the issue of massive base64 image streams from MP4/MKV files inflating the final report size by megabytes.
+
+### Fixed
 - 2026-07-26: Truncated massive embedded tag values (e.g. base64 image data mistakenly placed in lyrics or title tags) across HTML, CSV, Excel, and JSON report exporters to prevent unexpected 8MB+ file size bloat when generating reports for libraries containing mis-tagged files.
 
 ### Fixed
