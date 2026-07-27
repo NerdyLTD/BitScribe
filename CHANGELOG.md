@@ -99,6 +99,12 @@
 
 ## [1.4.30] - 2026-07-26
 ### Fixed
+- Fixed an issue where the Demo Database would persistently remain if a user clicked "Skip permanently" or "Pause for 1 week" on the welcome tour.
+
+### Changed
+- Improved the App Reset visual effect. Bitsy now visibly charges up power before unleashing a 360-degree confetti burst with a stylized "KABOOM!" comic-book graphic.
+
+### Fixed
 - 2026-07-26: Increased aggressiveness of metadata tag truncation. Standard text tags are now safely capped at 250 characters, synopsis/description at 1500, and lyrics at 5000. This permanently eliminates the issue of massive base64 image streams from MP4/MKV files inflating the final report size by megabytes.
 
 ### Fixed
