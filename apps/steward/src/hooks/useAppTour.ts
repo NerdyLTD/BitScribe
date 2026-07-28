@@ -247,6 +247,13 @@ export function useAppTour({
 
   const goToTourStep = (step: number) => {
     if (step < 0 || step >= TOUR_STEPS.length) return;
+
+    if (step > 0) {
+      const demoInserted = localStorage.getItem("bitscribe_demo_data_inserted");
+      if (!demoInserted) {
+        injectDemoData();
+      }
+    }
     
     // Stop any active running demo/simulation when navigating to a new tour step
     setActiveDemo(null);

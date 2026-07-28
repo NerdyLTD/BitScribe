@@ -98,39 +98,6 @@ export default function App() {
     showDemoCleanupModal, setShowDemoCleanupModal
   } = useAppState();
 
-  const {
-    showTour, setShowTour,
-    tourStepIndex, setTourStepIndex,
-    demoMessage, setDemoMessage,
-    demoReelTarget, setDemoReelTarget,
-    demoMsgRef,
-    activeDemo, setActiveDemo,
-    isDemoPaused, setIsDemoPaused,
-    isDemoPausedRef,
-    tourMenuOpen, setTourMenuOpen,
-    tourPosition, setTourPosition,
-    isTourDragging, setIsTourDragging,
-    tourDragStart, setTourDragStart,
-    isReelEndingAnimation, setIsReelEndingAnimation,
-    handleTourMouseDown,
-    finishTour,
-    cancelTour,
-    remindLaterTour,
-    goToTourStep,
-    handleJoyrideCallback
-  } = useAppTour({
-    activeTab,
-    handleTabChange,
-    setShowMetrics,
-    setShowDiagnostic,
-    setCustomRules,
-    resetToDiscoveryPreset,
-    scannedFilesList: [], 
-    setShowDemoCleanupModal,
-    setShowCustomColumnsMenu,
-    injectDemoData: async () => {} 
-  });
-
   const [scannedFilesList, setScannedFilesList] = useState<MediaItem[]>([]);
   const [exportCompleteMsg, setExportCompleteMsg] = useState("");
   const [isExporting, setIsExporting] = useState(false);
@@ -231,9 +198,38 @@ export default function App() {
     scanPaths
   });
 
-
-
-
+  const {
+    showTour, setShowTour,
+    tourStepIndex, setTourStepIndex,
+    demoMessage, setDemoMessage,
+    demoReelTarget, setDemoReelTarget,
+    demoMsgRef,
+    activeDemo, setActiveDemo,
+    isDemoPaused, setIsDemoPaused,
+    isDemoPausedRef,
+    tourMenuOpen, setTourMenuOpen,
+    tourPosition, setTourPosition,
+    isTourDragging, setIsTourDragging,
+    tourDragStart, setTourDragStart,
+    isReelEndingAnimation, setIsReelEndingAnimation,
+    handleTourMouseDown,
+    finishTour,
+    cancelTour,
+    remindLaterTour,
+    goToTourStep,
+    handleJoyrideCallback
+  } = useAppTour({
+    activeTab,
+    handleTabChange,
+    setShowMetrics,
+    setShowDiagnostic,
+    setCustomRules,
+    resetToDiscoveryPreset,
+    scannedFilesList, 
+    setShowDemoCleanupModal,
+    setShowCustomColumnsMenu,
+    injectDemoData: handlePopulateDemo
+  });
 
   useTourSimulation({
     showTour,
