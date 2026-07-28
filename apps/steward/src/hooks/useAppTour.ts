@@ -6,6 +6,54 @@ import { MediaItem } from '@bitscribe/core-types';
 import { TOUR_STEPS } from '../components/ProductTour';
 
 
+
+
+export function useAppTour({
+  activeTab,
+  handleTabChange,
+  setShowMetrics,
+  setShowDiagnostic,
+  setCustomRules,
+  resetToDiscoveryPreset,
+  scannedFilesList,
+  setShowDemoCleanupModal,
+  setShowCustomColumnsMenu,
+  injectDemoData
+}: any) {
+  const [showTour, setShowTour] = useState(() => {
+    const tourStatus = localStorage.getItem("bitscribe_tour_status");
+    if (!tourStatus) return false;
+    try {
+      const parsed = JSON.parse(tourStatus);
+      if (parsed.status === 'active') return true;
+      if (parsed.status === 'remind' && parsed.remindAt) {
+        return new Date().getTime() > parsed.remindAt;
+      }
+    } catch(e) {}
+    return false;
+  });
+
+  const [tourStepIndex, setTourStepIndex] = useState(() => {
+    try {
+      const tourStatus = localStorage.getItem("bitscribe_tour_status");
+      if (tourStatus) {
+        const parsed = JSON.parse(tourStatus);
+        if (parsed.status === 'active' && parsed.startStep !== undefined) {
+          return parsed.startStep;
+        }
+      }
+    } catch(e) {}
+    return 0;
+  });
+  
+  const [demoMessage, setDemoMessage] = useState<{text: string, targetId?: string, position?: 'top' | 'bottom' | 'right' | 'left', offset?: number} | null>(null);
+  const [demoReelTarget, setDemoReelTarget] = useState<string | null>(null);
+  const demoMsgRef = useRef<HTMLDivElement>(null);
+
+  const [activeDemo, setActiveDemo] = useState<'hover' | 'click' | 'type' | 'wait' | number | null>(null);
+  const [isDemoPaused, setIsDemoPaused] = useState(false);
+  const isDemoPausedRef = useRef(false);
+
   useEffect(() => {
     if (!demoMessage || !demoMessage.targetId) {
       return;
@@ -60,52 +108,6 @@ import { TOUR_STEPS } from '../components/ProductTour';
       cancelAnimationFrame(frame);
     };
   }, [demoMessage]);
-
-export function useAppTour({
-  activeTab,
-  handleTabChange,
-  setShowMetrics,
-  setShowDiagnostic,
-  setCustomRules,
-  resetToDiscoveryPreset,
-  scannedFilesList,
-  setShowDemoCleanupModal,
-  setShowCustomColumnsMenu,
-  injectDemoData
-}: any) {
-  const [showTour, setShowTour] = useState(() => {
-    const tourStatus = localStorage.getItem("bitscribe_tour_status");
-    if (!tourStatus) return false;
-    try {
-      const parsed = JSON.parse(tourStatus);
-      if (parsed.status === 'active') return true;
-      if (parsed.status === 'remind' && parsed.remindAt) {
-        return new Date().getTime() > parsed.remindAt;
-      }
-    } catch(e) {}
-    return false;
-  });
-
-  const [tourStepIndex, setTourStepIndex] = useState(() => {
-    try {
-      const tourStatus = localStorage.getItem("bitscribe_tour_status");
-      if (tourStatus) {
-        const parsed = JSON.parse(tourStatus);
-        if (parsed.status === 'active' && parsed.startStep !== undefined) {
-          return parsed.startStep;
-        }
-      }
-    } catch(e) {}
-    return 0;
-  });
-  
-  const [demoMessage, setDemoMessage] = useState<{text: string, targetId?: string, position?: 'top' | 'bottom' | 'right' | 'left', offset?: number} | null>(null);
-  const [demoReelTarget, setDemoReelTarget] = useState<string | null>(null);
-  const demoMsgRef = useRef<HTMLDivElement>(null);
-
-  const [activeDemo, setActiveDemo] = useState<'hover' | 'click' | 'type' | 'wait' | number | null>(null);
-  const [isDemoPaused, setIsDemoPaused] = useState(false);
-  const isDemoPausedRef = useRef(false);
 
   useEffect(() => {
     isDemoPausedRef.current = isDemoPaused;

@@ -488,3 +488,7 @@ Update changelog
   - Restored the missing `handleStartScan`, `handlePauseScan`, `handleStopScan`, and `handleEvaluateDb` scanning logic back to `App.tsx`.
   - Configured `tauri-plugin-log` in Rust to write logs persistently to the folder the application runs from (`TargetKind::Folder`).
   - Added an initialization hook in `App.tsx` that queries the executable directory via a new `get_data_dir` Tauri command, creates a `Reports` folder if it doesn't exist, and sets it as the default file export directory.
+
+### React ReferenceError Fix
+- **Problem**: The dashboard modularization caused a crash `ReferenceError: demoMessage is not defined` because a `useEffect` tracking `demoMessage` was left lingering in the global file scope of `useAppTour.ts`, outside the exported hook function.
+- **Solution**: Moved the stranded `useEffect` back inside the `useAppTour` hook block, restoring component stability and Tour overlay functionality.
