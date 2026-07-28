@@ -850,6 +850,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         console.error("Failed to load demo data", e);
                       }
                     });
+                    setTourStepIndex(startStep);
+                    setShowTour(true);
                     return;
                   }
                   localStorage.setItem("bitscribe_tour_status", JSON.stringify({ status: "active", startStep }));

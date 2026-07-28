@@ -4,3 +4,6 @@
 ### Fix Product Tour Empty Data
 - **Problem**: When taking the product tour, the demo media data wasn't being injected into the local database upon advancing from the introduction slide, leaving the dashboard and metrics entirely empty during the tour.
 - **Solution**: Refactored `App.tsx` hook initialization order to allow `handlePopulateDemo` from `useDemoActions` to be passed into `useAppTour` as the `injectDemoData` callback. Updated `goToTourStep` inside `useAppTour` to invoke `injectDemoData` when transitioning to `step > 0` if demo data hasn't already been inserted.
+### Fix Product Tour Auto-Launch
+- **Problem**: When launching the application after a full reset, clicking the "Tour" button for the first time would successfully populate the demo data but failed to actually start the tour (requiring a second click).
+- **Solution**: Removed the early return inside the `if (scannedFilesList.length < 5)` block in `Sidebar.tsx` and ensured `setTourStepIndex(startStep)` and `setShowTour(true)` are called immediately after initiating the demo data injection, so the tour overlay appears instantly on the first click.
