@@ -1,3 +1,5 @@
+import { useAppState } from './hooks/useAppState';
+import { useAppTour } from './hooks/useAppTour';
 import { useScanState } from './hooks/useScanState';
 import confetti from "canvas-confetti";
 /**
@@ -60,6 +62,7 @@ const resetToDiscoveryPreset = (prev: RuleCriteria): RuleCriteria => ({
     : ["SDR", "HDR10", "HDR10+", "Dolby Vision", "HLG", "Advanced HDR"],
 });
 
+
 export default function App() {
   const {
     isScanning, setIsScanning,
@@ -72,52 +75,76 @@ export default function App() {
     scanLogs, setScanLogs
   } = useScanState();
 
-  
+  const {
+    activeTab, setActiveTab,
+    renderedTab, setRenderedTab,
+    isPending, startTransition,
+    handleTabChange,
+    isFullscreen, setIsFullscreen,
+    fakeExportMenu, setFakeExportMenu,
+    helpHighlight, setHelpHighlight,
+    previousTab, setPreviousTab,
+    isFluidLayout, setIsFluidLayout,
+    scanPaths, setScanPaths,
+    excelColumns, setExcelColumns,
+    showCustomColumnsMenu, setShowCustomColumnsMenu,
+    customRules, setCustomRules,
+    showDiagnostic, setShowDiagnostic,
+    showFileRegistry, setShowFileRegistry,
+    showMetrics, setShowMetrics,
+    confirmAction, setConfirmAction,
+    isAppResetting, setIsAppResetting,
+    showDemoCleanupModal, setShowDemoCleanupModal
+  } = useAppState();
 
-
-
-  
-
-  const [activeTab, setActiveTab] = useState<
-    "scan" | "library" | "rules" | "help" | "logs"
-  >("scan");
-  const [renderedTab, setRenderedTab] = useState<
-    "scan" | "library" | "rules" | "help" | "logs"
-  >("scan");
-  const [isPending, startTransition] = useTransition();
-  const handleTabChange = (tab: "scan" | "library" | "rules" | "help" | "logs") => { setActiveTab(tab); startTransition(() => setRenderedTab(tab)); };
-
-  
-  const [showTour, setShowTour] = useState(() => {
-    const tourStatus = localStorage.getItem("bitscribe_tour_status");
-    if (!tourStatus) return false;
-    try {
-      const parsed = JSON.parse(tourStatus);
-      if (parsed.status === 'active') return true;
-      if (parsed.status === 'remind' && parsed.remindAt) {
-        return new Date().getTime() > parsed.remindAt;
-      }
-    } catch(e) {}
-    return false;
+  const {
+    showTour, setShowTour,
+    tourStepIndex, setTourStepIndex,
+    demoMessage, setDemoMessage,
+    demoReelTarget, setDemoReelTarget,
+    demoMsgRef,
+    activeDemo, setActiveDemo,
+    isDemoPaused, setIsDemoPaused,
+    isDemoPausedRef,
+    tourMenuOpen, setTourMenuOpen,
+    tourPosition, setTourPosition,
+    isTourDragging, setIsTourDragging,
+    tourDragStart, setTourDragStart,
+    isReelEndingAnimation, setIsReelEndingAnimation,
+    handleTourMouseDown,
+    finishTour,
+    cancelTour,
+    remindLaterTour,
+    goToTourStep,
+    handleJoyrideCallback
+  } = useAppTour({
+    activeTab,
+    handleTabChange,
+    setShowMetrics,
+    setShowDiagnostic,
+    setCustomRules,
+    resetToDiscoveryPreset,
+    scannedFilesList: [], 
+    setShowDemoCleanupModal,
+    setShowCustomColumnsMenu,
+    injectDemoData: async () => {} 
   });
+
+  const [scannedFilesList, setScannedFilesList] = useState<MediaItem[]>([]);
+  const [exportCompleteMsg, setExportCompleteMsg] = useState("");
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportProgress, setExportProgress] = useState(0);
+  const [currentExportFile, setCurrentExportFile] = useState("");
+  const [exportDirectory, setExportDirectory] = useState<string>(() => localStorage.getItem("bitscribe_export_directory") || "");
+  const [isBackupRestoreActive, setIsBackupRestoreActive] = useState(false);
+  const [exportFormats, setExportFormats] = useState({ xlsx: true, csv: false, html: false, json: false });
+  const [scannedFiles, setScannedFiles] = useState<MediaItem[]>([]);
+  const [corruptFiles, setCorruptFiles] = useState<MediaItem[]>([]);
+  const [notification, setNotification] = useState<string | { type: string; message: string } | null>(null);
+  const [exportProfile, setExportProfile] = useState<string>("Media Discovery");
+  const [demoClickedSteps, setDemoClickedSteps] = useState<number[]>([]);
   
-  const [tourStepIndex, setTourStepIndex] = useState(() => {
-    try {
-      const tourStatus = localStorage.getItem("bitscribe_tour_status");
-      if (tourStatus) {
-        const parsed = JSON.parse(tourStatus);
-        if (parsed.status === 'active' && parsed.startStep !== undefined) {
-          return parsed.startStep;
-        }
-      }
-    } catch(e) {}
-    return 0;
-  });
-  const [demoMessage, setDemoMessage] = useState<{text: string, targetId?: string, position?: 'top' | 'bottom' | 'right' | 'left', offset?: number} | null>(null);
-  const [demoReelTarget, setDemoReelTarget] = useState<string | null>(null);
-  const demoMsgRef = useRef<HTMLDivElement>(null);
-
-
+  const customColumnsMenuRef = useRef<HTMLDivElement>(null);
 
   const handleBrowseFolder = async () => {
     try {
@@ -133,9 +160,7 @@ export default function App() {
         setScanPaths(prev => [
             ...prev,
             ...selected.map(p => ({ path: p, enabled: true }))
-        ]);
-        
-        
+        ]);              
       } else if (selected && typeof selected === "string") {
         setScanPaths(prev => [...prev, { path: selected, enabled: true }]);
       }
@@ -144,1264 +169,6 @@ export default function App() {
     }
   };
 
-  useEffect(() => {
-    if (!demoMessage || !demoMessage.targetId) {
-      return;
-    }
-    
-    const updateCoords = () => {
-      if (!demoMsgRef.current) return;
-      
-      const el = document.getElementById(demoMessage.targetId!.replace('#', '')) || document.querySelector(demoMessage.targetId!) as HTMLElement;
-      if (el) {
-        const rect = el.getBoundingClientRect();
-        const msgWidth = demoMsgRef.current.offsetWidth || 200;
-        const msgHeight = demoMsgRef.current.offsetHeight || 52;
-        
-        let x = rect.left + rect.width / 2;
-        let y = demoMessage.position === 'top' ? rect.top - msgHeight - (demoMessage.offset || 0) - 8 : rect.bottom + 12 + (demoMessage.offset || 0);
-        let transform = 'translateX(-50%)';
-
-        if (demoMessage.position === 'right') {
-          x = rect.right + 16 + (demoMessage.offset || 0);
-          y = rect.top + rect.height / 2 - msgHeight / 2;
-          transform = 'none';
-        } else if (demoMessage.position === 'left') {
-          x = rect.left - msgWidth - 16 - (demoMessage.offset || 0);
-          y = rect.top + rect.height / 2 - msgHeight / 2;
-          transform = 'none';
-        } else {
-          // Prevent tooltip from going off the top of the screen
-          if (y < 10 && demoMessage.position === 'top') {
-            y = rect.bottom + 12 + (demoMessage.offset || 0); // Flip to bottom
-          }
-          const minX = msgWidth / 2 + 10;
-          const maxX = window.innerWidth - msgWidth / 2 - 10;
-          x = Math.max(minX, Math.min(x, maxX));
-        }
-        
-        demoMsgRef.current.style.left = `${x}px`;
-        demoMsgRef.current.style.top = `${y}px`;
-        demoMsgRef.current.style.bottom = 'auto';
-        demoMsgRef.current.style.transform = transform;
-        demoMsgRef.current.style.opacity = '1';
-      } else {
-        demoMsgRef.current.style.opacity = '0';
-      }
-    };
-    
-    updateCoords();
-    
-    window.addEventListener('scroll', updateCoords, true);
-    window.addEventListener('resize', updateCoords);
-    
-    let frame: number;
-    const loop = () => {
-      updateCoords();
-      frame = requestAnimationFrame(loop);
-    };
-    frame = requestAnimationFrame(loop);
-    
-    return () => {
-      window.removeEventListener('scroll', updateCoords, true);
-      window.removeEventListener('resize', updateCoords);
-      cancelAnimationFrame(frame);
-    };
-  }, [demoMessage]);
-
-  const [activeDemo, setActiveDemo] = useState<number | null>(null);
-  const [isDemoPaused, setIsDemoPaused] = useState(false);
-
-  const [isFullscreen, setIsFullscreen] = useState(false);
-
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-    document.addEventListener("fullscreenchange", handleFullscreenChange);
-    document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
-    document.addEventListener("mozfullscreenchange", handleFullscreenChange);
-    document.addEventListener("MSFullscreenChange", handleFullscreenChange);
-    return () => {
-      document.removeEventListener("fullscreenchange", handleFullscreenChange);
-      document.removeEventListener("webkitfullscreenchange", handleFullscreenChange);
-      document.removeEventListener("mozfullscreenchange", handleFullscreenChange);
-      document.removeEventListener("MSFullscreenChange", handleFullscreenChange);
-    };
-  }, []);
-
-  const toggleFullscreen = async () => {
-    try {
-      const enable = !isFullscreen;
-      if (typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__) {
-        await getCurrentWindow().setFullscreen(enable);
-        setIsFullscreen(enable);
-      } else {
-        if (enable) {
-          const docEl = document.documentElement as any;
-          if (docEl.requestFullscreen) {
-            await docEl.requestFullscreen();
-          } else if (docEl.mozRequestFullScreen) {
-            await docEl.mozRequestFullScreen();
-          } else if (docEl.webkitRequestFullscreen) {
-            await docEl.webkitRequestFullscreen();
-          } else if (docEl.msRequestFullscreen) {
-            await docEl.msRequestFullscreen();
-          }
-        } else {
-          const doc = document as any;
-          if (doc.exitFullscreen) {
-            await doc.exitFullscreen();
-          } else if (doc.mozCancelFullScreen) {
-            await doc.mozCancelFullScreen();
-          } else if (doc.webkitExitFullscreen) {
-            await doc.webkitExitFullscreen();
-          } else if (doc.msExitFullscreen) {
-            await doc.msExitFullscreen();
-          }
-        }
-      }
-    } catch (e) {
-      console.error("Failed to toggle fullscreen:", e);
-      if (typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__) {
-        getCurrentWindow().isFullscreen().then(setIsFullscreen).catch(console.error);
-      }
-    }
-  };
-
-  useEffect(() => {
-    if (showTour && activeDemo === null) {
-      try {
-        if (typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__) {
-          getCurrentWindow().maximize().catch(() => {});
-        }
-      } catch (e) {}
-    }
-  }, [showTour, activeDemo]);
-  const isDemoPausedRef = useRef(false);
-  
-  const [demoClickedSteps, setDemoClickedSteps] = useState<number[]>([]);
-  const [fakeExportMenu, setFakeExportMenu] = useState<{show: boolean, highlight: string | null}>({show: false, highlight: null});
-
-  
-  useEffect(() => {
-    isDemoPausedRef.current = isDemoPaused;
-  }, [isDemoPaused]);
-
-  const [tourMenuOpen, setTourMenuOpen] = useState(false);
-  const [tourPosition, setTourPosition] = useState({ x: 0, y: 0 });
-  const [isTourDragging, setIsTourDragging] = useState(false);
-  const [tourDragStart, setTourDragStart] = useState({ x: 0, y: 0 });
-
-  const handleTourMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    const target = e.target as HTMLElement;
-    if (
-      target.closest('button') || 
-      target.closest('select') || 
-      target.closest('a') || 
-      target.closest('.no-drag') || 
-      target.closest('ul') || 
-      target.closest('li')
-    ) {
-      return;
-    }
-    setIsTourDragging(true);
-    setTourDragStart({ x: e.clientX - tourPosition.x, y: e.clientY - tourPosition.y });
-  };
-
-  useEffect(() => {
-    const handleTourMouseMove = (e: MouseEvent) => {
-      if (!isTourDragging) return;
-      setTourPosition({
-        x: e.clientX - tourDragStart.x,
-        y: e.clientY - tourDragStart.y
-      });
-    };
-
-    const handleTourMouseUp = () => {
-      setIsTourDragging(false);
-    };
-
-    if (isTourDragging) {
-      document.addEventListener('mousemove', handleTourMouseMove);
-      document.addEventListener('mouseup', handleTourMouseUp);
-    }
-
-    return () => {
-      document.removeEventListener('mousemove', handleTourMouseMove);
-      document.removeEventListener('mouseup', handleTourMouseUp);
-    };
-  }, [isTourDragging, tourDragStart]);
-
-  // Reset active demo when step index changes or tour toggles
-  useEffect(() => {
-    setActiveDemo(null);
-    setIsDemoPaused(false);
-  }, [tourStepIndex, showTour]);
-
-  // Listen for clicks on the "Show me" buttons in the tour tooltips
-
-  const handleJoyrideCallback = (data: EventData) => {
-    const { status, type, index, action } = data;
-    
-    const finishedStatuses: string[] = [STATUS.FINISHED, STATUS.SKIPPED];
-    if (finishedStatuses.includes(status)) {
-      if (status === STATUS.FINISHED) {
-        finishTour();
-      } else {
-        cancelTour();
-      }
-    } else if (type === EVENTS.TARGET_NOT_FOUND) {
-      console.warn("Tour target not found:", data.step.target);
-      let correctTab: "scan" | "library" | "rules" | "help" | "logs" = "scan";
-      if (index >= 20 && index <= 21) correctTab = "library";
-      else if (index >= 22 && index <= 31) correctTab = "rules";
-      else if (index >= 32) correctTab = "help";
-
-      if (activeTab !== correctTab) {
-        handleTabChange(correctTab);
-      }
-    } else if (type === EVENTS.STEP_AFTER) {
-      return; // We control navigation entirely through the remote control (goToTourStep)
-    }
-  };
-
-  // Toggle active-demo body class to handle opacity-fade on tooltips
-  useEffect(() => {
-    if (activeDemo !== null) {
-      document.body.classList.add("demo-active");
-    } else {
-      document.body.classList.remove("demo-active");
-    }
-    return () => {
-      document.body.classList.remove("demo-active");
-    };
-  }, [activeDemo]);
-
-  // Toggle tour-active body class to force render components needed for Joyride targets
-  useEffect(() => {
-    if (showTour) {
-      document.body.classList.add("tour-active");
-    } else {
-      document.body.classList.remove("tour-active");
-    }
-    return () => {
-      document.body.classList.remove("tour-active");
-    };
-  }, [showTour]);
-
-  // Programmatic toggling of scan rules/options based on active options tour step
-  useEffect(() => {
-    if (!showTour) return;
-
-    // Show metrics and diagnostic dynamically during the tour
-    setShowMetrics(tourStepIndex >= 7 && tourStepIndex <= 19);
-    setShowDiagnostic(tourStepIndex === 5);
-
-    if (tourStepIndex === 4) {
-      setExportProfile("Custom Fields");
-      setShowCustomColumnsMenu(true);
-    } else {
-      setShowCustomColumnsMenu(false);
-    }
-
-    if (tourStepIndex === 26) {
-      setCustomRules(prev => ({
-        ...prev,
-        useDiscoveryPreset: true,
-        useModernPreset: false,
-        useLegacyPreset: false,
-        useSubtitleScan: false,
-        useDuplicationScan: false,
-        useAnomalyScan: false,
-        useMetadataScan: false,
-      }));
-    } else if (tourStepIndex === 27) {
-      setCustomRules(prev => ({
-        ...prev,
-        useDiscoveryPreset: false,
-        useModernPreset: true,
-        useLegacyPreset: true,
-      }));
-    } else if (tourStepIndex === 28) {
-      setCustomRules(prev => ({
-        ...prev,
-        useSubtitleScan: true,
-      }));
-    } else if (tourStepIndex === 29) {
-      setCustomRules(prev => ({
-        ...prev,
-        useDuplicationScan: true,
-        useDuplicationVideoScan: true,
-        useDuplicationMusicScan: true,
-      }));
-    } else if (tourStepIndex === 30) {
-      setCustomRules(prev => ({
-        ...prev,
-        useAnomalyScan: true,
-      }));
-    } else if (tourStepIndex === 31) {
-      setCustomRules(prev => ({
-        ...prev,
-        useMetadataScan: true,
-        useVideoMetadataScan: true,
-        useMusicMetadataScan: true,
-      }));
-    } else if (tourStepIndex >= 34) {
-      handleTabChange("help");
-      // Revert to standard Discovery mode
-      setCustomRules(prev => ({
-        ...prev,
-        useDiscoveryPreset: true,
-        useModernPreset: false,
-        useLegacyPreset: false,
-        useSubtitleScan: false,
-        useDuplicationScan: false,
-        useAnomalyScan: false,
-        useMetadataScan: false,
-      }));
-    } else if (tourStepIndex < 26 && tourStepIndex > 4) {
-      // Ensure default/neutral state for early tour steps so Streaming Readiness card is named correctly
-      setCustomRules(prev => ({
-        ...prev,
-        useDiscoveryPreset: false,
-        useModernPreset: true,
-        useLegacyPreset: true,
-        useSubtitleScan: false,
-        useDuplicationScan: false,
-        useAnomalyScan: false,
-        useMetadataScan: false,
-      }));
-    }
-  }, [tourStepIndex, showTour]);
-
-  // Scroll Jump to Step dropdown container to current step
-  useEffect(() => {
-    if (tourMenuOpen) {
-      setTimeout(() => {
-        const container = document.getElementById("tour-steps-dropdown-container");
-        const activeItem = document.getElementById(`tour-step-item-${tourStepIndex}`);
-        if (container && activeItem) {
-          activeItem.scrollIntoView({ block: "nearest", behavior: "auto" });
-        }
-      }, 50);
-    }
-  }, [tourMenuOpen, tourStepIndex]);
-
-  // Special effects for concluding tour steps
-  useEffect(() => {
-    if (!showTour) return;
-    
-    if (tourStepIndex === 36) {
-      // Fireworks for Open Source Acknowledgments
-      const duration = 5 * 1000;
-      const end = Date.now() + duration;
-      const festivalColors = ['#ff3366', '#33ff99', '#3399ff', '#ffcc00', '#ff00ff', '#00ffff', '#ff6600', '#9933ff'];
-      (function frame() {
-        confetti({
-          particleCount: 5,
-          angle: 60,
-          spread: 55,
-          origin: { x: 0 },
-          colors: festivalColors,
-          zIndex: 100005
-        });
-        confetti({
-          particleCount: 5,
-          angle: 120,
-          spread: 55,
-          origin: { x: 1 },
-          colors: festivalColors,
-          zIndex: 100005
-        });
-        if (Date.now() < end) {
-          requestAnimationFrame(frame);
-        }
-      }());
-    } else if (tourStepIndex === 37) {
-      // Hearts for Support Development
-      const duration = 3 * 1000;
-      const end = Date.now() + duration;
-      const scalar = 2;
-      const heart = confetti.shapeFromPath({
-        path: 'M167 72c19,-38 37,-56 75,-56 42,0 76,33 76,75 0,76 -76,151 -151,227 -76,-76 -151,-151 -151,-227 0,-42 33,-75 75,-75 38,0 57,18 76,56z',
-        matrix: [0.03333333333333333, 0, 0, 0.03333333333333333, -5.566666666666666, -5.533333333333333]
-      } as any);
-      (function frame() {
-        let originX = 0.5;
-        let originY = 0.8;
-        const reel = document.getElementById("bitsy-reel");
-        if (reel) {
-          const rect = reel.getBoundingClientRect();
-          originX = (rect.left + rect.width / 2) / window.innerWidth;
-          originY = (rect.top + rect.height / 2) / window.innerHeight;
-        }
-        confetti({
-          particleCount: 1,
-          angle: 90,
-          spread: 60,
-          origin: { x: originX, y: originY },
-          colors: ['#ef4444', '#ec4899', '#f43f5e'],
-          shapes: [heart],
-          scalar,
-          startVelocity: 15,
-          gravity: -0.5,
-          ticks: 300,
-          zIndex: 100005
-        });
-        if (Date.now() < end) {
-          requestAnimationFrame(frame);
-        }
-      }());
-    }
-  }, [tourStepIndex, showTour]);
-
-
-  const finishTour = () => {
-    setActiveDemo(null);
-    setDemoMessage(null);
-    setShowCustomColumnsMenu(false);
-    setShowMetrics(true);
-    setShowDiagnostic(false);
-    localStorage.setItem("bitscribe_tour_status", JSON.stringify({ status: 'completed' }));
-    
-    setIsReelEndingAnimation(true);
-    confetti({
-      particleCount: 200,
-      spread: 160,
-      origin: { y: 0.6 },
-      colors: ['#818cf8', '#c084fc', '#34d399', '#ef4444', '#f59e0b'],
-      zIndex: 999999
-    });
-
-    setTimeout(() => {
-      setIsReelEndingAnimation(false);
-      setShowTour(false);
-      setTourStepIndex(0);
-      if (scannedFilesList.length > 0) {
-        setShowDemoCleanupModal(true);
-      } else {
-        setCustomRules(resetToDiscoveryPreset);
-      }
-    }, 2000);
-  };
-
-  const cancelTour = async () => {
-    setShowTour(false);
-    setActiveDemo(null);
-    setDemoMessage(null);
-    setTourStepIndex(0);
-    setShowCustomColumnsMenu(false);
-    setShowMetrics(true);
-    setShowDiagnostic(false);
-    localStorage.setItem("bitscribe_tour_status", JSON.stringify({ status: 'skipped' }));
-    setCustomRules(resetToDiscoveryPreset);
-    const demoInserted = localStorage.getItem("bitscribe_demo_data_inserted");
-    if (demoInserted) {
-      await flushDemoDataOnly();
-    }
-  };
-
-  const remindLaterTour = async () => {
-    setShowTour(false);
-    setActiveDemo(null);
-    setDemoMessage(null);
-    setTourStepIndex(0);
-    setShowCustomColumnsMenu(false);
-    setShowMetrics(true);
-    setShowDiagnostic(false);
-    const oneWeek = new Date().getTime() + 7 * 24 * 60 * 60 * 1000;
-    localStorage.setItem("bitscribe_tour_status", JSON.stringify({ status: 'remind', remindAt: oneWeek }));
-    setCustomRules(resetToDiscoveryPreset);
-    const demoInserted = localStorage.getItem("bitscribe_demo_data_inserted");
-    if (demoInserted) {
-      await flushDemoDataOnly();
-    }
-  };
-
-  const goToTourStep = (step: number) => {
-    if (step < 0 || step >= TOUR_STEPS.length) return;
-    
-    // Stop any active running demo/simulation when navigating to a new tour step
-    setActiveDemo(null);
-    setDemoMessage(null);
-    
-    if (step === 8) {
-      setTourPosition({ x: 264 - window.innerWidth, y: 0 });
-    }
-
-    let targetTab: "scan" | "library" | "rules" | "help" | "logs" = "scan";
-    if (step >= 20 && step <= 22) targetTab = "library";
-    else if (step >= 23 && step <= 33) targetTab = "rules";
-    else if (step >= 34) targetTab = "help";
-
-    const targetSelector = (TOUR_STEPS[step]?.target as string);
-    
-    if (targetTab !== activeTab) {
-      document.body.classList.add("tour-transitioning");
-      handleTabChange(targetTab);
-      
-      // Poll for the target element to exist before advancing the tour,
-      // because startTransition might delay the render of the new tab.
-      let attempts = 0;
-      const checkInterval = setInterval(() => {
-        attempts++;
-        const elExists = targetSelector === 'body' || !!document.querySelector(targetSelector);
-        if (elExists || attempts > 20) { // Max 2 seconds (20 * 100ms)
-          clearInterval(checkInterval);
-          setTourStepIndex(step);
-          if (targetSelector && targetSelector !== 'body') {
-            scrollToElement(targetSelector);
-          }
-          setTimeout(() => document.body.classList.remove("tour-transitioning"), 50);
-        }
-      }, 100);
-    } else {
-      setTourStepIndex(step);
-      if (targetSelector && targetSelector !== 'body') {
-        setTimeout(() => scrollToElement(targetSelector), 50);
-      }
-    }
-  };
-
-  const [helpHighlight, setHelpHighlight] = useState<string | null>(null);
-  const [previousTab, setPreviousTab] = useState<"scan" | "library" | "rules" | "help">("scan");
-
-  useEffect(() => {
-    if (activeTab !== "logs") {
-      setPreviousTab(activeTab as any);
-    }
-  }, [activeTab]);
-  const [scannedFilesList, setScannedFilesList] = useState<MediaItem[]>([]);
-
-  const [exportCompleteMsg, setExportCompleteMsg] = useState("");
-  const [isExporting, setIsExporting] = useState(false);
-  const [exportProgress, setExportProgress] = useState(0);
-  const [currentExportFile, setCurrentExportFile] = useState("");
-  
-  const [exportDirectory, setExportDirectory] = useState<string>(() => localStorage.getItem("bitscribe_export_directory") || "");
-  const [isBackupRestoreActive, setIsBackupRestoreActive] = useState(false);
-
-  const [exportFormats, setExportFormats] = useState({
-    xlsx: true,
-    csv: false,
-    html: false,
-    json: false,
-  });
-
-
-
-
-
-
-  
-  const [scannedFiles, setScannedFiles] = useState<MediaItem[]>([]);
-  const [corruptFiles, setCorruptFiles] = useState<MediaItem[]>([]);
-  const [notification, setNotification] = useState<string | { type: string; message: string } | null>(null);
-  
-  const [isFluidLayout, setIsFluidLayout] = useState<boolean>(() => {
-    try {
-      const val = localStorage.getItem("bitscribe_layout_fluid");
-      return val ? JSON.parse(val) : true; // Default to true (fluid layout, no scrollbar)
-    } catch (e) {
-      return true;
-    }
-  });
-
-  const handleFluidLayoutChange = (val: boolean) => {
-    setIsFluidLayout(val);
-    try {
-      localStorage.setItem("bitscribe_layout_fluid", JSON.stringify(val));
-    } catch (e) {
-      // Ignore
-    }
-  };
-
-
-
-
-  const [exportProfile, setExportProfile] = useState<string>("Media Discovery");
-  
-  const abortControllerRef = React.useRef<AbortController | null>(null);
-
-  const startTimeRef = React.useRef<number | null>(null);
-
-  const handlePauseScan = () => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    if (startTimeRef.current) {
-      setLastScanDuration(Date.now() - startTimeRef.current);
-    }
-    setIsScanning(false);
-    setHasCompletedScan(false);
-    setIsResumeState(true);
-    setNotification({ type: 'success', message: "Scan paused by user." });
-    setScanLogs((prev) => [
-      "User paused the scan.",
-      ...prev.slice(0, 5000),
-    ]);
-  };
-
-
-
-  const handleStopScan = () => {
-    localStorage.removeItem("bitscribe_scan_in_progress");
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    setIsScanning(false);
-    setHasCompletedScan(false);
-    setIsResumeState(false);
-    setScanProgress(0);
-    setCurrentScanFile("");
-    setNotification({ type: 'success', message: "Scan stopped and reset by user." });
-    setScanLogs((prev) => [
-      "User stopped and reset the scan.",
-      ...prev.slice(0, 5000),
-    ]);
-  };
-
-  
-  const handleEvaluateDb = async () => {
-    setIsScanning(true);
-    setScanProgress(0);
-    setHasCompletedScan(false);
-    setIsResumeState(false);
-    setScanLogs([
-      "Initiating offline database streaming evaluation...",
-      "Analyzing codecs, containers, and bitrates against rules..."
-    ]);
-    
-    let evaluationRules = { ...customRules };
-    if (evaluationRules.useDiscoveryPreset) {
-      evaluationRules.useDiscoveryPreset = false;
-      evaluationRules.useModernPreset = true;
-      setCustomRules(evaluationRules);
-    }
-
-    try {
-      const files = await getDbFiles();
-      const updatedFiles = [];
-      for (let i = 0; i < files.length; i++) {
-        let f = files[i];
-        if (!f.isCorrupted) {
-          const evalResult = evaluatePlexCompatibility(f, evaluationRules, false, true);
-          f.streamFriendlyLevel = evalResult.level as any;
-          f.streamFriendlyReason = evalResult.reason;
-          f.streamFriendlySuggestion = evalResult.suggestion;
-          f.streamFriendlyEvaluated = Date.now();
-        }
-        updatedFiles.push(f);
-        if (i % Math.max(1, Math.ceil(files.length / 20)) === 0 || i === files.length - 1) {
-            setScanProgress(Math.floor(((i + 1) / files.length) * 100));
-        }
-      }
-      
-      await saveDbFiles(updatedFiles);
-      setScanProgress(100);
-      setHasCompletedScan(true);
-      setScanLogs(prev => [...prev, "Evaluation complete. Updated local database."]);
-      
-      const cleanFiles = updatedFiles.filter((f: any) => !f.isCorrupted);
-      setScannedFilesList(cleanFiles);
-      setScannedFiles(cleanFiles);
-      setCorruptFiles(updatedFiles.filter((f: any) => f.isCorrupted));
-      
-      } catch (e: any) {
-      console.error(e);
-      setScanLogs(prev => [...prev, "Evaluation failed: " + e.message]);
-    } finally {
-      setIsScanning(false);
-    }
-  };
-
-  
-  
-  const handleStartScan = async (isQuickRefresh: boolean = false) => {
-    handleTabChange("scan");
-    const isQ = isQuickRefresh === true;
-    const hasData = scannedFilesList.length > 0;
-
-    // Intercept if starting a standard scan and we already have database content
-    const isResuming = localStorage.getItem("bitscribe_scan_in_progress") === "true";
-    if (!isQ && hasData && !isResuming) {
-      const lastScanTsStr = localStorage.getItem("plex_last_scan_timestamp");
-      const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-      let shouldRunRefresh = false;
-      let shouldUseCacheDirectly = false;
-
-      if (lastScanTsStr) {
-        const lastScanTs = Number(lastScanTsStr);
-        if (!isNaN(lastScanTs)) {
-          const age = Date.now() - lastScanTs;
-          if (age > ONE_WEEK_MS) {
-            shouldRunRefresh = true;
-          } else {
-            shouldUseCacheDirectly = true;
-          }
-        } else {
-          shouldUseCacheDirectly = true;
-        }
-      } else {
-        // If there's data in the database but no timestamp, assume fresh for now, set timestamp and proceed
-        localStorage.setItem("plex_last_scan_timestamp", Date.now().toString());
-      localStorage.removeItem("bitscribe_scan_in_progress");
-        shouldUseCacheDirectly = true;
-      }
-
-      if (shouldRunRefresh) {
-        console.log("Database has content but last scan was > 1 week ago. Directing to Quick Refresh.");
-        return handleStartScan(true);
-      }
-
-      if (shouldUseCacheDirectly) {
-        console.log("Database has content and was scanned < 1 week ago. Using cache directly.");
-        setIsScanning(true);
-        setScanProgress(0);
-        setHasCompletedScan(false);
-        setIsResumeState(false);
-        setScanLogs([
-          "Initializing cache-driven media scan updates...",
-          "Validating SQLite database connection...",
-          "Existing database content detected within fresh cache window (< 7 days).",
-          "Retrieved already indexed files from SQLite successfully without disk seeking."
-        ]);
-
-        await new Promise((resolve) => setTimeout(resolve, 500));
-
-        setScanProgress(50);
-        setScanLogs((prev) => [
-          "Parsing active player profile rule matrices...",
-          "Updating statistics dashboard to reflect active stream parameters...",
-          ...prev
-        ]);
-
-        await new Promise((resolve) => setTimeout(resolve, 300));
-
-        setScanProgress(100);
-        setIsScanning(false);
-        setHasCompletedScan(true);
-        setScannedFiles(scannedFilesList);
-        setScanLogs((prev) => [
-          "High-performance scan completed instantly using local SQLite cache database!",
-          `Successfully verified and mapped ${scannedFilesList.length} items to the current view.`,
-          ...prev
-        ]);
-        setNotification({
-          type: 'success',
-          message: `Loaded ${scannedFilesList.length} files instantly from existing SQLite database cache.`
-        });
-        return;
-      }
-    }
-
-    setIsQuickRefreshState(isQ); // workaround
-    localStorage.setItem("bitscribe_scan_in_progress", "true");
-    startTimeRef.current = Date.now();
-    setIsScanning(true);
-    setScanProgress(0);
-    setHasCompletedScan(false);
-    setIsResumeState(false);
-    setScanLogs([
-      isQ ? "Quick refresh initialized..." : "Initializing FFprobe parsing engine...",
-      "Validating local environment variables...",
-      "Contacting local backend...",
-    ]);
-    setScannedFiles([]);
-    setNotification(null);
-    
-    abortControllerRef.current = new AbortController();
-
-    let wakeLock: any = null;
-    try {
-      if (typeof navigator !== 'undefined' && 'wakeLock' in navigator) {
-        wakeLock = await (navigator as any).wakeLock.request('screen');
-      }
-    } catch (e) {
-      console.warn("Wake lock could not be requested:", e);
-    }
-    try {
-      const activePaths = scanPaths.filter((p) => p.enabled).map(p => p.path);
-      let scannedCount = 0;
-
-      let lastLogUpdateTime = Date.now();
-      let lastFileUpdateTime = Date.now();
-      const logsBuffer: string[] = [
-        isQ ? "Quick refresh initialized..." : "Initializing FFprobe parsing engine...",
-        "Validating local environment variables...",
-        "Contacting local backend...",
-      ];
-      let currentFile = "";
-      let lastProgress = -1;
-
-      const flushUiUpdates = (force = false) => {
-        const now = Date.now();
-        if (force || now - lastLogUpdateTime > 500) {
-          setScanLogs([...logsBuffer].slice(0, 5000));
-          lastLogUpdateTime = now;
-        }
-        if (force || now - lastFileUpdateTime > 32) {
-          setCurrentScanFile(currentFile);
-          lastFileUpdateTime = now;
-        }
-      };
-
-      const isResumingScan = localStorage.getItem("bitscribe_scan_in_progress") === "true";
-      await scanDirectories(activePaths, customRules, 
-          (total) => {
-              logsBuffer.unshift(`Found ${total} files. Probing started...`);
-              flushUiUpdates(true);
-          },
-          (msg) => {
-              logsBuffer.unshift(msg);
-              currentFile = msg;
-              flushUiUpdates();
-          },
-          (prog) => {
-              const roundedPct = Math.round((prog.current / Math.max(prog.total, 1)) * 100);
-              if (roundedPct !== lastProgress) {
-                  setScanProgress(roundedPct);
-                  lastProgress = roundedPct;
-              }
-              if (prog.item && !prog.error) {
-                  scannedCount++;
-              }
-          }
-      , isResumingScan, isQ, abortControllerRef.current?.signal || undefined);
-      
-      if (abortControllerRef.current?.signal.aborted) {
-          // Scan was paused or cancelled. Load whatever was scanned so far without completing the scan sequence or clearing resume state
-          const reloadedDbFiles = await getDbFiles();
-          const finalItemsLoaded: MediaItem[] = [];
-          const corruptItemsLoaded: MediaItem[] = [];
-          reloadedDbFiles.forEach(f => {
-              if (f.category === "Corrupted" || (f.category && f.category.toLowerCase().includes("corrupt"))) {
-                  corruptItemsLoaded.push(f);
-              } else {
-                  finalItemsLoaded.push(f);
-              }
-          });
-          flushUiUpdates(true);
-          setIsScanning(false);
-          setCurrentScanFile("");
-          setScannedFilesList(finalItemsLoaded);
-          setScannedFiles(finalItemsLoaded);
-          setCorruptFiles(corruptItemsLoaded);
-          return;
-      }
-      
-      // Reload final lists from persistent database to guarantee pruned/deleted ghost files are correctly omitted in React state
-      const reloadedDbFiles = await getDbFiles();
-      const finalItemsLoaded: MediaItem[] = [];
-      const corruptItemsLoaded: MediaItem[] = [];
-      reloadedDbFiles.forEach(f => {
-          if (f.category === "Corrupted" || (f.category && f.category.toLowerCase().includes("corrupt"))) {
-              corruptItemsLoaded.push(f);
-          } else {
-              finalItemsLoaded.push(f);
-          }
-      });
-
-      flushUiUpdates(true);
-      setIsScanning(false);
-      setCurrentScanFile("");
-      setScanProgress(100);
-      setScannedFilesList(finalItemsLoaded);
-      setScannedFiles(finalItemsLoaded);
-      setCorruptFiles(corruptItemsLoaded);
-      if (startTimeRef.current) {
-        setLastScanDuration(Date.now() - startTimeRef.current);
-      }
-      setScanLogs([
-        isQ 
-          ? `Scan complete. ${scannedCount} changed/new files were checked and updated.`
-          : `Scanning operations finished! ${finalItemsLoaded.length} files parsed.`,
-        ...logsBuffer.slice(0, 5000),
-      ]);
-      setNotification({ type: 'success', message: isQ ? `Scan complete: ${scannedCount} new or changed files were updated in the database.` : `Successfully completed media library scan from ${activePaths.length} active paths!` });
-      localStorage.setItem("plex_last_scan_timestamp", Date.now().toString());
-      localStorage.removeItem("bitscribe_scan_in_progress");
-      setHasCompletedScan(true);
-      setIsResumeState(false);
-
-    } catch (err: any) {
-      if (err.name === 'AbortError') {
-        console.log("Fetch aborted by user");
-        return;
-      }
-      console.error(err);
-      if (startTimeRef.current) {
-        setLastScanDuration(Date.now() - startTimeRef.current);
-      }
-      setIsScanning(false);
-      setScanLogs((prev) => [
-        `ERROR: Scan failed: ${err.message || String(err)}`,
-        ...prev,
-      ]);
-      setNotification(`Failed to execute scan: ${err.message || String(err)}`);
-    } finally {
-      if (wakeLock) {
-        try {
-          wakeLock.release();
-        } catch (e) {}
-      }
-    }
-  };
-
-  
-  const [scanPaths, setScanPaths] = useState<
-    { path: string; enabled: boolean }[]
-  >(() => {
-    const saved = localStorage.getItem("plex_scan_paths");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
-      } catch (e) {}
-    }
-    return [];
-  });
-
-  const [excelColumns, setExcelColumns] = useState<Record<string, boolean>>(
-    () => {
-      const defaultColumns = {
-        "Stream Audit": true,
-        "File Name": true,
-        "Container": true,
-        "Video Codec": true,
-        "Resolution": true,
-        "HDR Format": true,
-        "Audio Tracks": true,
-        "Audio Codecs": true,
-        "Subtitles": true,
-        "Artist": false,
-        "Album Title": false,
-        "Song Title": false,
-        "File Format/Codec": false,
-        "Bitrate": true,
-        "Embedded Poster": false,
-        "Bitrate Anomaly": false,
-        "Analysis Notes": true,
-        "Remediation Action": true,
-        "Corruption Type": false,
-        "Recommendation": false,
-        "File Path": true,
-      };
-      
-      const isFirstRun = !localStorage.getItem("bitscribe_first_run_discovery_v3");
-      if (isFirstRun) {
-        localStorage.setItem("plex_excel_columns", JSON.stringify(defaultColumns));
-      }
-      const saved = localStorage.getItem("plex_excel_columns");
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          
-          // Migrate old keys to new keys if they exist
-          if ("Full Drive Location" in parsed) parsed["File Path"] = parsed["Full Drive Location"];
-          if ("Filename" in parsed) parsed["File Name"] = parsed["Filename"];
-          if ("Video Resolution" in parsed) parsed["Resolution"] = parsed["Video Resolution"];
-          if ("Plex Rating" in parsed || "Stream Compatibility" in parsed) parsed["Stream Audit"] = parsed["Plex Rating"] || parsed["Stream Compatibility"];
-          if ("Analysis" in parsed) parsed["Analysis Notes"] = parsed["Analysis"];
-          if ("Recommended Action" in parsed) parsed["Remediation Action"] = parsed["Recommended Action"];
-          
-          // Merge avoiding old garbage keys
-          const merged: Record<string, boolean> = {};
-          for (const key of Object.keys(defaultColumns)) {
-            merged[key] = parsed.hasOwnProperty(key) ? parsed[key] : defaultColumns[key as keyof typeof defaultColumns];
-          }
-          
-          return merged;
-        } catch (e) {}
-      }
-      return defaultColumns;
-    },
-  );
-
-  const [showCustomColumnsMenu, setShowCustomColumnsMenu] = useState(false);
-  const customColumnsMenuRef = React.useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (customColumnsMenuRef.current && !customColumnsMenuRef.current.contains(e.target as Node)) {
-        setShowCustomColumnsMenu(false);
-      }
-    };
-    if (showCustomColumnsMenu) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [showCustomColumnsMenu]);
-
-  // Initialize rules from localStorage if available, or default
-  const [customRules, setCustomRules] = useState<RuleCriteria>(() => {
-    const isFirstRun = !localStorage.getItem("bitscribe_first_run_discovery_v3");
-    if (isFirstRun) {
-      localStorage.setItem("bitscribe_first_run_discovery_v3", "true");
-      const initialRules = {
-        ...DEFAULT_RULES,
-        useDiscoveryPreset: true,
-        useModernPreset: false,
-        useLegacyPreset: false,
-        useSubtitleScan: false,
-        useDuplicationScan: false,
-        useAnomalyScan: false,
-        useMetadataScan: false,
-        useVideoMetadataScan: false,
-        useMusicMetadataScan: false,
-      };
-      localStorage.setItem("plex_compat_rules", JSON.stringify(initialRules));
-    }
-    const saved = localStorage.getItem("plex_compat_rules");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        
-        // Ensure AC3 is enabled by default for existing users
-        let modified = false;
-        if (parsed.legacyStereoAudioCodecs && !parsed.legacyStereoAudioCodecs.includes("ac3")) {
-          parsed.legacyStereoAudioCodecs.push("ac3");
-          modified = true;
-        }
-        if (parsed.modernStereoAudioCodecs && !parsed.modernStereoAudioCodecs.includes("ac3")) {
-          parsed.modernStereoAudioCodecs.push("ac3");
-          modified = true;
-        }
-        if (modified) {
-           localStorage.setItem("plex_compat_rules", JSON.stringify(parsed));
-        }
-
-        const merged = { ...DEFAULT_RULES, ...parsed };
-        if (!merged.discoveryHdrFormats || merged.discoveryHdrFormats.length === 0) {
-          merged.discoveryHdrFormats = ["SDR", "HDR10", "HDR10+", "Dolby Vision", "HLG", "Advanced HDR"];
-        }
-        const hasActiveMode = merged.useMetadataScan || merged.useVideoMetadataScan || merged.useMusicMetadataScan ||
-                             merged.useSubtitleScan || merged.useDuplicationScan || merged.useAnomalyScan ||
-                             merged.useDiscoveryPreset || merged.useModernPreset || merged.useLegacyPreset;
-        if (!hasActiveMode) {
-          merged.useDiscoveryPreset = true;
-        }
-        return merged;
-      } catch (e) {
-        return DEFAULT_RULES;
-      }
-    }
-    return DEFAULT_RULES;
-  });
-
-  // Track settings in localStorage and the portable file
-  useEffect(() => {
-    localStorage.setItem("plex_compat_rules", JSON.stringify(customRules));
-    localStorage.setItem("plex_scan_paths", JSON.stringify(scanPaths));
-    localStorage.setItem("plex_excel_columns", JSON.stringify(excelColumns));
-    localStorage.setItem("bitscribe_export_directory", exportDirectory);
-    if (lastScanDuration !== null) {
-      localStorage.setItem("bitscribe_last_scan_duration", String(lastScanDuration));
-    }
-
-    const settings = {
-      bitscribe_export_directory: exportDirectory,
-      plex_scan_paths: scanPaths,
-      plex_excel_columns: excelColumns,
-      plex_compat_rules: customRules,
-      bitscribe_last_scan_duration: lastScanDuration,
-      bitscribe_tour_status: (() => {
-        try {
-          const val = localStorage.getItem("bitscribe_tour_status");
-          return val ? JSON.parse(val) : undefined;
-        } catch (e) {
-          return undefined;
-        }
-      })()
-    };
-    saveSettings(settings);
-  }, [customRules, scanPaths, excelColumns, exportDirectory, lastScanDuration]);
-
-  useEffect(() => {
-    if (!isScanning) { localStorage.setItem("bitscribe_scan_logs", JSON.stringify(scanLogs)); }
-  }, [scanLogs, isScanning]);
-
-  // Load settings from the portable JSON file on startup
-  useEffect(() => {
-    const initSettings = async () => {
-      try {
-        const settings = await loadSettings();
-        if (settings && Object.keys(settings).length > 0) {
-          if (settings.bitscribe_export_directory !== undefined) {
-            localStorage.setItem("bitscribe_export_directory", settings.bitscribe_export_directory);
-            setExportDirectory(settings.bitscribe_export_directory);
-          }
-          if (settings.plex_scan_paths !== undefined) {
-            localStorage.setItem("plex_scan_paths", JSON.stringify(settings.plex_scan_paths));
-            setScanPaths(settings.plex_scan_paths);
-          }
-          if (settings.plex_excel_columns !== undefined) {
-            localStorage.setItem("plex_excel_columns", JSON.stringify(settings.plex_excel_columns));
-            setExcelColumns(settings.plex_excel_columns);
-          }
-          if (settings.plex_compat_rules !== undefined) {
-            localStorage.setItem("plex_compat_rules", JSON.stringify(settings.plex_compat_rules));
-            setCustomRules(settings.plex_compat_rules);
-          }
-          if (settings.bitscribe_last_scan_duration !== undefined && settings.bitscribe_last_scan_duration !== null) {
-            localStorage.setItem("bitscribe_last_scan_duration", String(settings.bitscribe_last_scan_duration));
-            setLastScanDuration(settings.bitscribe_last_scan_duration);
-          }
-          if (settings.bitscribe_tour_status !== undefined) {
-            localStorage.setItem("bitscribe_tour_status", JSON.stringify(settings.bitscribe_tour_status));
-          }
-        }
-      } catch (err) {
-        console.error("Failed to load portable settings:", err);
-      }
-    };
-    initSettings();
-  }, []);
-
-  // Auto Backup once per week
-  useEffect(() => {
-    const runAutoBackup = async () => {
-      try {
-        if (typeof window === 'undefined' || !(window as any).__TAURI_INTERNALS__) {
-            return; // only run auto-backup in Tauri environment
-        }
-
-        const lastBackupStr = localStorage.getItem("last_backup_timestamp");
-        let shouldBackup = false;
-        if (!lastBackupStr) {
-          shouldBackup = true;
-        } else {
-          const lastDate = new Date(lastBackupStr).getTime();
-          const now = Date.now();
-          if (now - lastDate > 7 * 24 * 60 * 60 * 1000) { // 7 days
-            shouldBackup = true;
-          }
-        }
-
-        if (shouldBackup) {
-          const exportDir = localStorage.getItem("bitscribe_export_directory");
-          if (!exportDir) return; // Need an export directory set to auto-backup
-
-          const type = 'full';
-          let backup: any = { type, timestamp: new Date().toISOString() };
-          
-          backup.settings = {
-              plex_scan_paths: localStorage.getItem("plex_scan_paths"),
-              plex_compat_rules: localStorage.getItem("plex_compat_rules"),
-              bitscribe_export_directory: localStorage.getItem("bitscribe_export_directory"),
-              plex_excel_columns: localStorage.getItem("plex_excel_columns"),
-              bitscribe_custom_block_presets: localStorage.getItem("bitscribe_custom_block_presets")
-          };
-          const files = await invoke("get_db_files");
-          backup.data = files;
-
-          const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
-          const backupsDir = await join(exportDir, "Backups");
-
-          const dirExists = await exists(backupsDir);
-          if (!dirExists) {
-              await mkdir(backupsDir, { recursive: true });
-          }
-          const fileName = `bitscribe_backup_${type}_${Date.now()}.json`;
-          await downloadOrSaveFile(fileName, blob, backupsDir);
-          localStorage.setItem("last_backup_timestamp", new Date().toISOString());
-        }
-      } catch (e) {
-         console.error("Auto backup failed", e);
-      }
-    };
-    setTimeout(() => {
-        runAutoBackup();
-    }, 5000);
-  }, []);
-
-    // Load saved scan results from the portable SQLite database on launch
-  useEffect(() => {
-    let active = true;
-    const loadSavedScanResults = async () => {
-      try {
-        const files = await getDbFiles();
-        if (active) {
-          if (files && files.length >= 5) {
-            const cleanFiles = files.filter((f: any) => f.category !== "Corrupted" && (!f.category || !f.category.toLowerCase().includes("corrupt")));
-            const corrupt = files.filter((f: any) => f.category === "Corrupted" || (f.category && f.category.toLowerCase().includes("corrupt")));
-            setScannedFiles(cleanFiles);
-            setScannedFilesList(cleanFiles);
-            setCorruptFiles(corrupt);
-            setScanLogs([`Restored ${files.length} library items from portable SQLite database.`]);
-            if (localStorage.getItem("bitscribe_scan_in_progress") === "true") {
-              setNotification({ type: 'warning', message: "Scan was unexpectedly interrupted. Click Resume to finish." });
-              setScanLogs(prev => ["Scan was unexpectedly interrupted. Click Resume to finish.", ...prev]);
-            }
-          } else {
-            const tourStatusStr = localStorage.getItem("bitscribe_tour_status");
-            let shouldPopulate = !tourStatusStr;
-            if (tourStatusStr) {
-                try {
-                    const parsed = JSON.parse(tourStatusStr);
-                    if (parsed.status === 'remind' && parsed.remindAt && new Date().getTime() > parsed.remindAt) {
-                        shouldPopulate = true;
-                    }
-                    if (parsed.status === 'active') {
-                        shouldPopulate = true;
-                    }
-                } catch(e) {}
-            }
-            if (shouldPopulate) {
-                setShowTour(true);
-                localStorage.setItem("bitscribe_tour_status", JSON.stringify({ status: "active", startStep: 0 }));
-                localStorage.setItem("bitscribe_demo_data_inserted", "true");
-                injectDemoData().then(async () => {
-                        try {
-                            const newFiles = await getDbFiles();
-                            const cleanFiles = newFiles.filter((f: any) => f.category !== "Corrupted" && (!f.category || !f.category.toLowerCase().includes("corrupt")));
-                            const corrupt = newFiles.filter((f: any) => f.category === "Corrupted" || (f.category && f.category.toLowerCase().includes("corrupt")));
-                            setScannedFiles(cleanFiles);
-                            setScannedFilesList(cleanFiles);
-                            setCorruptFiles(corrupt);
-                            setScanLogs([`Populated demo database with ${newFiles.length} items.`]);
-                        } catch (e) {
-                            console.error("Failed to load demo data", e);
-                        }
-                      });
-            } else if (files && files.length > 0) {
-                const cleanFiles = files.filter((f: any) => f.category !== "Corrupted" && (!f.category || !f.category.toLowerCase().includes("corrupt")));
-                const corrupt = files.filter((f: any) => f.category === "Corrupted" || (f.category && f.category.toLowerCase().includes("corrupt")));
-                setScannedFiles(cleanFiles);
-                setScannedFilesList(cleanFiles);
-                setCorruptFiles(corrupt);
-                setScanLogs([`Restored ${files.length} library items from portable SQLite database.`]);
-                if (localStorage.getItem("bitscribe_scan_in_progress") === "true") {
-                  setNotification({ type: 'warning', message: "Scan was unexpectedly interrupted. Click Resume to finish." });
-                  setScanLogs(prev => ["Scan was unexpectedly interrupted. Click Resume to finish.", ...prev]);
-                }
-            }
-          }
-        }
-      } catch (err) {
-        console.error("Failed to restore scan results from local database:", err);
-      }
-    };
-    loadSavedScanResults();
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  const [showDiagnostic, setShowDiagnostic] = useState(false);
-  const [showFileRegistry, setShowFileRegistry] = useState(true);
-  const [showMetrics, setShowMetrics] = useState(true);
-  const [confirmAction, setConfirmAction] = useState<{message: string, onConfirm: () => void} | null>(null);
-const [isAppResetting, setIsAppResetting] = useState(false);
-  const [showDemoCleanupModal, setShowDemoCleanupModal] = useState(false);
-
-
-
-
-  const [isReelEndingAnimation, setIsReelEndingAnimation] = useState(false);
   const { handleBackup, handleRestore } = useBackupRestore({
     exportDirectory,
     setNotification,
@@ -1421,6 +188,71 @@ const [isAppResetting, setIsAppResetting] = useState(false);
     setNotification,
   });
 
+  useTourSimulation({
+    showTour,
+    activeDemo,
+    setActiveDemo,
+    setDemoMessage,
+    setDemoReelTarget,
+    setIsDemoPaused,
+    setExportProfile,
+    setFakeExportMenu,
+    setShowCustomColumnsMenu,
+    setCustomRules,
+    isDemoPausedRef
+  });
+
+  useEffect(() => {
+    if (!showTour) return;
+    setShowMetrics(tourStepIndex >= 7 && tourStepIndex <= 19);
+    setShowDiagnostic(tourStepIndex === 5);
+    if (tourStepIndex === 4) {
+      setExportProfile("Custom Fields");
+      setShowCustomColumnsMenu(true);
+    } else {
+      setShowCustomColumnsMenu(false);
+    }
+    if (tourStepIndex === 26) {
+      setCustomRules(prev => ({ ...prev, useDiscoveryPreset: true, useModernPreset: false, useLegacyPreset: false, useSubtitleScan: false, useDuplicationScan: false, useAnomalyScan: false, useMetadataScan: false }));
+    } else if (tourStepIndex === 27) {
+      setCustomRules(prev => ({ ...prev, useDiscoveryPreset: false, useModernPreset: true, useLegacyPreset: true }));
+    } else if (tourStepIndex === 28) {
+      setCustomRules(prev => ({ ...prev, useSubtitleScan: true }));
+    } else if (tourStepIndex === 29) {
+      setCustomRules(prev => ({ ...prev, useDuplicationScan: true, useDuplicationVideoScan: true, useDuplicationMusicScan: true }));
+    } else if (tourStepIndex === 30) {
+      setCustomRules(prev => ({ ...prev, useAnomalyScan: true }));
+    } else if (tourStepIndex === 31) {
+      setCustomRules(prev => ({ ...prev, useMetadataScan: true }));
+    }
+  }, [tourStepIndex, showTour]);
+
+  useEffect(() => {
+    const savedRules = localStorage.getItem("plex_compat_rules");
+    if (savedRules) {
+      try {
+        const parsed = JSON.parse(savedRules);
+        let activeCount = 0;
+        if (parsed.useDiscoveryPreset) activeCount++;
+        if (parsed.useModernPreset || parsed.useLegacyPreset) activeCount++;
+        if (parsed.useSubtitleScan) activeCount++;
+        if (parsed.useDuplicationScan) activeCount++;
+        if (parsed.useAnomalyScan) activeCount++;
+        if (parsed.useMetadataScan) activeCount++;
+        if (activeCount > 1 && !parsed.useBleedingEdgePreset) {
+          setCustomRules(prev => ({ ...prev, useBleedingEdgePreset: true }));
+        } else if (activeCount <= 1 && parsed.useBleedingEdgePreset) {
+          setCustomRules(prev => ({ ...prev, useBleedingEdgePreset: false }));
+        }
+      } catch(e) {}
+    }
+  }, [customRules]);
+
+  useEffect(() => {
+    if (!customRules.useMetadataScan) {
+      setCustomRules(prev => ({ ...prev, useVideoMetadataScan: false, useMusicMetadataScan: false }));
+    }
+  }, [customRules.useMetadataScan]);
 
   const handleHeaderModeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
@@ -1439,267 +271,90 @@ const [isAppResetting, setIsAppResetting] = useState(false);
     updatedRules.useMetadataScan = false;
     updatedRules.useVideoMetadataScan = false;
     updatedRules.useMusicMetadataScan = false;
+    Object.keys(updatedExcel).forEach(k => {
+      if (k !== "File Name" && k !== "Library Path" && k !== "Library Section" && k !== "Size (GB)") {
+        updatedExcel[k] = false;
+      }
+    });
+
     if (val === "Stream Audit") {
       updatedRules.useModernPreset = true;
       updatedRules.useLegacyPreset = true;
-      updatedRules.useBleedingEdgePreset = true;
-      updatedExcel = {
-        ...updatedExcel,
-        "Stream Audit": true,
-        "File Name": true,
-        Container: true,
-        "Video Codec": true,
-        Resolution: false,
-        "HDR Format": false,
-        "Audio Tracks": true,
-        "Audio Codecs": true,
-        Subtitles: true,
-        "Analysis Notes": true,
-        "Remediation Action": true,
-        "Corruption Type": false,
-        Recommendation: false,
-        "Embedded Poster": false,
-        "Bitrate Anomaly": false,
-        "File Path": true,
-        Artist: false,
-        "Album Title": false,
-        "Song Title": false,
-        "File Format/Codec": false,
-        Bitrate: false,
-      };
-    } else if (val === "Modern Direct Play") {
-      updatedRules.useModernPreset = true;
-      updatedExcel = {
-        ...updatedExcel,
-        "Stream Audit": true,
-        "File Name": true,
-        Container: true,
-        "Video Codec": true,
-        Resolution: false,
-        "HDR Format": false,
-        "Audio Tracks": true,
-        "Audio Codecs": true,
-        Subtitles: true,
-        "Analysis Notes": true,
-        "Remediation Action": true,
-        "Corruption Type": false,
-        Recommendation: false,
-        "Embedded Poster": false,
-        "Bitrate Anomaly": false,
-        "File Path": true,
-        Artist: false,
-        "Album Title": false,
-        "Song Title": false,
-        "File Format/Codec": false,
-        Bitrate: false,
-      };
-    } else if (val === "Legacy Direct Play") {
-      updatedRules.useLegacyPreset = true;
-      updatedExcel = {
-        ...updatedExcel,
-        "Stream Audit": true,
-        "File Name": true,
-        Container: true,
-        "Video Codec": true,
-        Resolution: false,
-        "HDR Format": false,
-        "Audio Tracks": true,
-        "Audio Codecs": true,
-        Subtitles: true,
-        "Analysis Notes": true,
-        "Remediation Action": true,
-        "Corruption Type": false,
-        Recommendation: false,
-        "Embedded Poster": false,
-        "Bitrate Anomaly": false,
-        "File Path": true,
-        Artist: false,
-        "Album Title": false,
-        "Song Title": false,
-        "File Format/Codec": false,
-        Bitrate: false,
-      };
+      updatedRules.useSubtitleScan = true;
+      updatedExcel["Container"] = true;
+      updatedExcel["Video Codec"] = true;
+      updatedExcel["Audio Tracks"] = true;
+      updatedExcel["Stream Audit"] = true;
     } else if (val === "Media Discovery") {
       updatedRules.useDiscoveryPreset = true;
-      if (!updatedRules.discoveryHdrFormats || updatedRules.discoveryHdrFormats.length === 0) {
-        updatedRules.discoveryHdrFormats = ["SDR", "HDR10", "HDR10+", "Dolby Vision", "HLG", "Advanced HDR"];
-      }
-      updatedExcel = {
-        ...updatedExcel,
-        "Stream Audit": true,
-        "File Name": true,
-        Container: true,
-        "Video Codec": true,
-        Resolution: true,
-        "HDR Format": true,
-        "Audio Tracks": true,
-        "Audio Codecs": true,
-        Subtitles: true,
-        "Analysis Notes": true,
-        "Remediation Action": true,
-        "Corruption Type": false,
-        Recommendation: false,
-        "Embedded Poster": false,
-        "Bitrate Anomaly": false,
-        "File Path": true,
-        Artist: false,
-        "Album Title": false,
-        "Song Title": false,
-        "File Format/Codec": false,
-        Bitrate: true,
-      };
-    } else if (val === "Subtitle Audit") {
-      updatedRules.useSubtitleScan = true;
-      updatedExcel = {
-        ...updatedExcel,
-        "Stream Audit": false,
-        "File Name": true,
-        Container: true,
-        "Video Codec": false,
-        Resolution: false,
-        "HDR Format": false,
-        "Audio Tracks": false,
-        "Audio Codecs": false,
-        Subtitles: true,
-        "Analysis Notes": true,
-        "Remediation Action": true,
-        "Corruption Type": false,
-        Recommendation: false,
-        "Embedded Poster": false,
-        "Bitrate Anomaly": false,
-        "File Path": true,
-        Artist: false,
-        "Album Title": false,
-        "Song Title": false,
-        "File Format/Codec": false,
-        Bitrate: false,
-      };
-    } else if (val === "Duplication Scan") {
+      updatedExcel["Duration (Mins)"] = true;
+      updatedExcel["Year"] = true;
+      updatedExcel["Resolution"] = true;
+    } else if (val === "Quality Audit") {
+      updatedRules.useAnomalyScan = true;
+      updatedExcel["Video Bitrate"] = true;
+      updatedExcel["Bitrate Anomaly"] = true;
+      updatedExcel["Anomaly Reason"] = true;
+      updatedExcel["Corruption Status"] = true;
+    } else if (val === "Dupe Scan") {
       updatedRules.useDuplicationScan = true;
       updatedRules.useDuplicationVideoScan = true;
       updatedRules.useDuplicationMusicScan = true;
-      updatedExcel = {
-        ...updatedExcel,
-        "Stream Audit": false,
-        "File Name": true,
-        Container: true,
-        "Video Codec": true,
-        Resolution: true,
-        "HDR Format": true,
-        "Audio Tracks": true,
-        "Audio Codecs": true,
-        Subtitles: false,
-        "Analysis Notes": true,
-        "Remediation Action": true,
-        "Corruption Type": false,
-        Recommendation: false,
-        "Embedded Poster": false,
-        "Bitrate Anomaly": false,
-        "File Path": true,
-        Artist: false,
-        "Album Title": false,
-        "Song Title": false,
-        "File Format/Codec": false,
-        Bitrate: true,
-      };
-    } else if (val === "Quality Audit") {
-      updatedRules.useAnomalyScan = true;
-      updatedExcel = {
-        ...updatedExcel,
-        "Stream Audit": false,
-        "File Name": true,
-        Container: true,
-        "Video Codec": true,
-        Resolution: true,
-        "HDR Format": true,
-        "Audio Tracks": true,
-        "Audio Codecs": true,
-        Subtitles: false,
-        "Analysis Notes": true,
-        "Remediation Action": true,
-        "Corruption Type": false,
-        Recommendation: false,
-        "Embedded Poster": false,
-        "Bitrate Anomaly": true,
-        "File Path": true,
-        Artist: false,
-        "Album Title": false,
-        "Song Title": false,
-        "File Format/Codec": false,
-        Bitrate: true,
-      };
-    } else if (val === "Metadata Audit") {
+      updatedExcel["Resolution"] = true;
+      updatedExcel["Duration (Mins)"] = true;
+      updatedExcel["Video Codec"] = true;
+    } else if (val === "Metadata Scan") {
+      updatedRules.useMetadataScan = true;
       updatedRules.useVideoMetadataScan = true;
       updatedRules.useMusicMetadataScan = true;
-      updatedExcel = {
-        ...updatedExcel,
-        "Stream Audit": false,
-        "File Name": true,
-        Container: true,
-        "Video Codec": false,
-        Resolution: false,
-        "HDR Format": false,
-        "Audio Tracks": false,
-        "Audio Codecs": false,
-        Subtitles: false,
-        "Analysis Notes": true,
-        "Remediation Action": true,
-        "Corruption Type": false,
-        Recommendation: false,
-        "Embedded Poster": true,
-        "Bitrate Anomaly": false,
-        "File Path": true,
-        Artist: true,
-        "Album Title": true,
-        "Song Title": true,
-        "File Format/Codec": true,
-        Bitrate: false,
-      };
+      updatedExcel["Resolution"] = true;
+      updatedExcel["Video Codec"] = true;
+      updatedExcel["Audio Tracks"] = true;
+      updatedExcel["Audio Bitrate"] = true;
+      updatedExcel["Subtitle Tracks"] = true;
+      updatedExcel["Bit Depth"] = true;
+      updatedExcel["Audio Hz"] = true;
+      updatedExcel["Chapters"] = true;
     }
+
     setCustomRules(updatedRules);
     setExcelColumns(updatedExcel);
   };
 
-  const MODE_DESCRIPTIONS: Record<string, string> = {
-    "Stream Audit": "Audits video, audio streams, and subtitles for direct play compatibility on both modern and legacy devices.",
-    "Modern Direct Play": "Checks for modern high-efficiency codecs (like HEVC & AC3 Stereo) that direct play on modern hardware.",
-    "Legacy Direct Play": "Checks for standard backward-compatible formats (like H.264, AAC & AC3 Stereo) that direct play on legacy clients with zero server-side transcoding.",
-    "Media Discovery": "Discovers and catalogs all media files, conforming to standard configurations.",
-    "Quality Audit": "Scans for media stream corruption, quality anomalies, and bitrate issues.",
-    "Subtitle Audit": "Detects missing subtitles, unsupported image-based subtitles, and text formatting.",
-    "Duplication Scan": "Analyzes video and music libraries to identify duplicate media items.",
-    "Metadata Audit": "Audits embedded tags (titles, artists, years, cover art) for clean cataloging.",
-    "Select a mode": "Choose a preset mode to scan and audit your media collection."
+  const handleFluidLayoutChange = (val: boolean) => {
+    setIsFluidLayout(val);
+    localStorage.setItem("bitscribe_layout_fluid", JSON.stringify(val));
   };
+  
+  const toggleFullscreen = () => { setIsFullscreen(!isFullscreen); };
+  
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (customColumnsMenuRef.current && !customColumnsMenuRef.current.contains(e.target as Node)) {
+        setShowCustomColumnsMenu(false);
+      }
+    };
+    if (showCustomColumnsMenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showCustomColumnsMenu]);
 
-  const activeModeName = useMemo(() => {
-    if (customRules.useMetadataScan || customRules.useVideoMetadataScan || customRules.useMusicMetadataScan) return "Metadata Audit";
-    if (customRules.useSubtitleScan) return "Subtitle Audit";
-    if (customRules.useDuplicationScan) return "Duplication Scan";
-    if (customRules.useAnomalyScan) return "Quality Audit";
-    if (customRules.useDiscoveryPreset) return "Media Discovery";
-    if (customRules.useModernPreset && customRules.useLegacyPreset) return "Stream Audit";
-    if (customRules.useModernPreset) return "Modern Direct Play";
-    if (customRules.useLegacyPreset) return "Legacy Direct Play";
-    return "Select a mode";
-  }, [customRules]);
+  const activeModeName = 
+    customRules.useMetadataScan ? "Metadata Scan" : 
+    customRules.useDuplicationScan ? "Dupe Scan" : 
+    customRules.useAnomalyScan ? "Quality Audit" : 
+    customRules.useModernPreset ? "Stream Audit" : "Media Discovery";
 
-  useTourSimulation({
-    showTour,
-    activeDemo,
-    setActiveDemo,
-    setDemoMessage,
-    setDemoReelTarget,
-    setIsDemoPaused,
-    setExportProfile,
-    setFakeExportMenu,
-    setShowCustomColumnsMenu,
-    setCustomRules,
-    isDemoPausedRef
-  });
+  const total = scannedFilesList.length;
 
-  // Compute live statistics for the left sidebar "Library Health"
-  const total = scannedFilesList.length + corruptFiles.length;
+  const MODE_DESCRIPTIONS = {
+    "Stream Audit": "Audits compatibility for legacy + modern players.",
+    "Media Discovery": "Basic discovery cataloging.",
+    "Quality Audit": "Checks video bitrates, anomalies.",
+    "Dupe Scan": "Identifies duplicate media files.",
+    "Metadata Scan": "Deep FFprobe metadata extraction."
+  };
 
   return (
     <>
