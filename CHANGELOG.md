@@ -496,3 +496,7 @@ Update changelog
 ### Scan Engine Modularization
 - **Problem**: The local typescript scan logic was tightly coupled to the main `App.tsx` component, creating a massive file and reducing readability and modularity.
 - **Solution**: Extracted `handleStartScan`, `handlePauseScan`, `handleStopScan`, and `handleEvaluateDb` into a clean, new custom hook named `useLocalScanEngine`. Fixed related TypeScript and type inconsistencies in Dashboard, LibraryView, and TourRemoteControl.
+
+### Tauri Log Plugin Compilation Fix
+- **Problem**: Build failed with a rustc compiler error `expected value, found struct variant tauri_plugin_log::TargetKind::Folder` due to a breaking change in the Tauri log plugin where `Folder` is now a struct rather than a tuple.
+- **Solution**: Updated the instantiation of `tauri_plugin_log::TargetKind::Folder` to use named fields `{ path: data_dir.clone(), file_name: None }` to fix compilation.

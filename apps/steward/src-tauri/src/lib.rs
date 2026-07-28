@@ -387,7 +387,10 @@ pub fn run() {
                 tauri_plugin_log::Builder::default()
                     .targets([
                         tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Stdout),
-                        tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Folder(data_dir.clone()))
+                        tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Folder {
+                            path: data_dir.clone(),
+                            file_name: None,
+                        })
                     ])
                     .level(log::LevelFilter::Info)
                     .build(),
