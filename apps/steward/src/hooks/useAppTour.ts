@@ -257,8 +257,8 @@ export function useAppTour({
     }
 
     let targetTab = "scan";
-    if (step >= 5 && step < 17) targetTab = "library";
-    else if (step >= 17 && step < 34) targetTab = "rules";
+    if (step >= 20 && step <= 22) targetTab = "library";
+    else if (step >= 23 && step <= 33) targetTab = "rules";
     else if (step >= 34) targetTab = "help";
 
     const targetSelector = (TOUR_STEPS[step]?.target as string);

@@ -508,3 +508,7 @@ Update changelog
 ### Fix Missing Untracked File
 - **Problem**: `useLocalScanEngine.ts` was not included in the previous commit because `git commit -am` skips untracked files. This caused a Vite resolution error ("Failed to resolve import") on cloned copies.
 - **Solution**: Explicitly added and committed `apps/steward/src/hooks/useLocalScanEngine.ts`.
+
+### App Tour Tab Routing Fix
+- **Problem**: In the product tour, slides from 9 onward were failing to appear. This happened because the internal `targetTab` routing logic mapped steps 5 through 16 to the "library" tab. However, steps 8 through 19 require metrics and audit cards which are strictly on the "scan" tab. When `react-joyride` was directed to the "library" tab, it couldn't locate the metric components (as `showMetrics` is false on that tab), causing the tour to halt.
+- **Solution**: Updated `targetTab` switch boundaries in `useAppTour.ts`. Mapped indices 0-19 to the `scan` tab, 20-22 to `library`, 23-33 to `rules`, and 34+ to `help`, ensuring all tour step targets are correctly rendered.
