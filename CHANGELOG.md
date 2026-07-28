@@ -504,3 +504,7 @@ Update changelog
 ### Tauri Black Screen Fix (writeTextFile)
 - **Problem**: The application launched to a blank black screen. This was caused by a TypeScript linting fix in `main.tsx` that changed `writeTextFile` to `writeFile`. Tauri's `writeFile` API requires a `Uint8Array`, while `main.tsx` was passing string data for diagnostic logs, causing a pre-render runtime exception that prevented the React app from mounting.
 - **Solution**: Restored `writeTextFile` to the `@bitscribe/desktop-api` fs wrapper and reverted `main.tsx` back to using `writeTextFile`, preventing the runtime crash and restoring the UI.
+
+### Fix Missing Untracked File
+- **Problem**: `useLocalScanEngine.ts` was not included in the previous commit because `git commit -am` skips untracked files. This caused a Vite resolution error ("Failed to resolve import") on cloned copies.
+- **Solution**: Explicitly added and committed `apps/steward/src/hooks/useLocalScanEngine.ts`.
