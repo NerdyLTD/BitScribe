@@ -477,3 +477,7 @@ Update changelog
 
 ### Refactoring & Monolith Dismantling (Completed)
 - **App.tsx Clean-up**: Concluded the dismantling of the `App.tsx` monolith (down from ~2,045 lines to under 700). Extracted all inline product tour state and `react-joyride` coordinate handlers into a focused `useAppTour` hook, and relocated all top-level UI, modal, layout, and filtering states into a new `useAppState` hook. The `App` component now acts solely as a clean layout router passing context directly to the standalone `Dashboard` and `LibraryView` components.
+
+### Critical Crash Fix: missingFmt in Dashboard
+- **Problem**: A runtime `ReferenceError: missingFmt is not defined` crashed the UI (specifically around tour slide 20-21 on the Library view) because formatting helper functions (`missingFmt`, `formatResolution`, `formatSubtitleSummary`, `formatSubtitleTechnical`) were referenced in `Dashboard.tsx` and passed to `LibraryView` but had not been explicitly defined or imported in that file.
+- **Solution**: Re-implemented these missing format helper functions directly within `Dashboard.tsx` to restore functionality and prevent the crash.
