@@ -12,9 +12,9 @@ interface LibraryViewProps {
   sortColumn: string;
   sortDirection: "asc" | "desc";
   handleSort: (key: string) => void;
-  paginatedFiles: (MediaItem | DuplicatePairRow)[];
+  paginatedFiles: any[];
   resizingColKey?: string;
-  handleColumnResize?: (e: any, key: string) => void;
+  handleColumnResize?: (e: any, key: string, defaultWidth: number) => void;
   missingFmt: (val: any) => React.ReactNode;
   formatResolution: (w?: number, h?: number, parsed?: any) => React.ReactNode;
   formatSubtitleSummary: (parsed?: any) => React.ReactNode;

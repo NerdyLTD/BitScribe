@@ -19,8 +19,8 @@ interface TourRemoteControlProps {
   handleTourMouseDown: (e: React.MouseEvent<HTMLDivElement>) => void;
   tourStepIndex: number;
   tourSteps: any[];
-  activeDemo: number | null;
-  setActiveDemo: (val: number | null) => void;
+  activeDemo: 'hover' | 'click' | 'type' | 'wait' | number | null;
+  setActiveDemo: (val: 'hover' | 'click' | 'type' | 'wait' | number | null) => void;
   isDemoPaused: boolean;
   setIsDemoPaused: (val: boolean) => void;
   demoClickedSteps: number[];

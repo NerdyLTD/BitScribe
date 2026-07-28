@@ -492,3 +492,7 @@ Update changelog
 ### React ReferenceError Fix
 - **Problem**: The dashboard modularization caused a crash `ReferenceError: demoMessage is not defined` because a `useEffect` tracking `demoMessage` was left lingering in the global file scope of `useAppTour.ts`, outside the exported hook function.
 - **Solution**: Moved the stranded `useEffect` back inside the `useAppTour` hook block, restoring component stability and Tour overlay functionality.
+
+### Scan Engine Modularization
+- **Problem**: The local typescript scan logic was tightly coupled to the main `App.tsx` component, creating a massive file and reducing readability and modularity.
+- **Solution**: Extracted `handleStartScan`, `handlePauseScan`, `handleStopScan`, and `handleEvaluateDb` into a clean, new custom hook named `useLocalScanEngine`. Fixed related TypeScript and type inconsistencies in Dashboard, LibraryView, and TourRemoteControl.

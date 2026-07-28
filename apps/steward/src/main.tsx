@@ -43,7 +43,7 @@ import './index.css';
       (window as any).__BITSCRIBE_LOG_INITIALIZED__ = true;
       
       const { downloadDir, join } = await import('@bitscribe/desktop-api');
-      const { writeTextFile, mkdir, exists } = await import('@bitscribe/desktop-api');
+      const { writeFile, mkdir, exists } = await import('@bitscribe/desktop-api');
       
       let exportDir = localStorage.getItem("bitscribe_export_directory") || "";
       if (!exportDir) {
@@ -69,7 +69,7 @@ import './index.css';
       const APP_VERSION = "1.4.8"; // Hardcoded for this script context
       const logContent = `[${timestamp}] App launched successfully. \nVersion: ${APP_VERSION}\n`;
       
-      await writeTextFile(logFile, logContent);
+      await writeFile(logFile, logContent);
       console.info("Diagnostic log started at: " + logFile);
       
       // Override console to write to file
@@ -88,7 +88,7 @@ import './index.css';
         logBuffer = [];
         try {
           const currentContent = await import('@bitscribe/desktop-api').then(m => m.readTextFile(logFile).catch(() => ""));
-          await writeTextFile(logFile, currentContent + chunk);
+          await writeFile(logFile, currentContent + chunk);
         } catch(e) {
           // Fallback silence
         }

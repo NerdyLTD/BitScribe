@@ -51,7 +51,7 @@ export function useScanEngine({
   const unlistenMetricsRef = useRef<UnlistenFn | null>(null);
 
   const setupScanListeners = async () => {
-    unlistenProgressRef.current = await listen<ProgressPayload>("scan-progress", (event) => {
+    unlistenProgressRef.current = await listen("scan-progress", (event) => {
       setScanProgress(event.payload.progress);
       if (event.payload.currentFile) {
         setCurrentFile(event.payload.currentFile);
@@ -141,10 +141,10 @@ export function useScanEngine({
         anomalies: MediaItem[];
         time: number;
         error?: string;
-      } = await invoke("scan_directories", { 
+      } = (await invoke("scan_directories", { 
         directories,
         rules: customRules
-      });
+      })) as any;
       
       cleanupListeners();
 

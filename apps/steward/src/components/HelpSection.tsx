@@ -9,7 +9,7 @@ interface HelpSectionProps {
   highlightId?: string | null;
   isTourActive?: boolean;
   tourStepIndex?: number;
-  activeDemo?: number | null;
+  activeDemo?: 'hover' | 'click' | 'type' | 'wait' | number | null;
 }
 
 interface OSSProject {

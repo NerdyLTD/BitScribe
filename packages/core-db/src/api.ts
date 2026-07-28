@@ -22,7 +22,7 @@ import { MOCK_MEDIA_LIBRARY } from "./data/mockMediaData";
 
 export async function getDbFiles(): Promise<MediaItem[]> {
     if (!isTauri()) return _mockDb;
-    return await invoke("get_db_files");
+    return (await invoke("get_db_files")) as MediaItem[];
 }
 
 export async function clearDb(): Promise<void> {
@@ -337,7 +337,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
         onLog(`Walking directory: ${p}`);
         try {
             const files = isTauri()
-                ? await invoke<{path: string, size: number, fileHash: string, hasExternalSubtitles: boolean}[]>("walk_dir", { path: p })
+                ? (await invoke("walk_dir", { path: p })) as {path: string, size: number, fileHash: string, hasExternalSubtitles: boolean}[]
                 : MOCK_MEDIA_LIBRARY.filter(m => {
                     const normFile = m.filePath.replace(/\\/g, '/').toLowerCase();
                     const normPath = p.replace(/\\/g, '/').toLowerCase();
@@ -1055,7 +1055,7 @@ export async function loadSettings(): Promise<Record<string, any>> {
         return {};
     }
     try {
-        const res = await invoke<string>("load_settings");
+        const res = (await invoke("load_settings")) as string;
         return JSON.parse(res || "{}");
     } catch (e) {
         console.error("Failed to load settings via Tauri", e);
