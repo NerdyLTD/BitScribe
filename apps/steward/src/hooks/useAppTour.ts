@@ -289,6 +289,10 @@ export function useAppTour({
   };
 
   const handleJoyrideCallback = (data: EventData) => {
+    // Ignore Joyride events if a demo is currently running, this prevents native clicks 
+    // inside the Joyride target from bubbling up and advancing the tour!
+    if (activeDemo !== null) return;
+    
     const { status, type, index, action } = data;
     
     if (action === 'close' || status === 'skipped') {

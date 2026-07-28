@@ -416,6 +416,7 @@ export const ProductTour: React.FC<ProductTourProps> = ({
   isDemoRunning = false,
 }) => {
   const handleJoyrideCallback = (data: EventData) => {
+    if (isDemoRunning) return;
     onJoyrideCallback(data);
   };
 

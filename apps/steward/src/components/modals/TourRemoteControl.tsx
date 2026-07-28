@@ -257,7 +257,10 @@ export const TourRemoteControl: React.FC<TourRemoteControlProps> = ({
                 See an animated demonstration
               </p>
               <button
-                onClick={() => {
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
                   if (!demoClickedSteps.includes(tourStepIndex)) {
                     setDemoClickedSteps(prev => [...prev, tourStepIndex]);
                   }
@@ -284,14 +287,22 @@ export const TourRemoteControl: React.FC<TourRemoteControlProps> = ({
       {/* Controls */}
       <div className="flex items-center justify-between gap-2 border-t border-slate-800/60 pt-2.5 mt-0.5 no-drag">
         <button
-          onClick={() => goToTourStep(tourStepIndex - 1)}
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            goToTourStep(tourStepIndex - 1);
+          }}
           disabled={tourStepIndex === 0}
           className="flex-1 flex items-center justify-center gap-0.5 py-1.5 px-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-30 disabled:pointer-events-none text-slate-300 border border-slate-700 rounded-lg text-xs font-bold transition cursor-pointer"
         >
           <ChevronLeft className="w-3.5 h-3.5" /> Back
         </button>
         <button
-          onClick={() => {
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
             if (tourStepIndex === tourSteps.length - 1) {
               finishTour();
             } else {
