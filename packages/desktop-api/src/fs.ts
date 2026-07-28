@@ -11,6 +11,12 @@ export const writeFile = async (...args: any[]) => {
     return writeFile(...args as Parameters<typeof writeFile>);
   }
 };
+export const writeTextFile = async (...args: any[]) => {
+  if (typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__) {
+    const { writeTextFile } = await import('@tauri-apps/plugin-fs');
+    return writeTextFile(...args as Parameters<typeof writeTextFile>);
+  }
+};
 export const mkdir = async (...args: any[]) => {
   if (typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__) {
     const { mkdir } = await import('@tauri-apps/plugin-fs');

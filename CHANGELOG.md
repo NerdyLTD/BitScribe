@@ -500,3 +500,7 @@ Update changelog
 ### Tauri Log Plugin Compilation Fix
 - **Problem**: Build failed with a rustc compiler error `expected value, found struct variant tauri_plugin_log::TargetKind::Folder` due to a breaking change in the Tauri log plugin where `Folder` is now a struct rather than a tuple.
 - **Solution**: Updated the instantiation of `tauri_plugin_log::TargetKind::Folder` to use named fields `{ path: data_dir.clone(), file_name: None }` to fix compilation.
+
+### Tauri Black Screen Fix (writeTextFile)
+- **Problem**: The application launched to a blank black screen. This was caused by a TypeScript linting fix in `main.tsx` that changed `writeTextFile` to `writeFile`. Tauri's `writeFile` API requires a `Uint8Array`, while `main.tsx` was passing string data for diagnostic logs, causing a pre-render runtime exception that prevented the React app from mounting.
+- **Solution**: Restored `writeTextFile` to the `@bitscribe/desktop-api` fs wrapper and reverted `main.tsx` back to using `writeTextFile`, preventing the runtime crash and restoring the UI.
