@@ -18,7 +18,8 @@ export function useAppTour({
   scannedFilesList,
   setShowDemoCleanupModal,
   setShowCustomColumnsMenu,
-  injectDemoData
+  injectDemoData,
+  clearDemoData
 }: any) {
   const [showTour, setShowTour] = useState(() => {
     const tourStatus = localStorage.getItem("bitscribe_tour_status");
@@ -221,9 +222,8 @@ export function useAppTour({
     localStorage.setItem("bitscribe_tour_status", JSON.stringify({ status: 'skipped' }));
     setCustomRules(resetToDiscoveryPreset);
     const demoInserted = localStorage.getItem("bitscribe_demo_data_inserted");
-    if (!demoInserted) {
-      await injectDemoData();
-      localStorage.setItem("bitscribe_demo_data_inserted", "true");
+    if (demoInserted && clearDemoData) {
+      await clearDemoData();
     }
   };
 
@@ -239,9 +239,8 @@ export function useAppTour({
     localStorage.setItem("bitscribe_tour_status", JSON.stringify({ status: 'remind', remindAt: oneWeek }));
     setCustomRules(resetToDiscoveryPreset);
     const demoInserted = localStorage.getItem("bitscribe_demo_data_inserted");
-    if (!demoInserted) {
-      await injectDemoData();
-      localStorage.setItem("bitscribe_demo_data_inserted", "true");
+    if (demoInserted && clearDemoData) {
+      await clearDemoData();
     }
   };
 

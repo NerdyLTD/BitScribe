@@ -7,3 +7,6 @@
 ### Fix Product Tour Auto-Launch
 - **Problem**: When launching the application after a full reset, clicking the "Tour" button for the first time would successfully populate the demo data but failed to actually start the tour (requiring a second click).
 - **Solution**: Removed the early return inside the `if (scannedFilesList.length < 5)` block in `Sidebar.tsx` and ensured `setTourStepIndex(startStep)` and `setShowTour(true)` are called immediately after initiating the demo data injection, so the tour overlay appears instantly on the first click.
+### Fix Product Tour Auto-Launch Demo Data Injection and Cleanup
+- **Problem**: The product tour would launch successfully on first click but would fail to populate the dashboard with the demo data, leaving the view completely empty. Additionally, skipping or permanently hiding the tour did not properly remove the demo data.
+- **Solution**: Re-wired `onPopulateDemo` in `Sidebar.tsx` to properly await the top-level `handlePopulateDemo` (which calls `setHasCompletedScan(true)` so the UI correctly switches from empty state to rendering metrics). Updated `useAppTour.ts` to execute `clearDemoData` (passing `flushDemoDataOnly` from `useDemoActions`) when the user cancels or reminds later, ensuring the mock data is cleaned out and the application is left in its default empty state.

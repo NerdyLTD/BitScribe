@@ -56,6 +56,7 @@ export interface SidebarProps {
   setScannedFilesList: (val: MediaItem[]) => void;
   setCorruptFiles: (val: MediaItem[]) => void;
   setHasCompletedScan: (val: boolean) => void;
+  onPopulateDemo?: () => Promise<void>;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -103,6 +104,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   setScannedFilesList,
   setCorruptFiles,
   setHasCompletedScan,
+  onPopulateDemo,
 }) => {
   const [isPathsExpanded, setIsPathsExpanded] = React.useState(false);
   const [editingPathIdx, setEditingPathIdx] = React.useState<number | null>(null);
@@ -828,7 +830,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
             <div className="flex gap-1.5 mt-1">
               <button
-                onClick={() => {
+                onClick={async () => {
                   let startStep = 0;
                   if (activeTab === "library") startStep = 21;
                   else if (activeTab === "rules") startStep = 26;
@@ -836,20 +838,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
                   if (scannedFilesList.length < 5) {
                     localStorage.setItem("bitscribe_tour_status", JSON.stringify({ status: "active", startStep }));
-                    localStorage.setItem("bitscribe_demo_data_inserted", "true");
-                    injectDemoData().then(async () => {
-                      try {
-                        const newFiles = await getDbFiles();
-                        const cleanFiles = newFiles.filter((f: any) => f.category !== "Corrupted" && (!f.category || !f.category.toLowerCase().includes("corrupt")));
-                        const corrupt = newFiles.filter((f: any) => f.category === "Corrupted" || (f.category && f.category.toLowerCase().includes("corrupt")));
-                        setScannedFiles(cleanFiles);
-                        setScannedFilesList(cleanFiles);
-                        setCorruptFiles(corrupt);
-                        setScanLogs([`Populated demo database with ${newFiles.length} items.`]);
-                      } catch (e) {
-                        console.error("Failed to load demo data", e);
-                      }
-                    });
+                    if (onPopulateDemo) {
+                      await onPopulateDemo();
+                    }
                     setTourStepIndex(startStep);
                     setShowTour(true);
                     return;

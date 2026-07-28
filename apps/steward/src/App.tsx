@@ -228,7 +228,8 @@ export default function App() {
     scannedFilesList, 
     setShowDemoCleanupModal,
     setShowCustomColumnsMenu,
-    injectDemoData: handlePopulateDemo
+    injectDemoData: handlePopulateDemo,
+    clearDemoData: flushDemoDataOnly
   });
 
   useTourSimulation({
@@ -569,6 +570,7 @@ export default function App() {
           setScannedFilesList={setScannedFilesList}
           setCorruptFiles={setCorruptFiles}
           setHasCompletedScan={setHasCompletedScan}
+          onPopulateDemo={handlePopulateDemo}
         />
 
         {/* Right Main Content Panel */}

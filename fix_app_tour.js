@@ -1,50 +1,14 @@
 const fs = require('fs');
-const content = fs.readFileSync('apps/steward/src/App.tsx', 'utf8');
-const toReplace = `    scanPaths
-  });
-
-
-
-
-
-  useTourSimulation({`;
-const newText = `    scanPaths
-  });
-
-  const {
-    showTour, setShowTour,
-    tourStepIndex, setTourStepIndex,
-    demoMessage, setDemoMessage,
-    demoReelTarget, setDemoReelTarget,
-    demoMsgRef,
-    activeDemo, setActiveDemo,
-    isDemoPaused, setIsDemoPaused,
-    isDemoPausedRef,
-    tourMenuOpen, setTourMenuOpen,
-    tourPosition, setTourPosition,
-    isTourDragging, setIsTourDragging,
-    tourDragStart, setTourDragStart,
-    isReelEndingAnimation, setIsReelEndingAnimation,
-    handleTourMouseDown,
-    finishTour,
-    cancelTour,
-    remindLaterTour,
-    goToTourStep,
-    handleJoyrideCallback
-  } = useAppTour({
-    activeTab,
-    handleTabChange,
-    setShowMetrics,
-    setShowDiagnostic,
-    setCustomRules,
-    resetToDiscoveryPreset,
-    scannedFilesList, 
-    setShowDemoCleanupModal,
-    setShowCustomColumnsMenu,
-    injectDemoData: handlePopulateDemo
-  });
-
-  useTourSimulation({`;
-const updated = content.replace(toReplace, newText);
-fs.writeFileSync('apps/steward/src/App.tsx', updated);
-console.log("Replaced:", updated !== content);
+const content = fs.readFileSync('apps/steward/src/hooks/useAppTour.ts', 'utf8');
+const updated = content.replace(
+  "injectDemoData\n}: any) {",
+  "injectDemoData,\n  clearDemoData\n}: any) {"
+).replace(
+  "    const demoInserted = localStorage.getItem(\"bitscribe_demo_data_inserted\");\n    if (!demoInserted) {\n      await injectDemoData();\n      localStorage.setItem(\"bitscribe_demo_data_inserted\", \"true\");\n    }",
+  "    const demoInserted = localStorage.getItem(\"bitscribe_demo_data_inserted\");\n    if (demoInserted && clearDemoData) {\n      await clearDemoData();\n    }"
+).replace(
+  "    const demoInserted = localStorage.getItem(\"bitscribe_demo_data_inserted\");\n    if (!demoInserted) {\n      await injectDemoData();\n      localStorage.setItem(\"bitscribe_demo_data_inserted\", \"true\");\n    }",
+  "    const demoInserted = localStorage.getItem(\"bitscribe_demo_data_inserted\");\n    if (demoInserted && clearDemoData) {\n      await clearDemoData();\n    }"
+);
+fs.writeFileSync('apps/steward/src/hooks/useAppTour.ts', updated);
+console.log("Updated hooks/useAppTour.ts");
