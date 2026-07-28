@@ -351,6 +351,13 @@ fn load_settings() -> Result<String, String> {
 }
 
 #[tauri::command]
+fn get_data_dir() -> String {
+    let exe_path = std::env::current_exe().unwrap_or_default();
+    let data_dir = exe_path.parent().unwrap_or(std::path::Path::new("")).to_path_buf();
+    data_dir.to_string_lossy().to_string()
+}
+
+#[tauri::command]
 fn save_file(path: String, contents_b64: String) -> Result<(), String> {
     use base64::{Engine as _, engine::general_purpose::STANDARD};
     let bytes = STANDARD.decode(&contents_b64).map_err(|e| e.to_string())?;
@@ -376,13 +383,15 @@ pub fn run() {
                 conn: Mutex::new(conn),
             });
             
-            if cfg!(debug_assertions) {
-                app.handle().plugin(
-                    tauri_plugin_log::Builder::default()
-                        .level(log::LevelFilter::Info)
-                        .build(),
-                )?;
-            }
+            app.handle().plugin(
+                tauri_plugin_log::Builder::default()
+                    .targets([
+                        tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Stdout),
+                        tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Folder(data_dir.clone()))
+                    ])
+                    .level(log::LevelFilter::Info)
+                    .build(),
+            )?;
             Ok(())
         })
         .plugin(tauri_plugin_shell::init())
@@ -390,6 +399,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .invoke_handler(tauri::generate_handler![
+            get_data_dir,
             save_file,
             get_db_files,
             clear_db,

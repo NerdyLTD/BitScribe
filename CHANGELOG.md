@@ -481,3 +481,10 @@ Update changelog
 ### Critical Crash Fix: missingFmt in Dashboard
 - **Problem**: A runtime `ReferenceError: missingFmt is not defined` crashed the UI (specifically around tour slide 20-21 on the Library view) because formatting helper functions (`missingFmt`, `formatResolution`, `formatSubtitleSummary`, `formatSubtitleTechnical`) were referenced in `Dashboard.tsx` and passed to `LibraryView` but had not been explicitly defined or imported in that file.
 - **Solution**: Re-implemented these missing format helper functions directly within `Dashboard.tsx` to restore functionality and prevent the crash.
+
+### Scan Engine Restoration and Logging Update
+- **Problem**: Scans stopped functioning entirely after the dashboard monolith dismantling refactor due to `handleStartScan` being removed and undeclared in `App.tsx`. Additionally, logs were not saved persistently by the executable, and the export folder defaulted to empty.
+- **Solution**: 
+  - Restored the missing `handleStartScan`, `handlePauseScan`, `handleStopScan`, and `handleEvaluateDb` scanning logic back to `App.tsx`.
+  - Configured `tauri-plugin-log` in Rust to write logs persistently to the folder the application runs from (`TargetKind::Folder`).
+  - Added an initialization hook in `App.tsx` that queries the executable directory via a new `get_data_dir` Tauri command, creates a `Reports` folder if it doesn't exist, and sets it as the default file export directory.
