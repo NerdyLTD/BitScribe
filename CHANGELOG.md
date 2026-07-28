@@ -474,3 +474,6 @@ Update changelog
 
 ### Visual / Style Hotfix
 - **White Border Line Issue**: Resolved a visual artifact where a bright white horizontal line appeared below the Header and above the Navigation tabs. The Tailwind v4 `@source` directive in `apps/steward/src/index.css` had an incorrect relative path to `packages/ui-components`, meaning custom hex colors (e.g. `border-[#1e2333]/80`, `bg-[#0F1117]`) within those shared components were silently stripped from the CSS build. This caused standard borders to fall back to the bright `text-slate-200` color. Corrected the path to include the shared workspace (`../../../packages/ui-components/src`), restoring all intended dark mode styles.
+
+### Refactoring & Monolith Dismantling (Completed)
+- **App.tsx Clean-up**: Concluded the dismantling of the `App.tsx` monolith (down from ~2,045 lines to under 700). Extracted all inline product tour state and `react-joyride` coordinate handlers into a focused `useAppTour` hook, and relocated all top-level UI, modal, layout, and filtering states into a new `useAppState` hook. The `App` component now acts solely as a clean layout router passing context directly to the standalone `Dashboard` and `LibraryView` components.
