@@ -23,7 +23,10 @@ export function useAppTour({
 }: any) {
   const [showTour, setShowTour] = useState(() => {
     const tourStatus = localStorage.getItem("bitscribe_tour_status");
-    if (!tourStatus) return false;
+    if (!tourStatus) {
+      localStorage.setItem("bitscribe_tour_status", JSON.stringify({ status: "active", startStep: 0 }));
+      return true;
+    }
     try {
       const parsed = JSON.parse(tourStatus);
       if (parsed.status === 'active') return true;
@@ -33,6 +36,16 @@ export function useAppTour({
     } catch(e) {}
     return false;
   });
+
+  
+  useEffect(() => {
+    if (showTour) {
+      const demoInserted = localStorage.getItem("bitscribe_demo_data_inserted");
+      if (!demoInserted && injectDemoData) {
+        injectDemoData();
+      }
+    }
+  }, [showTour, injectDemoData]);
 
   const [tourStepIndex, setTourStepIndex] = useState(() => {
     try {
@@ -247,12 +260,7 @@ export function useAppTour({
   const goToTourStep = (step: number) => {
     if (step < 0 || step >= TOUR_STEPS.length) return;
 
-    if (step > 0) {
-      const demoInserted = localStorage.getItem("bitscribe_demo_data_inserted");
-      if (!demoInserted) {
-        injectDemoData();
-      }
-    }
+
     
     // Stop any active running demo/simulation when navigating to a new tour step
     setActiveDemo(null);
