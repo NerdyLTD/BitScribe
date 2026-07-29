@@ -1,6 +1,10 @@
 ## [Unreleased]
 
 ### Fixed
+- **HTML Report Export**: Removed the "All Media" category filter specifically from Metadata Audit HTML reports. Since each media category (e.g., Movies, TV Shows, Music) has distinct metadata columns, combining them into "All Media" previously forced a generic column layout (File Name, Path) that provided no meaningful metadata insight. Users can now review metadata category by category.
+
+
+### Fixed
 - **Report Export UI and Path Settings**: 
   - Prevented `exportDirectory` from defaulting to the application binary folder (e.g. `c:\Github\...` during development) so that users are prompted appropriately if they haven't explicitly set a path.
   - Corrected hardcoded Sidebar text that incorrectly stated reports were always sent to `Downloads\BitScribe Reports\`. It now dynamically reflects the selected export directory or indicates a prompt will appear.
