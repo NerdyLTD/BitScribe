@@ -33,7 +33,7 @@ export default function LogsPanel({ logs }: { logs: string[] }) {
               const content = errorLogs.length > 0 ? errorLogs.join('\n') : "No runtime application errors logged during this session.";
               const blob = new Blob([content], { type: 'text/plain' });
               try {
-                await downloadOrSaveFile('Bitscribe_error.log', blob);
+                await downloadOrSaveFile('BitScribe Error Log.txt', blob);
               } catch (e: any) {
                 console.error("Failed to export error logs", e);
                 alert("Failed to export logs: " + e.message);

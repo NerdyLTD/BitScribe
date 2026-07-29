@@ -785,7 +785,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </button>
           </div>
           <div className="text-[9px] text-slate-500 mt-2 text-center border-t border-slate-700/50 pt-2 pb-1 mx-1 italic leading-relaxed">
-            Reports were sent to Downloads\BitScribe Reports\
+            {exportDirectory ? `Reports are saved to ${exportDirectory}` : "You will be prompted for an export folder."}
           </div>
         </section>
 

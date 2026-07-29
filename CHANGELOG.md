@@ -1,6 +1,13 @@
 ## [Unreleased]
 
 ### Fixed
+- **Report Export UI and Path Settings**: 
+  - Prevented `exportDirectory` from defaulting to the application binary folder (e.g. `c:\Github\...` during development) so that users are prompted appropriately if they haven't explicitly set a path.
+  - Corrected hardcoded Sidebar text that incorrectly stated reports were always sent to `Downloads\BitScribe Reports\`. It now dynamically reflects the selected export directory or indicates a prompt will appear.
+  - Renamed the error log export filename from `Bitscribe_error.log` to `BitScribe Error Log.txt` for better OS default associations and readability.
+
+
+### Fixed
 - **FFprobe Probe Error**: Fixed a `require is not defined` error during the media probing sequence by refactoring `desktop-api` shell and window wrappers to use ES module static imports instead of CommonJS `require()`. This ensures proper Vite bundling and resolves the scan crash.
 
 

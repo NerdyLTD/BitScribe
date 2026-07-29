@@ -115,10 +115,6 @@ export default function App() {
           if (!(await exists(reportsPath))) {
             await mkdir(reportsPath);
           }
-          if (!localStorage.getItem("bitscribe_export_directory")) {
-            setExportDirectory(reportsPath);
-            localStorage.setItem("bitscribe_export_directory", reportsPath);
-          }
         } catch (e) {
           console.error("Failed to init dirs", e);
         }
