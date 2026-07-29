@@ -110,6 +110,34 @@ const formatSubtitleTechnical = (parsed?: any) => {
   return missingFmt("[MISSING]");
 };
 
+
+function getTopLevelFolderUI(filePath: string, scanPaths: { path: string; enabled: boolean }[], fallbackFolder: string): string {
+    if (!filePath || !scanPaths || scanPaths.length === 0) return fallbackFolder || "Unknown";
+    const normFile = filePath.replace(/\\/g, '/').toLowerCase();
+    
+    let matchingBase = "";
+    let originalBase = "";
+    for (const sp of scanPaths) {
+        if (!sp.enabled) continue;
+        const normBase = sp.path.replace(/\\/g, '/');
+        if (normFile.startsWith(normBase.toLowerCase())) {
+            if (normBase.length > matchingBase.length) {
+                matchingBase = normBase.toLowerCase();
+                originalBase = normBase;
+            }
+        }
+    }
+    
+    if (originalBase) {
+        let noSlash = originalBase.endsWith('/') ? originalBase.slice(0, -1) : originalBase;
+        const lastSlash = Math.max(noSlash.lastIndexOf('/'), noSlash.lastIndexOf('\\'));
+        let baseName = lastSlash !== -1 ? noSlash.substring(lastSlash + 1) : noSlash;
+        return baseName || originalBase;
+    }
+    
+    return fallbackFolder || "Unknown";
+}
+
 export default memo(function Dashboard({
   customRules,
   onRulesChange,
@@ -373,12 +401,14 @@ export default memo(function Dashboard({
       const evaluation = evaluatePlexCompatibility(item, streamingRules, isDup);
       const level = evaluation.level;
       const reason = evaluation.reason;
+      const uiTopLevelFolder = getTopLevelFolderUI(item.filePath, scanPaths, item.topLevelFolder);
+      const safeItem = { ...item, topLevelFolder: uiTopLevelFolder };
       const suggestion = evaluation.suggestion;
 
       const finalLevel = item.category === 'Corrupted' ? 'corrupted' : level;
 
       return {
-        item,
+        item: safeItem,
         isDup,
         level: finalLevel,
         evaluation: {

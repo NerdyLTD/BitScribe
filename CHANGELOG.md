@@ -1,6 +1,11 @@
 ## [Unreleased]
 
 ### Fixed
+- **Analyze Dashboard Folder Clutter**: Fixed an issue where the "Folder" toggle mode in the Metrics Dashboard would display hundreds of individual subfolders (e.g. TV show names) instead of the actual root scan paths. The UI now dynamically associates media items to their parent mapped scan paths on-the-fly, instantly cleaning up the dashboard for existing databases without requiring a rescan.
+- **Export Data Folder Logic**: Updated the core engine's `getTopLevelFolder` logic to extract the exact basename of the mapped scan path, ensuring future CSV and JSON data exports group items cleanly by the user's selected roots rather than fragmenting across hundreds of subdirectories.
+
+
+### Fixed
 - **HTML Report Export**: Removed the "All Media" category filter from Media Discovery HTML reports as its value is superseded by the "All Metrics" Dashboard filter.
 
 

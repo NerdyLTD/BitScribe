@@ -250,14 +250,12 @@ function getTopLevelFolder(filePath: string, configuredPaths?: string[]): string
         }
         
         if (matchingBase) {
-            let relativePath = normFile.substring(matchingBase.length);
-            if (relativePath.startsWith('/')) relativePath = relativePath.substring(1);
-            const parts = relativePath.split('/').filter(p => p);
-            if (parts.length > 1) {
-                return parts[0];
-            } else {
-                return "Root";
+            let noSlash = matchingBase.endsWith('/') ? matchingBase.slice(0, -1) : matchingBase;
+            let baseName = fastBasename(noSlash);
+            if (!baseName) {
+                return matchingBase;
             }
+            return baseName;
         }
     }
 
