@@ -361,7 +361,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 const lastDotIdx = lower.lastIndexOf('.');
                 const ext = lastDotIdx !== -1 ? lower.substring(lastDotIdx) : "";
                 if (allowedExtensionsSet.has(ext)) {
-                    const normPath = fileObjItem.normPath;
+                    const normPath = normalizePath(file);
                     dirFiles.push({
                         path: file, 
                         hash: fileObj.fileHash,
