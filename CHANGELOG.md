@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Fixed
+- **Scan Path Reference Error**: Fixed a critical `ReferenceError` (`fileObjItem is not defined`) that occurred during the initial directory walk phase of the scan, which caused scans to fail prematurely for folders containing media files.
+
+
 ### Optimized
 - **Scan Path Normalization (Phase 1)**: Optimized the hot path in `scanDirectories` by caching the normalized path strings (`normPath`) on the file objects during the directory walk and database load phases. This prevents redundant `normalizePath` calls (which allocate strings via regex `replace`) during the O(N) duplicate detection and database pruning loops, significantly reducing CPU overhead for large library scans.
 
