@@ -360,7 +360,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   handleTabChange("scan");
                 }
               }}
-              disabled={isScanning || scanPaths.filter((p) => p.enabled).length === 0}
+              disabled={isScanning || (scanPaths.filter((p) => p.enabled).length === 0 && scannedFilesList.length === 0)}
               className="flex-1 py-1 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-600/30 text-white rounded text-[11px] font-bold shadow transition-all flex items-center justify-center gap-1 cursor-pointer disabled:cursor-not-allowed"
               title="Start or resume scanning"
             >
@@ -415,7 +415,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   handleTabChange("scan");
                 }
               }}
-              disabled={isScanning || scanPaths.filter((p) => p.enabled).length === 0}
+              disabled={isScanning || (scanPaths.filter((p) => p.enabled).length === 0 && scannedFilesList.length === 0)}
               className="flex-[1.2] flex justify-center items-center gap-1 py-1 px-1 bg-indigo-900/30 hover:bg-indigo-800/40 disabled:bg-indigo-900/10 text-indigo-300 disabled:text-indigo-800 rounded text-[10px] font-medium border border-indigo-700/50 hover:border-indigo-500 transition-all cursor-pointer shadow-md disabled:cursor-not-allowed whitespace-nowrap"
               title="Quickly checks for new or modified files without re-scanning unchanged items"
             >

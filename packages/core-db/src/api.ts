@@ -417,18 +417,26 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
 
             const allFilesSet = new Set(allFiles.map(f => normalizePath(f.path)));
             
+            const orphanedFiles: any[] = [];
             // Find which DB files are under the active scan paths
             const dbFilesUnderActivePaths = existingDbFiles.filter(item => {
                 if (!item.filePath) return false;
                 const normFile = normalizePath(item.filePath);
                 (item as any)._normPath = normFile; // cache for next steps
-                return normPaths.some(ap => normFile.startsWith(ap.withSlash) || normFile === ap.exact);
+                const isUnderActive = normPaths.some(ap => normFile.startsWith(ap.withSlash) || normFile === ap.exact);
+                if (!isUnderActive) {
+                    orphanedFiles.push(item);
+                }
+                return isUnderActive;
             });
             
             // Ghost files: in DB under active path, but not found on disk
             const ghostFiles = dbFilesUnderActivePaths.filter(item => {
                 return !allFilesSet.has((item as any)._normPath);
             });
+            
+            // Append orphaned files so they are pruned from the DB
+            ghostFiles.push(...orphanedFiles);
             
             // New files: on disk, but not in existing DB
             const existingDbFilesSet = new Set(existingDbFiles.map(f => normalizePath(f.filePath)));

@@ -1,4 +1,9 @@
 ## [Unreleased]
+
+### Fixed
+- **Quick Refresh Button Logic**: Fixed an issue in `Sidebar.tsx` where the Quick Refresh button would incorrectly remain disabled if active scan paths were toggled off, even if valid database items existed to refresh. The button now properly evaluates `scannedFilesList.length` against the disabled state.
+- **Database File Pruning Logic**: Corrected an issue in `api.ts` where deleted files on disk were not properly pruned from the database. Refactored the path detection step to explicitly capture `orphanedFiles` that are no longer part of the active path evaluation, appending them to the ghost files array for proper deletion.
+
 ### Fixed
 - **App Startup Crash**: Fixed a ReferenceError that caused the app to render a black screen on startup. The newly extracted `useBackupRestore` and `useDemoActions` hooks were accidentally placed above the React `useState` variables they relied on (e.g., `setScanPaths`, `setExcelColumns`), causing an initialization failure. Moved the hook calls below all state declarations in `App.tsx` to correct the order.
 
