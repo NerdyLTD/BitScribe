@@ -1,6 +1,10 @@
 ## [Unreleased]
 
 ### Fixed
+- **FFprobe Probe Error**: Fixed a `require is not defined` error during the media probing sequence by refactoring `desktop-api` shell and window wrappers to use ES module static imports instead of CommonJS `require()`. This ensures proper Vite bundling and resolves the scan crash.
+
+
+### Fixed
 - **Scan Path Reference Error**: Fixed a critical `ReferenceError` (`fileObjItem is not defined`) that occurred during the initial directory walk phase of the scan, which caused scans to fail prematurely for folders containing media files.
 
 
