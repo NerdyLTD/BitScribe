@@ -121,14 +121,23 @@ export default function HelpSection({ highlightId, isTourActive, tourStepIndex, 
   }, [isOssSlideActive]);
 
   useEffect(() => {
-    if (activeDemo === null) {
+    if (activeDemo === null && tourStepIndex !== 35) {
       setOpenPanels({});
     }
-  }, [activeDemo]);
+  }, [activeDemo, tourStepIndex]);
+
+  useEffect(() => {
+    if (tourStepIndex === 35) {
+      setTimeout(() => {
+        setOpenPanels(prev => ({ ...prev, 'tutorials-main': true, 'faqs-main': true }));
+      }, 300);
+    }
+  }, [tourStepIndex]);
+
 
   // Sequential cascading highlights for Step-by-Step Tutorials
   useEffect(() => {
-    if (activeDemo === 33 && openPanels['tutorials-main'] === true) {
+    if ((activeDemo === 33 || tourStepIndex === 35) && openPanels['tutorials-main'] === true) {
       const tutorialIds = [
         'help-discovery',
         'help-streaming',
@@ -165,11 +174,11 @@ export default function HelpSection({ highlightId, isTourActive, tourStepIndex, 
     } else {
       setHighlightedTutorialId(null);
     }
-  }, [activeDemo, openPanels['tutorials-main']]);
+  }, [activeDemo, tourStepIndex, openPanels['tutorials-main']]);
 
   // Sequential cascading highlights for FAQs
   useEffect(() => {
-    if (activeDemo === 33 && openPanels['faqs-main'] === true) {
+    if ((activeDemo === 33 || tourStepIndex === 35) && openPanels['faqs-main'] === true) {
       const faqIds = [
         'faq-what-is',
         'faq-video-music',
@@ -206,7 +215,7 @@ export default function HelpSection({ highlightId, isTourActive, tourStepIndex, 
     } else {
       setHighlightedFaqId(null);
     }
-  }, [activeDemo, openPanels['faqs-main']]);
+  }, [activeDemo, tourStepIndex, openPanels['faqs-main']]);
   
   useEffect(() => {
     if (highlightId) {

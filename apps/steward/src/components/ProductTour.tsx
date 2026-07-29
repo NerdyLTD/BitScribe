@@ -331,6 +331,7 @@ export const TOUR_STEPS: Step[] = [
         <p>Configure general preferences that apply application-wide:</p>
         <ul className="list-disc pl-4 text-xs space-y-1 text-slate-700">
           <li><strong>Fix Music Grouping</strong>: Strips 'OST' tags, groups soundtracks by folder, and overrides foreign characters.</li>
+          <li><strong>Diagnostic Logging</strong>: Enable verbose debugging and error output directly into the scan log.</li>
           <li><strong>Export Directory</strong>: Set a default target folder for your exported media reports.</li>
           <li><strong>Fluid Wrap Layout</strong>: Toggle between a responsive fluid layout and a fixed 1280px container width.</li>
         </ul>
