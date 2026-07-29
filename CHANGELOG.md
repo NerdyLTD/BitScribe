@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Optimized
+- **Scan Path Normalization (Phase 1)**: Optimized the hot path in `scanDirectories` by caching the normalized path strings (`normPath`) on the file objects during the directory walk and database load phases. This prevents redundant `normalizePath` calls (which allocate strings via regex `replace`) during the O(N) duplicate detection and database pruning loops, significantly reducing CPU overhead for large library scans.
+
+
 ### Fixed
 - **Quick Refresh Button Logic**: Fixed an issue in `Sidebar.tsx` where the Quick Refresh button would incorrectly remain disabled if active scan paths were toggled off, even if valid database items existed to refresh. The button now properly evaluates `scannedFilesList.length` against the disabled state.
 - **Database File Pruning Logic**: Corrected an issue in `api.ts` where deleted files on disk were not properly pruned from the database. Refactored the path detection step to explicitly capture `orphanedFiles` that are no longer part of the active path evaluation, appending them to the ghost files array for proper deletion.

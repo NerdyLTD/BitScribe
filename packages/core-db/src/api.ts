@@ -311,12 +311,15 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
     };
 
     let existingPaths = new Set<string>();
+    let existingDbFilesCache: any[] = [];
     let existingFilesMap = new Map<string, any>();
     onLog("Loading existing database to determine cache-skip files...");
     try {
         const dbFiles = await getDbFiles();
+        existingDbFilesCache = dbFiles;
         dbFiles.forEach(f => {
             const normPath = normalizePath(f.filePath || f.id);
+            (f as any)._normPath = normPath;
             existingPaths.add(normPath);
             existingFilesMap.set(normPath, f);
         });
@@ -327,7 +330,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
     const allowedExtensions = ['.mkv', '.mp4', '.avi', '.mov', '.wmv', '.flv', '.webm', '.m4v', '.mpg', '.mpeg', '.m2ts', '.ts', '.vob', '.mxf', '.mp3', '.flac', '.m4a', '.wav', '.aac', '.ogg', '.wma', '.alac', '.m4b', '.ape', '.opus', '.mka'];
     const allowedExtensionsSet = new Set(allowedExtensions);
     
-    let allFiles: {path: string, hash: string, hasExternalSubtitles?: boolean}[] = [];
+    let allFiles: {path: string, hash: string, hasExternalSubtitles?: boolean, normPath: string}[] = [];
     
     // Walk all directories concurrently to fully utilize CPU cores and overlapping filesystem IO
     onLog(`Walking ${paths.length} director${paths.length === 1 ? 'y' : 'ies'} in parallel...`);
@@ -351,19 +354,20 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                   }));
             
             let validCount = 0;
-            const dirFiles: {path: string, hash: string, hasExternalSubtitles?: boolean}[] = [];
+            const dirFiles: {path: string, hash: string, hasExternalSubtitles?: boolean, normPath: string}[] = [];
             for (const fileObj of files) {
                 const file = fileObj.path;
                 const lower = file.toLowerCase();
                 const lastDotIdx = lower.lastIndexOf('.');
                 const ext = lastDotIdx !== -1 ? lower.substring(lastDotIdx) : "";
                 if (allowedExtensionsSet.has(ext)) {
+                    const normPath = fileObjItem.normPath;
                     dirFiles.push({
                         path: file, 
                         hash: fileObj.fileHash,
-                        hasExternalSubtitles: fileObj.hasExternalSubtitles
+                        hasExternalSubtitles: fileObj.hasExternalSubtitles,
+                        normPath: normPath
                     });
-                    const normPath = normalizePath(file);
                     // Temporarily store the physical size in the map so we can use it later
                     existingFilesMap.set(normPath + "_physical_size", fileObj.size as any);
                     validCount++;
@@ -405,7 +409,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
     if (!isResume) {
         onLog("Pruning database and detecting file moves/deletions...");
         try {
-            const existingDbFiles = await getDbFiles();
+            const existingDbFiles = existingDbFilesCache;
             
             const normPaths = paths.map(p => {
                 const normActive = normalizePath(p);
@@ -415,14 +419,13 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 };
             });
 
-            const allFilesSet = new Set(allFiles.map(f => normalizePath(f.path)));
+            const allFilesSet = new Set(allFiles.map(f => f.normPath));
             
             const orphanedFiles: any[] = [];
             // Find which DB files are under the active scan paths
             const dbFilesUnderActivePaths = existingDbFiles.filter(item => {
                 if (!item.filePath) return false;
-                const normFile = normalizePath(item.filePath);
-                (item as any)._normPath = normFile; // cache for next steps
+                const normFile = (item as any)._normPath;
                 const isUnderActive = normPaths.some(ap => normFile.startsWith(ap.withSlash) || normFile === ap.exact);
                 if (!isUnderActive) {
                     orphanedFiles.push(item);
@@ -439,9 +442,9 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
             ghostFiles.push(...orphanedFiles);
             
             // New files: on disk, but not in existing DB
-            const existingDbFilesSet = new Set(existingDbFiles.map(f => normalizePath(f.filePath)));
+            const existingDbFilesSet = new Set(existingDbFiles.map(f => (f as any)._normPath));
             const newFilesOnDisk = allFiles.filter(fileObjItem => {
-                return !existingDbFilesSet.has(normalizePath(fileObjItem.path));
+                return !existingDbFilesSet.has(fileObjItem.normPath);
             });
 
             if (ghostFiles.length > 0 || newFilesOnDisk.length > 0) {
@@ -586,7 +589,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
             const fileHash = fileObjItem.hash;
             const hasExternalSubtitles = fileObjItem.hasExternalSubtitles || false;
             let skipProbe = false;
-            const normPath = normalizePath(file);
+            const normPath = fileObjItem.normPath;
             const cachedItem = existingFilesMap.get(normPath);
             
             if (cachedItem && cachedItem.id === fileHash) {
@@ -627,7 +630,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
             onLog(`Probing (${i+1}/${allFiles.length}): ${file.substring(Math.max(0, file.length - 40))}`);
             
             if (!isTauri()) {
-                const normPath = normalizePath(file);
+                const normPath = fileObjItem.normPath;
                 const mockItem = MOCK_MEDIA_LIBRARY.find(m => normalizePath(m.filePath) === normPath);
                 if (mockItem) {
                     const isMusic = mockItem.category === 'Music' || mockItem.category === 'Music Albums' || mockItem.category === 'Soundtracks' || mockItem.category === 'Music Compilations';
