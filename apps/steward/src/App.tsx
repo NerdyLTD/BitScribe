@@ -130,6 +130,61 @@ export default function App() {
   const [exportProfile, setExportProfile] = useState<string>("Media Discovery");
   const [demoClickedSteps, setDemoClickedSteps] = useState<number[]>([]);
   
+
+  useEffect(() => {
+    let active = true;
+    const initApp = async () => {
+      try {
+        const settings = await loadSettings();
+        if (settings && Object.keys(settings).length > 0) {
+          if (settings.bitscribe_export_directory !== undefined) {
+            localStorage.setItem("bitscribe_export_directory", settings.bitscribe_export_directory);
+            setExportDirectory(settings.bitscribe_export_directory);
+          }
+          if (settings.plex_scan_paths !== undefined) {
+            localStorage.setItem("plex_scan_paths", JSON.stringify(settings.plex_scan_paths));
+            setScanPaths(settings.plex_scan_paths);
+          }
+          if (settings.plex_excel_columns !== undefined) {
+            localStorage.setItem("plex_excel_columns", JSON.stringify(settings.plex_excel_columns));
+            setExcelColumns(settings.plex_excel_columns);
+          }
+          if (settings.plex_compat_rules !== undefined) {
+            localStorage.setItem("plex_compat_rules", JSON.stringify(settings.plex_compat_rules));
+            setCustomRules(settings.plex_compat_rules);
+          }
+          if (settings.bitscribe_last_scan_duration !== undefined && settings.bitscribe_last_scan_duration !== null) {
+            localStorage.setItem("bitscribe_last_scan_duration", String(settings.bitscribe_last_scan_duration));
+            setLastScanDuration(settings.bitscribe_last_scan_duration);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to load settings:", e);
+      }
+
+      try {
+        const files = await getDbFiles();
+        if (active && files && files.length > 0) {
+          const cleanFiles = files.filter((f: any) => f.category !== "Corrupted" && (!f.category || !f.category.toLowerCase().includes("corrupt")));
+          const corrupt = files.filter((f: any) => f.category === "Corrupted" || (f.category && f.category.toLowerCase().includes("corrupt")));
+          setScannedFiles(cleanFiles);
+          setScannedFilesList(cleanFiles);
+          setCorruptFiles(corrupt);
+          setScanLogs([`Restored ${files.length} library items from portable SQLite database.`]);
+          
+          if (localStorage.getItem("bitscribe_scan_in_progress") === "true") {
+            setNotification({ type: 'warning', message: "Scan was unexpectedly interrupted. Click Resume to finish." });
+            setScanLogs(prev => ["Scan was unexpectedly interrupted. Click Resume to finish.", ...prev]);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to restore db files:", e);
+      }
+    };
+    initApp();
+    return () => { active = false; };
+  }, []);
+
   const customColumnsMenuRef = useRef<HTMLDivElement>(null);
 
   const handleBrowseFolder = async () => {

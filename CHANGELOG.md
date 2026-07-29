@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Fixed
+- **App Initialization Regression**: Restored the missing `initApp` lifecycle hook in `App.tsx` that was inadvertently omitted during a recent UI refactor. The application now correctly reloads saved scan paths, user preferences, and the pre-existing SQLite database contents immediately on launch, instead of presenting an empty zero-item state until manually refreshed.
+
+
 ### Optimized
 - **Scan Path Normalization (Phase 2)**: Optimized the top-level folder resolution and duplicate detection logic. Abstracted array splits and regex replacements out of the O(N) duplicate mapping loops by implementing a fast `fastBasename` helper. Added memoization (`_topLevelPathCache`) to `getTopLevelFolder` to prevent redundant lowercasing and regex replacement operations on configured paths during file traversal, significantly decreasing CPU memory allocation during large scans.
 
