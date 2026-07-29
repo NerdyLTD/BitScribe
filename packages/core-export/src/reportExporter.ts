@@ -1196,7 +1196,7 @@ export async function exportMediaLibraryToHTML(
       return a.localeCompare(b);
     });
     
-    if (!isMetadata) orderedCats.unshift("All Media");
+    if (!isMetadata && !isDiscovery) orderedCats.unshift("All Media");
     if (orderedCats.length > 0) {
       activeCategory = orderedCats[0];
       applyCategoryColumns(activeCategory);

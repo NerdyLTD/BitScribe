@@ -1,6 +1,10 @@
 ## [Unreleased]
 
 ### Fixed
+- **HTML Report Export**: Removed the "All Media" category filter from Media Discovery HTML reports as its value is superseded by the "All Metrics" Dashboard filter.
+
+
+### Fixed
 - **App Initialization Regression**: Restored the missing `initApp` lifecycle hook in `App.tsx` that was inadvertently omitted during a recent UI refactor. The application now correctly reloads saved scan paths, user preferences, and the pre-existing SQLite database contents immediately on launch, instead of presenting an empty zero-item state until manually refreshed.
 
 
