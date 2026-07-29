@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Optimized
+- **Scan Path Normalization (Phase 2)**: Optimized the top-level folder resolution and duplicate detection logic. Abstracted array splits and regex replacements out of the O(N) duplicate mapping loops by implementing a fast `fastBasename` helper. Added memoization (`_topLevelPathCache`) to `getTopLevelFolder` to prevent redundant lowercasing and regex replacement operations on configured paths during file traversal, significantly decreasing CPU memory allocation during large scans.
+
+
 ### Fixed
 - **HTML Report Export**: Removed the "All Media" category filter specifically from Metadata Audit HTML reports. Since each media category (e.g., Movies, TV Shows, Music) has distinct metadata columns, combining them into "All Media" previously forced a generic column layout (File Name, Path) that provided no meaningful metadata insight. Users can now review metadata category by category.
 
