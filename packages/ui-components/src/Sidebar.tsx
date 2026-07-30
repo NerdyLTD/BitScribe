@@ -673,7 +673,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     filteredItems = filterItemsForReport(filteredItems, profileRules);
                   }
 
-                  if (filteredItems.length === 0) return { success: 0, fail: 0 };
+                  // Removed early return so empty reports can be exported to show 0 anomalies
 
                   let jsonCsvItems = filteredItems.filter((item) => item.category !== "Unrecognized" && item.topLevelFolder !== "Unrecognized");
 
