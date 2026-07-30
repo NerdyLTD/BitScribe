@@ -1,4 +1,5 @@
 ## [Unreleased]
+- **Apple Silicon FFprobe Enforcement**: Replaced the Intel (x86_64) `ffprobe` sidecar binary for macOS with the Apple Silicon (`arm64`) binary to completely eliminate the Intel Mac version and prevent "Bad CPU type" errors when running under Rosetta.
 - **macOS Title Bar Fix**: Changed the `productName` in `tauri.conf.json` from `BitScribeSteward` to `BitScribe Steward` to correct the title displayed in the macOS application menu and title bar.
 - **Scan Duration Persistence**: Fixed an issue where the duration of a completed scan was not being synchronized to `localStorage`. This caused the dashboard to display the duration of an older scan (or null) upon restarting the app instead of the most recently completed scan duration.
 - **Apple Silicon FFprobe Fix**: Replaced the bundled macOS ffprobe sidecar binary with a proper native `arm64` executable. Previously, the bundled aarch64 binary was incorrectly compiled as an Intel (x86_64) executable, causing "Bad CPU type in executable (os error 86)" errors on Apple Silicon Macs without Rosetta installed.
