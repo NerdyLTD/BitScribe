@@ -1,4 +1,7 @@
 ## [Unreleased]
+### Fixed
+- **Library View Layout & Scrolling**: Fixed an issue where the file registry table failed to scroll vertically by properly passing `flex-1` and `min-h-0` down through the Dashboard components and setting the table header to `sticky`.
+
 
 ### Optimized
 - **Dashboard Global Evaluation Cache (Phase 3)**: Extracted Plex rule evaluation and metadata regex parsing out of React `useMemo` and into persistent global Maps (`_globalEvalCache`, `_globalMetadataCache`). By caching results keyed strictly by file ID and rule hashes, we bypass the need to re-evaluate 25,000+ files during active scanning updates or tab switching, effectively reducing CPU rendering lag to zero for previously parsed items.
