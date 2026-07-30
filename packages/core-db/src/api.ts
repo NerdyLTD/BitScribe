@@ -316,6 +316,19 @@ function getTrackLanguage(stream: any): string {
 export async function scanDirectories(paths: string[], rules: any, onStart: (total: number) => void, onLog: (msg: string) => void, onProgress: (prog: any) => void, isResume: boolean = false, isQuickRefresh: boolean = false, signal?: AbortSignal) {
     onLog("Initializing scan...");
     
+    if (isTauri()) {
+        onLog("Validating native ffprobe execution...");
+        try {
+            const output = await Command.sidecar('bin/ffprobe', ['-version']).execute();
+            if (output.code !== 0) {
+                throw new Error(`Execution returned code ${output.code}. Stderr: ${output.stderr}`);
+            }
+        } catch (e: any) {
+            const errMsg = e.message || String(e);
+            throw new Error(`CRITICAL NATIVE COMPATIBILITY ERROR:\nThe video parsing engine (ffprobe) is blocked or incompatible with your operating system.\n\nOn macOS, this is almost always caused by Apple's Gatekeeper blocking bundled sidecar binaries.\n\nTo fix this, please open your Mac Terminal and run the following command to allow the app:\nxattr -rc /Applications/BitScribe.app\n\n(If you placed the app in a different folder, replace /Applications/BitScribe.app with the correct path).\n\nTechnical Details: ${errMsg}`);
+        }
+    }
+    
     // ITEM 1: Centralized cross-platform path normalization.
     // Handles both Windows backslashes and Unix forward slashes gracefully to prevent file mismatches.
     const normalizePath = (pStr: string) => {
