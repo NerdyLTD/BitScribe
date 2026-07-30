@@ -316,16 +316,41 @@ function getTrackLanguage(stream: any): string {
 export async function scanDirectories(paths: string[], rules: any, onStart: (total: number) => void, onLog: (msg: string) => void, onProgress: (prog: any) => void, isResume: boolean = false, isQuickRefresh: boolean = false, signal?: AbortSignal) {
     onLog("Initializing scan...");
     
+    let isMac = false;
+    let macFfprobePath = "";
     if (isTauri()) {
-        onLog("Validating native ffprobe execution...");
         try {
-            const output = await Command.sidecar('bin/ffprobe', ['-version']).execute();
-            if (output.code !== 0) {
-                throw new Error(`Execution returned code ${output.code}. Stderr: ${output.stderr}`);
+            const diag = await invoke("get_diagnostic") as any;
+            isMac = diag.platform === 'macos';
+        } catch (e) {}
+        
+        if (isMac) {
+            onLog("Extracting bundled Mac ffprobe to bypass Gatekeeper...");
+            try {
+                macFfprobePath = await invoke("setup_mac_ffprobe") as string;
+                onLog("Mac ffprobe extracted to: " + macFfprobePath);
+            } catch (e: any) {
+                const errMsg = e.message || String(e);
+                throw new Error("Failed to extract Mac ffprobe: " + errMsg);
             }
-        } catch (e: any) {
-            const errMsg = e.message || String(e);
-            throw new Error(`CRITICAL NATIVE COMPATIBILITY ERROR:\nThe video parsing engine (ffprobe) is blocked or incompatible with your operating system.\n\nOn macOS, this is almost always caused by Apple's Gatekeeper blocking bundled sidecar binaries.\n\nTo fix this, please open your Mac Terminal and run the following command to allow the app:\nxattr -rc /Applications/BitScribe.app\n\n(If you placed the app in a different folder, replace /Applications/BitScribe.app with the correct path).\n\nTechnical Details: ${errMsg}`);
+            onLog("Validating extracted native ffprobe execution...");
+            try {
+                await invoke("run_mac_ffprobe", { binPath: macFfprobePath, args: ['-version'] });
+            } catch (e: any) {
+                const errMsg = e.message || String(e);
+                throw new Error(`CRITICAL NATIVE COMPATIBILITY ERROR:\nThe video parsing engine (ffprobe) is blocked or incompatible with your operating system.\n\nTechnical Details: ${errMsg}`);
+            }
+        } else {
+            onLog("Validating native ffprobe execution...");
+            try {
+                const output = await Command.sidecar('bin/ffprobe', ['-version']).execute();
+                if (output.code !== 0) {
+                    throw new Error(`Execution returned code ${output.code}. Stderr: ${output.stderr}`);
+                }
+            } catch (e: any) {
+                const errMsg = e.message || String(e);
+                throw new Error(`CRITICAL NATIVE COMPATIBILITY ERROR:\nThe video parsing engine (ffprobe) is blocked or incompatible with your operating system.\n\nTechnical Details: ${errMsg}`);
+            }
         }
     }
     
@@ -764,7 +789,17 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 }
                 ffprobeArgs.push('-analyzeduration', '500000', '-probesize', '500000', file);
 
-                const probePromise = Command.sidecar('bin/ffprobe', ffprobeArgs).execute();
+                let probePromise: Promise<{code: number, stdout: string, stderr: string}>;
+                if (isTauri() && isMac) {
+                    probePromise = invoke("run_mac_ffprobe", { binPath: macFfprobePath, args: ffprobeArgs }).then((stdout: any) => {
+                        return { code: 0, stdout: String(stdout), stderr: "" };
+                        return { code: 0, stdout, stderr: "" };
+                    }).catch(err => {
+                        throw new Error(`ffprobe returned non-zero code: ${err}`);
+                    });
+                } else {
+                    probePromise = Command.sidecar('bin/ffprobe', ffprobeArgs).execute() as Promise<{code: number, stdout: string, stderr: string}>;
+                }
 
                 let timeoutId: any;
                 const timeoutPromise = new Promise<never>((_, reject) => {

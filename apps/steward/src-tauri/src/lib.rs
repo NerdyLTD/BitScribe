@@ -370,6 +370,82 @@ fn save_file(path: String, contents_b64: String) -> Result<(), String> {
     std::fs::write(path, bytes).map_err(|e| e.to_string())
 }
 
+
+#[tauri::command]
+fn setup_mac_ffprobe(app: tauri::AppHandle) -> Result<String, String> {
+    if std::env::consts::OS != "macos" {
+        return Ok("Not macOS".to_string());
+    }
+
+    let resource_path = app
+        .path()
+        .resolve("resources/mac_ffprobe.tar.gz", tauri::path::BaseDirectory::Resource)
+        .map_err(|e| e.to_string())?;
+
+    let app_data_dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| e.to_string())?;
+
+    std::fs::create_dir_all(&app_data_dir).map_err(|e| e.to_string())?;
+
+    let dest_bin_name = if std::env::consts::ARCH == "aarch64" {
+        "ffprobe-aarch64-apple-darwin"
+    } else {
+        "ffprobe-x86_64-apple-darwin"
+    };
+
+    let target_bin = app_data_dir.join(dest_bin_name);
+    
+    if target_bin.exists() {
+        return Ok(target_bin.to_string_lossy().to_string());
+    }
+
+    let output = std::process::Command::new("tar")
+        .arg("-xzf")
+        .arg(&resource_path)
+        .arg("-C")
+        .arg(&app_data_dir)
+        .output()
+        .map_err(|e| format!("Failed to execute tar: {}", e))?;
+
+    if !output.status.success() {
+        return Err(format!("Tar extraction failed: {}", String::from_utf8_lossy(&output.stderr)));
+    }
+
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        if let Ok(mut perms) = std::fs::metadata(&target_bin).map(|m| m.permissions()) {
+            perms.set_mode(0o755);
+            let _ = std::fs::set_permissions(&target_bin, perms);
+        }
+    }
+
+    let _ = std::process::Command::new("xattr")
+        .arg("-d")
+        .arg("com.apple.quarantine")
+        .arg(&target_bin)
+        .output();
+
+    Ok(target_bin.to_string_lossy().to_string())
+}
+
+#[tauri::command]
+async fn run_mac_ffprobe(bin_path: String, args: Vec<String>) -> Result<String, String> {
+    let output = tokio::process::Command::new(bin_path)
+        .args(&args)
+        .output()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if !output.status.success() {
+        return Err(String::from_utf8_lossy(&output.stderr).to_string());
+    }
+
+    Ok(String::from_utf8_lossy(&output.stdout).to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let exe_path = std::env::current_exe().unwrap_or_default();
@@ -414,6 +490,8 @@ pub fn run() {
             clear_db,
             save_db_files,
             get_diagnostic,
+            setup_mac_ffprobe,
+            run_mac_ffprobe,
             walk_dir,
             save_settings,
             load_settings,
