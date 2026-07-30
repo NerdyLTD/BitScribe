@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export function useScanState() {
   const [isScanning, setIsScanning] = useState(false);
@@ -12,6 +12,12 @@ export function useScanState() {
     const saved = localStorage.getItem("bitscribe_last_scan_duration");
     return saved ? Number(saved) : null;
   });
+
+  useEffect(() => {
+    if (lastScanDuration !== null) {
+      localStorage.setItem("bitscribe_last_scan_duration", String(lastScanDuration));
+    }
+  }, [lastScanDuration]);
   
   const [scanLogs, setScanLogs] = useState<string[]>(() => {
     const saved = localStorage.getItem("bitscribe_scan_logs");
