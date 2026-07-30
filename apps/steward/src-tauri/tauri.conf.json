@@ -1,6 +1,6 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "BitScribeSteward",
+  "productName": "BitScribe Steward",
   "version": "1.4.8",
   "identifier": "com.bitscribe.steward",
   "build": {
