@@ -1,4 +1,7 @@
 ## [Unreleased]
+- **Library Index Count Variance**: Fixed an issue where the top header's 'items indexed' count did not match the Dashboard's Library Overview count because corrupted files were incorrectly excluded from the global header total.
+- **Mac Scanning UI Freeze**: Resolved a severe UI thread lockup on macOS by converting the core Tauri Rust backend file system commands (`walk_dir`, `get_db_files`, `save_db_files`) to asynchronous operations. This prevents the Mac UI from spinning a rainbow pinwheel while indexing tens of thousands of files across the IPC bridge.
+
 ### Fixed
 - **Library View Layout & Scrolling**: Fixed an issue where the file registry table failed to scroll vertically by properly passing `flex-1` and `min-h-0` down through the Dashboard components and setting the table header to `sticky`.
 

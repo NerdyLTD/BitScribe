@@ -441,7 +441,7 @@ export default function App() {
     customRules.useAnomalyScan ? "Quality Audit" : 
     customRules.useModernPreset ? "Stream Audit" : "Media Discovery";
 
-  const total = scannedFilesList.length;
+  const total = scannedFilesList.length + corruptFiles.length;
 
   const MODE_DESCRIPTIONS = {
     "Stream Audit": "Audits compatibility for legacy + modern players.",

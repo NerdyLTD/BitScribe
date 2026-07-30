@@ -13,7 +13,7 @@ struct DbState {
 }
 
 #[tauri::command]
-fn get_db_files(state: State<'_, DbState>) -> Result<Vec<ScannedFile>, String> {
+async fn get_db_files(state: State<'_, DbState>) -> Result<Vec<ScannedFile>, String> {
     let conn = state.conn.lock().unwrap();
     let mut stmt = conn.prepare("SELECT \
         id, filename, filePath, category, container, sizeGB, durationMins, year, \
@@ -86,7 +86,7 @@ fn clear_db(state: State<'_, DbState>) -> Result<(), String> {
 }
 
 #[tauri::command]
-fn delete_db_files(state: State<'_, DbState>, ids: Vec<String>) -> Result<(), String> {
+async fn delete_db_files(state: State<'_, DbState>, ids: Vec<String>) -> Result<(), String> {
     let mut conn = state.conn.lock().unwrap();
     let tx = conn.transaction().map_err(|e| e.to_string())?;
     
@@ -99,7 +99,7 @@ fn delete_db_files(state: State<'_, DbState>, ids: Vec<String>) -> Result<(), St
 }
 
 #[tauri::command]
-fn save_db_files(state: State<'_, DbState>, files: Vec<ScannedFile>) -> Result<(), String> {
+async fn save_db_files(state: State<'_, DbState>, files: Vec<ScannedFile>) -> Result<(), String> {
     let mut conn = state.conn.lock().unwrap();
     let tx = conn.transaction().map_err(|e| e.to_string())?;
     
@@ -164,7 +164,7 @@ struct FileEntry {
 }
 
 #[tauri::command]
-fn walk_dir(path: String) -> Result<Vec<FileEntry>, String> {
+async fn walk_dir(path: String) -> Result<Vec<FileEntry>, String> {
     use std::collections::HashMap;
     use std::path::PathBuf;
 
