@@ -131,6 +131,21 @@ export default function App() {
   const [demoClickedSteps, setDemoClickedSteps] = useState<number[]>([]);
   
 
+
+  useEffect(() => {
+    localStorage.setItem("bitscribe_export_directory", exportDirectory);
+    localStorage.setItem("plex_scan_paths", JSON.stringify(scanPaths));
+    localStorage.setItem("plex_excel_columns", JSON.stringify(excelColumns));
+    localStorage.setItem("plex_compat_rules", JSON.stringify(customRules));
+    
+    saveSettings({
+      bitscribe_export_directory: exportDirectory,
+      plex_scan_paths: scanPaths,
+      plex_excel_columns: excelColumns,
+      plex_compat_rules: customRules,
+    }).catch(e => console.error("Failed to sync settings to Tauri", e));
+  }, [exportDirectory, scanPaths, excelColumns, customRules]);
+
   useEffect(() => {
     let active = true;
     const initApp = async () => {

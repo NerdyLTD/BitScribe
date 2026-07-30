@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { saveSettings } from '@bitscribe/core-db';
 
 export function useScanState() {
   const [isScanning, setIsScanning] = useState(false);
@@ -16,6 +17,7 @@ export function useScanState() {
   useEffect(() => {
     if (lastScanDuration !== null) {
       localStorage.setItem("bitscribe_last_scan_duration", String(lastScanDuration));
+      saveSettings({ bitscribe_last_scan_duration: lastScanDuration }).catch(console.error);
     }
   }, [lastScanDuration]);
   

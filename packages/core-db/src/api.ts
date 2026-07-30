@@ -1131,12 +1131,24 @@ export async function injectDemoData() {
 export async function saveSettings(settings: Record<string, any>): Promise<void> {
     if (!isTauri()) {
         try {
-            localStorage.setItem("bitscribe_web_settings", JSON.stringify(settings));
+            let current = {};
+            try {
+                const val = localStorage.getItem("bitscribe_web_settings");
+                if (val) current = JSON.parse(val);
+            } catch (e) {}
+            const merged = { ...current, ...settings };
+            localStorage.setItem("bitscribe_web_settings", JSON.stringify(merged));
         } catch (e) {}
         return;
     }
     try {
-        await invoke("save_settings", { settings: JSON.stringify(settings, null, 2) });
+        let current = {};
+        try {
+            const res = (await invoke("load_settings")) as string;
+            if (res) current = JSON.parse(res);
+        } catch (e) {}
+        const merged = { ...current, ...settings };
+        await invoke("save_settings", { settings: JSON.stringify(merged, null, 2) });
     } catch (e) {
         console.error("Failed to save settings via Tauri", e);
     }
