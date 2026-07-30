@@ -22,7 +22,17 @@ import { MOCK_MEDIA_LIBRARY } from "./data/mockMediaData";
 
 export async function getDbFiles(): Promise<MediaItem[]> {
     if (!isTauri()) return _mockDb;
-    return (await invoke("get_db_files")) as MediaItem[];
+    const CHUNK_SIZE = 5000;
+    let allFiles: MediaItem[] = [];
+    let offset = 0;
+    while (true) {
+        const chunk = (await invoke("get_db_files", { limit: CHUNK_SIZE, offset })) as MediaItem[];
+        if (!chunk || chunk.length === 0) break;
+        allFiles = allFiles.concat(chunk);
+        offset += CHUNK_SIZE;
+        if (chunk.length < CHUNK_SIZE) break;
+    }
+    return allFiles;
 }
 
 export async function clearDb(): Promise<void> {

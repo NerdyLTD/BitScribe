@@ -466,8 +466,13 @@ export default memo(function Dashboard({
     });
   }, [allCurrentFiles, customRules, duplicatesMap, scanPaths]);
 
-  const filteredFilesData = useMemo(() => {
-    const lowercaseQuery = deferredSearchQuery.toLowerCase().trim();
+  const [filteredFilesData, setFilteredFilesData] = useState<any[]>([]);
+  const [isFiltering, setIsFiltering] = useState(false);
+
+  useEffect(() => {
+    setIsFiltering(true);
+    const timeoutId = setTimeout(() => {
+      const lowercaseQuery = deferredSearchQuery.toLowerCase().trim();
     const categoriesSetArr = new Set(selectedCategories);
 
     const filtered = evaluatedFiles.filter(({ item, level }) => {
@@ -626,8 +631,11 @@ export default memo(function Dashboard({
       });
     }
 
-    return filtered;
-  }, [evaluatedFiles, deferredSearchQuery, selectedCategories, selectedCompatibility, sortColumn, sortDirection, customRules]);
+    setFilteredFilesData(filtered);
+    setIsFiltering(false);
+    }, 0);
+    return () => clearTimeout(timeoutId);
+  }, [evaluatedFiles, deferredSearchQuery, selectedCategories, selectedCompatibility, sortColumn, sortDirection, customRules, parsedMetadataMap]);
 
   const filteredFiles = useMemo(() => {
     return filteredFilesData.map(d => d.item);

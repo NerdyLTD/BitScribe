@@ -13,15 +13,21 @@ struct DbState {
 }
 
 #[tauri::command]
-async fn get_db_files(state: State<'_, DbState>) -> Result<Vec<ScannedFile>, String> {
+async fn get_db_files(state: State<'_, DbState>, limit: Option<u32>, offset: Option<u32>) -> Result<Vec<ScannedFile>, String> {
     let conn = state.conn.lock().unwrap();
-    let mut stmt = conn.prepare("SELECT \
+    let mut query = "SELECT \
         id, filename, filePath, category, container, sizeGB, durationMins, year, \
         videoCodec, videoResolution, videoBitrateMbps, audioTracks, subtitleTracks, tags, audioBitrate, isCorrupted, errorMessage, hasEmbeddedPoster, bitrateAnomaly, bitrateAnomalyReason, topLevelFolder, \
         streamFriendlyLevel, streamFriendlyReason, streamFriendlySuggestion, streamFriendlyEvaluated, \
         videoBitDepth, audioSampleRate, chapterCount, rawAudioCodec, physicalAudioChannels, matchedOnlineId, fileUuid, hasExternalSubtitles, embeddedSubtitleLanguages, \
         author, narrator, publisher, bookSeries, seriesIndex, isbn, pageCount, videoFrameRate \
-        FROM scanned_files").map_err(|e| e.to_string())?;
+        FROM scanned_files".to_string();
+        
+    if let (Some(l), Some(o)) = (limit, offset) {
+        query.push_str(&format!(" LIMIT {} OFFSET {}", l, o));
+    }
+    
+    let mut stmt = conn.prepare(&query).map_err(|e| e.to_string())?;
     
     let file_iter = stmt.query_map([], |row| {
         Ok(ScannedFile {

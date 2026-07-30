@@ -356,7 +356,23 @@ export function getDuplicatePairRows(items: MediaItem[], rules: RuleCriteria): D
   }
 
   if (isMusicActive) {
-    const musicItems = items.filter(it => isMusicCategory(it.category) && !isPlexThemeMusic(it, items));
+    const nonMusicDirs = new Set<string>();
+    for (const other of items) {
+      if (other.category !== "Corrupted" && other.category !== "Static" && !isMusicCategory(other.category)) {
+        const s = Math.max(other.filePath.lastIndexOf("/"), other.filePath.lastIndexOf("\\"));
+        if (s !== -1) {
+          nonMusicDirs.add(other.filePath.substring(0, s).toLowerCase());
+        }
+      }
+    }
+    const isThemeMusic = (item: MediaItem) => {
+      if (item.filename.toLowerCase() !== "theme.mp3") return false;
+      const s = Math.max(item.filePath.lastIndexOf("/"), item.filePath.lastIndexOf("\\"));
+      if (s === -1) return false;
+      return nonMusicDirs.has(item.filePath.substring(0, s).toLowerCase());
+    };
+
+    const musicItems = items.filter(it => isMusicCategory(it.category) && !isThemeMusic(it));
     const musicGroups = new Map<string, MediaItem[]>();
 
     musicItems.forEach(item => {
