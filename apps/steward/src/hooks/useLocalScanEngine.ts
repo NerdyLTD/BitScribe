@@ -241,7 +241,7 @@ export function useLocalScanEngine({
           setScanLogs([...logsBuffer].slice(0, 5000));
           lastLogUpdateTime = now;
         }
-        if (force || now - lastFileUpdateTime > 32) {
+        if (force || now - lastFileUpdateTime > 200) {
           setCurrentScanFile(currentFile);
           lastFileUpdateTime = now;
         }

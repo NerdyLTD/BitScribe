@@ -28,6 +28,10 @@ export function cleanAlbumTitle(title: string): string {
 
 const fallbackCache = new WeakMap<any, { fallbackArtist: string, fallbackAlbum: string }>();
 
+const displayArtistCache = new WeakMap<any, string>();
+const displayAlbumCache = new WeakMap<any, string>();
+const displaySongTitleCache = new WeakMap<any, string>();
+
 export const getMusicFallback = (item: any) => {
   if (fallbackCache.has(item)) return fallbackCache.get(item)!;
 
@@ -89,6 +93,8 @@ export const getMusicFallback = (item: any) => {
 };
 
 export const getDisplayArtist = (item: any, rules?: any) => {
+  if (displayArtistCache.has(item)) return displayArtistCache.get(item)!;
+
   const { fallbackArtist, fallbackAlbum } = getMusicFallback(item);
   let artist = item.tags?.album_artist || item.tags?.ALBUM_ARTIST || item.tags?.artist || item.tags?.ARTIST;
   
@@ -108,10 +114,14 @@ export const getDisplayArtist = (item: any, rules?: any) => {
   }
   
   if (!artist || String(artist).toLowerCase() === '<unknown>') artist = fallbackArtist || 'Unknown Artist';
-  return String(artist || '').trim();
+  const result = String(artist || '').trim();
+  displayArtistCache.set(item, result);
+  return result;
 };
 
 export const getDisplayAlbum = (item: any, rules?: any) => {
+  if (displayAlbumCache.has(item)) return displayAlbumCache.get(item)!;
+
   const { fallbackAlbum } = getMusicFallback(item);
   let album = item.tags?.album || item.tags?.ALBUM;
   if (album) {
@@ -136,8 +146,8 @@ export const getDisplayAlbum = (item: any, rules?: any) => {
     if (album && item.category === 'Soundtracks') {
       let isDisc = '';
       const discMatch = String(album).match(/\s*\(Disc\s*\d+\)$/i);
-      if (discMatch) {
-         isDisc = discMatch[0];
+      if (discMatch) { 
+         isDisc = discMatch[0]; 
          album = String(album).replace(/\s*\(Disc\s*\d+\)$/i, '');
       }
       album = String(album).replace(/^(?:o\.?s\.?t\.?|soundtrack|original soundtrack)\s*[-_\])]*\s*|\s*[-_\[(]*\s*(?:o\.?s\.?t\.?|soundtrack|original soundtrack|original motion picture soundtrack)\s*[\])]*\s*$/gi, '').trim();
@@ -160,10 +170,15 @@ export const getDisplayAlbum = (item: any, rules?: any) => {
   if (disc && typeof disc === 'string' && disc !== '1' && disc !== '1/1' && !String(album).match(/\bdisc\b/i)) {
     album = `${album} (Disc ${disc})`;
   }
-  return String(album || '').trim();
+  
+  const result = String(album || '').trim();
+  displayAlbumCache.set(item, result);
+  return result;
 };
 
 export const getDisplaySongTitle = (item: any, rules?: any) => {
+  if (displaySongTitleCache.has(item)) return displaySongTitleCache.get(item)!;
+
   let title = item.tags?.title || item.tags?.TITLE;
   const fileNameNoExt = item.filename ? item.filename.replace(/\.[^/.]+$/, '') : '';
   
@@ -178,6 +193,9 @@ export const getDisplaySongTitle = (item: any, rules?: any) => {
   if (!title || String(title).toLowerCase() === '<unknown>') {
     title = fileNameNoExt;
   }
-  return String(title).trim();
+  
+  const result = String(title).trim();
+  displaySongTitleCache.set(item, result);
+  return result;
 };
 

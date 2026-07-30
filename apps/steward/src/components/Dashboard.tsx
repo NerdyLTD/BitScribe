@@ -1284,9 +1284,20 @@ export default memo(function Dashboard({
   
   const defaultMetricsOptions = ["Movies", "TV Shows", "Documentaries", "Plays", "Shorts", "Specials", "Music Videos", "Music", "Video Only", "Music Only"];
 
-const handleCategoryToggle = (cat: string) => {
+  const handleCategoryToggle = (cat: string) => {
+    let current = [...selectedCategories];
+    if (current.includes(cat)) {
+      current = current.filter(c => c !== cat);
+    } else {
+      const selectedGroup = getCategoryGroup(cat);
+      current = current.filter(c => getCategoryGroup(c) === selectedGroup);
+      current.push(cat);
+    }
+    if (current.length === 0 && categoriesSet.length > 0) {
+      current = [categoriesSet[0]];
+    }
     startTransition(() => {
-      setSelectedCategories([cat]);
+      setSelectedCategories(current);
     });
   };
 
