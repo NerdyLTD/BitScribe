@@ -1,4 +1,5 @@
 ## [Unreleased]
+- **Gatekeeper Bypass for macOS**: Implemented dynamic extraction of `ffprobe` from a zipped resource at runtime for macOS users. This bypasses Apple Gatekeeper's quarantine block on bundled sidecar binaries by using the OS's native `tar` to extract the executable to the application's AppData directory and running it from there instead.
 - **Mac Directory Skipping**: Added `__MACOSX` to the directory exclusion list in the native `walk_dir` function to ensure hidden macOS resource fork directories are not parsed as media folders, further normalizing file counts between platforms.
 
 - **macOS Empty Library & Missing Exports**: Fixed a critical issue where macOS Gatekeeper or `dyld` linking errors would cause `ffprobe` to fail instantly for all scanned files, miscategorizing the entire library as "Corrupted". The system now creates graceful fallback media items using filename-inferred categories so that files still populate the dashboard and export reports correctly even when native video probing is blocked.
