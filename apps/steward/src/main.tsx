@@ -67,7 +67,24 @@ import './index.css';
       const logFile = await join(exportDir, `${safeTs}_debuglog.txt`);
       const timestamp = now.toISOString();
       const APP_VERSION = "1.4.8"; // Hardcoded for this script context
-      const logContent = `[${timestamp}] App launched successfully. \nVersion: ${APP_VERSION}\n`;
+      
+      const logContent = `[${timestamp}] App launched successfully. 
+Version: ${APP_VERSION}
+
+--- BITScribe Architecture & Reference Dump ---
+Packages: core-db, core-eval, core-export, core-types, desktop-api, ui-components
+Main Entrypoints:
+  - Scan: packages/core-db/src/api.ts (scanDirectories)
+  - Desktop FS/DB: apps/steward/src-tauri/src/lib.rs (walk_dir, execute_sqlite)
+  - Exports: packages/core-export/src/reportExporter.ts & excelExporter.ts
+Database Schema (SQLite 'scanned_files'):
+  id TEXT PRIMARY KEY, filename TEXT, filePath TEXT, category TEXT, container TEXT, sizeGB REAL, durationMins REAL, year INTEGER, videoCodec TEXT, videoResolution TEXT, videoBitrateMbps REAL, audioTracks TEXT, subtitleTracks TEXT, tags TEXT, audioBitrate REAL, isCorrupted INTEGER, errorMessage TEXT, hasEmbeddedPoster INTEGER, bitrateAnomaly INTEGER, bitrateAnomalyReason TEXT, topLevelFolder TEXT, streamFriendlyLevel TEXT, streamFriendlyReason TEXT, streamFriendlySuggestion TEXT, streamFriendlyEvaluated INTEGER, videoBitDepth TEXT, audioSampleRate INTEGER, chapterCount INTEGER, rawAudioCodec TEXT, physicalAudioChannels INTEGER, matchedOnlineId TEXT, fileUuid TEXT, hasExternalSubtitles INTEGER, embeddedSubtitleLanguages TEXT, author TEXT, narrator TEXT, publisher TEXT, bookSeries TEXT, seriesIndex REAL, isbn TEXT, pageCount INTEGER, videoFrameRate REAL
+Indexes:
+  - PRIMARY KEY (id)
+  - idx_scanned_files_filePath ON scanned_files(filePath)
+-----------------------------------------------
+`;
+
       
       await writeTextFile(logFile, logContent);
       console.info("Diagnostic log started at: " + logFile);

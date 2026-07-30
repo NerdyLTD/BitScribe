@@ -315,6 +315,8 @@ function getTrackLanguage(stream: any): string {
 
 export async function scanDirectories(paths: string[], rules: any, onStart: (total: number) => void, onLog: (msg: string) => void, onProgress: (prog: any) => void, isResume: boolean = false, isQuickRefresh: boolean = false, signal?: AbortSignal) {
     onLog("Initializing scan...");
+    const scanStartTime = performance.now();
+    console.info("[PROFILER] Scan started.");
     
     let isMac = false;
     let macFfprobePath = "";
@@ -344,6 +346,11 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
             onLog("Validating native ffprobe execution...");
             try {
                 const output = await Command.sidecar('bin/ffprobe', ['-version']).execute();
+                const _tProbeEnd = performance.now();
+                const _probeDuration = _tProbeEnd - _tProbeStart;
+                if (_probeDuration > slowThreshold) {
+                    slowestProbes.push({ file: fastBasename(file), duration: _probeDuration });
+                }
                 if (output.code !== 0) {
                     throw new Error(`Execution returned code ${output.code}. Stderr: ${output.stderr}`);
                 }
@@ -386,6 +393,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
     // Walk all directories concurrently to fully utilize CPU cores and overlapping filesystem IO
     onLog(`Walking ${paths.length} director${paths.length === 1 ? 'y' : 'ies'} in parallel...`);
     
+    const walkStartTime = performance.now();
     const walkPromises = paths.map(async (p) => {
         if (signal?.aborted) return;
         onLog(`Walking directory: ${p}`);
@@ -444,6 +452,8 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
 
     try {
         const results = await Promise.all(walkPromises);
+    const walkEndTime = performance.now();
+    console.info(`[PROFILER] Directory walk completed in ${(walkEndTime - walkStartTime).toFixed(2)}ms for ${paths.length} paths.`);
         if (signal?.aborted) {
             onLog("Scan aborted by user during directory walk.");
             return;
@@ -816,6 +826,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                     }
                 });
 
+                const _tProbeStart = performance.now();
                 const output = await Promise.race([probePromise, timeoutPromise, abortPromise]).catch(err => {
                     // Intentionally NOT calling child.kill() to prevent Tauri Windows panic 0xcfffffff.
                     // The JS promise chain will cleanly reject and ffprobe will exit natively.
@@ -1060,6 +1071,13 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
     }
     
     await Promise.all(workers);
+    const workersEndTime = performance.now();
+    console.info(`[PROFILER] Probing phase completed in ${(workersEndTime - probeStartTime).toFixed(2)}ms.`);
+    if (slowestProbes.length > 0) {
+        slowestProbes.sort((a, b) => b.duration - a.duration);
+        console.info(`[PROFILER] Slowest probes:\n` + slowestProbes.slice(0, 10).map(x => `  - ${x.file} (${x.duration.toFixed(2)}ms)`).join('\n'));
+    }
+
     await dbWritePromise;
 }
 
