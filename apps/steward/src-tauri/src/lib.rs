@@ -200,6 +200,7 @@ async fn walk_dir(path: String) -> Result<Vec<FileEntry>, String> {
                             || file_name.eq_ignore_ascii_case("System Volume Information")
                             || file_name.eq_ignore_ascii_case(".git")
                             || file_name.eq_ignore_ascii_case("target")
+                            || file_name.eq_ignore_ascii_case("__MACOSX")
                         {
                             should_skip = true;
                         }
@@ -211,6 +212,7 @@ async fn walk_dir(path: String) -> Result<Vec<FileEntry>, String> {
                             || file_name.eq_ignore_ascii_case("System Volume Information")
                             || file_name.eq_ignore_ascii_case(".git")
                             || file_name.eq_ignore_ascii_case("target")
+                            || file_name.eq_ignore_ascii_case("__MACOSX")
                         {
                             should_skip = true;
                         }
