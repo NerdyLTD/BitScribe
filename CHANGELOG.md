@@ -583,3 +583,10 @@ Update changelog
 ### App Tour Tab Routing Fix
 - **Problem**: In the product tour, slides from 9 onward were failing to appear. This happened because the internal `targetTab` routing logic mapped steps 5 through 16 to the "library" tab. However, steps 8 through 19 require metrics and audit cards which are strictly on the "scan" tab. When `react-joyride` was directed to the "library" tab, it couldn't locate the metric components (as `showMetrics` is false on that tab), causing the tour to halt.
 - **Solution**: Updated `targetTab` switch boundaries in `useAppTour.ts`. Mapped indices 0-19 to the `scan` tab, 20-22 to `library`, 23-33 to `rules`, and 34+ to `help`, ensuring all tour step targets are correctly rendered.
+
+### Performance Enhancements (P0 & P1)
+- **Problem**: The application experienced severe UI freezing and startup lag due to three main bottlenecks: O(N) database loads without limits, main-thread filtering and sorting of 25,000+ items inside React renders, and an O(N*M) nested loop checking every music track against every directory when identifying `theme.mp3` files.
+- **Solution**: 
+  - Refactored `get_db_files` (Rust/TypeScript) to load database rows in paginated chunks of 5000 using `LIMIT` and `OFFSET`.
+  - Moved the `filteredFilesData` processing out of a blocking `useMemo` into a `useEffect` wrapped with a `setTimeout` to prevent UI lockup.
+  - Optimized the duplicate-helper's `isThemeMusic` lookup by pre-computing a `Set` of non-music directories, turning an O(N) array iteration into an O(1) hash map lookup.
