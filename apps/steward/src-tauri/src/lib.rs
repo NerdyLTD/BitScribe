@@ -389,17 +389,14 @@ fn setup_mac_ffprobe(app: tauri::AppHandle) -> Result<String, String> {
 
     std::fs::create_dir_all(&app_data_dir).map_err(|e| e.to_string())?;
 
-    let dest_bin_name = if std::env::consts::ARCH == "aarch64" {
-        "ffprobe-aarch64-apple-darwin"
-    } else {
-        "ffprobe-x86_64-apple-darwin"
-    };
-
+    let dest_bin_name = "ffprobe-aarch64-apple-darwin";
     let target_bin = app_data_dir.join(dest_bin_name);
-    
-    if target_bin.exists() {
-        return Ok(target_bin.to_string_lossy().to_string());
-    }
+
+    // Force purge old extracted binaries so fresh bundle binaries are always unpacked
+    let _ = std::fs::remove_file(&target_bin);
+    let _ = std::fs::remove_file(app_data_dir.join("ffprobe-x86_64-apple-darwin"));
+    let _ = std::fs::remove_file(app_data_dir.join("ffprobe-aarch64-apple-darwin"));
+    let _ = std::fs::remove_file(app_data_dir.join("ffprobe"));
 
     let output = std::process::Command::new("tar")
         .arg("-xzf")
@@ -413,22 +410,35 @@ fn setup_mac_ffprobe(app: tauri::AppHandle) -> Result<String, String> {
         return Err(format!("Tar extraction failed: {}", String::from_utf8_lossy(&output.stderr)));
     }
 
+    let mut final_bin = target_bin.clone();
+    if !final_bin.exists() {
+        let fallback = app_data_dir.join("ffprobe-x86_64-apple-darwin");
+        if fallback.exists() {
+            final_bin = fallback;
+        } else {
+            let fallback_generic = app_data_dir.join("ffprobe");
+            if fallback_generic.exists() {
+                final_bin = fallback_generic;
+            }
+        }
+    }
+
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
-        if let Ok(mut perms) = std::fs::metadata(&target_bin).map(|m| m.permissions()) {
+        if let Ok(mut perms) = std::fs::metadata(&final_bin).map(|m| m.permissions()) {
             perms.set_mode(0o755);
-            let _ = std::fs::set_permissions(&target_bin, perms);
+            let _ = std::fs::set_permissions(&final_bin, perms);
         }
     }
 
     let _ = std::process::Command::new("xattr")
         .arg("-d")
         .arg("com.apple.quarantine")
-        .arg(&target_bin)
+        .arg(&final_bin)
         .output();
 
-    Ok(target_bin.to_string_lossy().to_string())
+    Ok(final_bin.to_string_lossy().to_string())
 }
 
 #[tauri::command]
