@@ -1,4 +1,5 @@
 ## [Unreleased]
+- **Apple Silicon FFprobe Fix**: Replaced the bundled macOS ffprobe sidecar binary with a proper native `arm64` executable. Previously, the bundled aarch64 binary was incorrectly compiled as an Intel (x86_64) executable, causing "Bad CPU type in executable (os error 86)" errors on Apple Silicon Macs without Rosetta installed.
 - **Gatekeeper Bypass for macOS**: Implemented dynamic extraction of `ffprobe` from a zipped resource at runtime for macOS users. This bypasses Apple Gatekeeper's quarantine block on bundled sidecar binaries by using the OS's native `tar` to extract the executable to the application's AppData directory and running it from there instead.
 - **Mac Directory Skipping**: Added `__MACOSX` to the directory exclusion list in the native `walk_dir` function to ensure hidden macOS resource fork directories are not parsed as media folders, further normalizing file counts between platforms.
 
