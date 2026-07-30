@@ -2,7 +2,7 @@ import { LibraryView } from './LibraryView';
 import { formatCodecString, getPrimaryAudioCodec, getPrimaryVideoCodec, getContainerFormat, getFormattedAudioTracks } from '@bitscribe/core-eval';
 import { BitsyCharacter } from "@bitscribe/ui-components";
 import { createPortal } from "react-dom";
-import React, { useState, useEffect, useMemo, memo, useTransition } from "react";
+import React, { useState, useEffect, useMemo, memo, useTransition, useDeferredValue } from "react";
 import { MediaItem, RuleCriteria, sortCategories, getCategoryGroup, isMusicCategory } from '@bitscribe/core-types';
 import { MOCK_MEDIA_LIBRARY } from '@bitscribe/core-db';
 import { evaluatePlexCompatibility, computeDuplicatesMap, getDuplicatePairRows, isMissingSubtitles } from '@bitscribe/core-eval';
@@ -111,6 +111,88 @@ const formatSubtitleTechnical = (parsed?: any) => {
 };
 
 
+
+const _globalMetadataCache = new Map<string, any>();
+const _globalEvalCache = new Map<string, any>();
+const _globalUiFolderCache = new Map<string, string>();
+
+function getCachedMetadata(item: MediaItem) {
+    if (!_globalMetadataCache.has(item.id)) {
+        _globalMetadataCache.set(item.id, parseVideoMetadata(item));
+    }
+    return _globalMetadataCache.get(item.id);
+}
+
+function getCachedEvaluation(item: MediaItem, rules: any, isDup: boolean, scanPaths: any[]) {
+    // Basic hash of rules that affect streaming compatibility
+    const ruleHash = `${rules.useDiscoveryPreset}|${rules.useModernPreset}|${rules.useLegacyPreset}|${rules.useLosslessAudio}|${rules.useMaxBitrate}`;
+    const cacheKey = `${item.id}|${ruleHash}|${isDup}`;
+    
+    if (!_globalEvalCache.has(cacheKey)) {
+        const streamingRules = {
+          ...rules,
+          useSubtitleScan: false,
+          useDuplicationScan: false,
+          useDuplicationVideoScan: false,
+          useDuplicationMusicScan: false,
+          useAnomalyScan: false,
+          useMetadataScan: false,
+          useVideoMetadataScan: false,
+          useMusicMetadataScan: false,
+        };
+        const evaluation = evaluatePlexCompatibility(item, streamingRules, isDup);
+        const finalLevel = item.category === 'Corrupted' ? 'corrupted' : evaluation.level;
+        
+        let uiTopLevelFolder = item.topLevelFolder;
+        // Simple scanPaths hash
+        const spHash = scanPaths.map(p => p.path + p.enabled).join('');
+        const folderCacheKey = `${item.filePath}|${spHash}|${item.topLevelFolder}`;
+        
+        if (!_globalUiFolderCache.has(folderCacheKey)) {
+            _globalUiFolderCache.set(folderCacheKey, getTopLevelFolderUI(item.filePath, scanPaths, item.topLevelFolder));
+        }
+        uiTopLevelFolder = _globalUiFolderCache.get(folderCacheKey);
+
+        const safeItem = { ...item, topLevelFolder: uiTopLevelFolder };
+        
+        _globalEvalCache.set(cacheKey, {
+            item: safeItem,
+            isDup,
+            level: finalLevel,
+            evaluation: {
+                level: finalLevel,
+                reason: evaluation.reason || "",
+                suggestion: evaluation.suggestion || ""
+            }
+        });
+    }
+    return _globalEvalCache.get(cacheKey);
+}
+
+
+const _globalDupCache = new Map<string, Map<string, boolean>>();
+function getCachedDuplicatesMap(files: MediaItem[], rules: any, isCustomActive: boolean, visibleBlocks: any, isTourActive: boolean) {
+    const isDuplicatesCardVisible = isCustomActive 
+      ? !!visibleBlocks['media-duplicates-card'] 
+      : (rules.useDuplicationScan || rules.useDuplicationVideoScan || rules.useDuplicationMusicScan || isTourActive || document.body.classList.contains("tour-active"));
+    const activeRules = isDuplicatesCardVisible 
+      ? { ...rules, useDuplicationScan: true } 
+      : rules;
+    
+    // Hash based on duplication rules only + file count
+    const ruleHash = `${activeRules.useDuplicationScan}|${activeRules.useDuplicationVideoScan}|${activeRules.useDuplicationMusicScan}|${files.length}`;
+    
+    if (!_globalDupCache.has(ruleHash)) {
+        // Limit cache size to prevent memory leaks
+        if (_globalDupCache.size > 5) {
+            const firstKey = _globalDupCache.keys().next().value;
+            _globalDupCache.delete(firstKey);
+        }
+        _globalDupCache.set(ruleHash, computeDuplicatesMap(files, activeRules));
+    }
+    return _globalDupCache.get(ruleHash)!;
+}
+
 function getTopLevelFolderUI(filePath: string, scanPaths: { path: string; enabled: boolean }[], fallbackFolder: string): string {
     if (!filePath || !scanPaths || scanPaths.length === 0) return fallbackFolder || "Unknown";
     const normFile = filePath.replace(/\\/g, '/').toLowerCase();
@@ -176,6 +258,7 @@ export default memo(function Dashboard({
   // Grid / filtering states
   const [localSearchTerm, setLocalSearchTerm] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const deferredSearchQuery = useDeferredValue(searchQuery);
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
@@ -366,62 +449,25 @@ export default memo(function Dashboard({
     allCurrentFiles.forEach((item) => {
       const isMus = getCategoryGroup(item.category) === 'Music' || isMusicCategory(item.category);
       if (!isMus) {
-        map.set(item.id, parseVideoMetadata(item));
+        map.set(item.id, getCachedMetadata(item));
       }
     });
     return map;
   }, [allCurrentFiles]);
 
   const duplicatesMap = useMemo(() => {
-    const isDuplicatesCardVisible = isCustomBlocksActive 
-      ? !!visibleBlocks['media-duplicates-card'] 
-      : (customRules.useDuplicationScan || customRules.useDuplicationVideoScan || customRules.useDuplicationMusicScan || isTourActive || document.body.classList.contains("tour-active"));
-    const activeRules = isDuplicatesCardVisible 
-      ? { ...customRules, useDuplicationScan: true } 
-      : customRules;
-    return computeDuplicatesMap(allCurrentFiles, activeRules);
+    return getCachedDuplicatesMap(allCurrentFiles, customRules, isCustomBlocksActive, visibleBlocks, isTourActive);
   }, [allCurrentFiles, customRules, isCustomBlocksActive, visibleBlocks, isTourActive]);
 
   const evaluatedFiles = useMemo(() => {
     return allCurrentFiles.map((item) => {
       const isDup = duplicatesMap.get(item.id) ?? false;
-      
-      const streamingRules = {
-        ...customRules,
-        useSubtitleScan: false,
-        useDuplicationScan: false,
-        useDuplicationVideoScan: false,
-        useDuplicationMusicScan: false,
-        useAnomalyScan: false,
-        useMetadataScan: false,
-        useVideoMetadataScan: false,
-        useMusicMetadataScan: false,
-      };
-      
-      const evaluation = evaluatePlexCompatibility(item, streamingRules, isDup);
-      const level = evaluation.level;
-      const reason = evaluation.reason;
-      const uiTopLevelFolder = getTopLevelFolderUI(item.filePath, scanPaths, item.topLevelFolder);
-      const safeItem = { ...item, topLevelFolder: uiTopLevelFolder };
-      const suggestion = evaluation.suggestion;
-
-      const finalLevel = item.category === 'Corrupted' ? 'corrupted' : level;
-
-      return {
-        item: safeItem,
-        isDup,
-        level: finalLevel,
-        evaluation: {
-          level: finalLevel,
-          reason: reason || "",
-          suggestion: suggestion || ""
-        }
-      };
+      return getCachedEvaluation(item, customRules, isDup, scanPaths);
     });
-  }, [allCurrentFiles, customRules, duplicatesMap]);
+  }, [allCurrentFiles, customRules, duplicatesMap, scanPaths]);
 
   const filteredFilesData = useMemo(() => {
-    const lowercaseQuery = searchQuery.toLowerCase().trim();
+    const lowercaseQuery = deferredSearchQuery.toLowerCase().trim();
     const categoriesSetArr = new Set(selectedCategories);
 
     const filtered = evaluatedFiles.filter(({ item, level }) => {
@@ -581,7 +627,7 @@ export default memo(function Dashboard({
     }
 
     return filtered;
-  }, [evaluatedFiles, searchQuery, selectedCategories, selectedCompatibility, sortColumn, sortDirection, customRules]);
+  }, [evaluatedFiles, deferredSearchQuery, selectedCategories, selectedCompatibility, sortColumn, sortDirection, customRules]);
 
   const filteredFiles = useMemo(() => {
     return filteredFilesData.map(d => d.item);

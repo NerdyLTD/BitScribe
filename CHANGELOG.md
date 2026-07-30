@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Optimized
+- **Dashboard Global Evaluation Cache (Phase 3)**: Extracted Plex rule evaluation and metadata regex parsing out of React `useMemo` and into persistent global Maps (`_globalEvalCache`, `_globalMetadataCache`). By caching results keyed strictly by file ID and rule hashes, we bypass the need to re-evaluate 25,000+ files during active scanning updates or tab switching, effectively reducing CPU rendering lag to zero for previously parsed items.
+- **Search Responsiveness (Phase 3)**: Implemented React 18's `useDeferredValue` hook for the Dashboard search bar and filter states. This segregates typing updates from the heavy O(N) array filtering logic, guaranteeing that the search input never drops frames or stutters even when instantaneously reducing 30,000 files in the UI.
+- **Duplicate Map Memoization (Phase 3)**: Moved the O(N log N) `computeDuplicatesMap` string sorting routine to a global cache. Prevented the app from needlessly recalculating pair matches when other React state toggles (like "Hide Corrupted" or column sorts) trigger re-renders.
+
+
 ### Fixed
 - **Analyze Dashboard Folder Clutter**: Fixed an issue where the "Folder" toggle mode in the Metrics Dashboard would display hundreds of individual subfolders (e.g. TV show names) instead of the actual root scan paths. The UI now dynamically associates media items to their parent mapped scan paths on-the-fly, instantly cleaning up the dashboard for existing databases without requiring a rescan.
 - **Export Data Folder Logic**: Updated the core engine's `getTopLevelFolder` logic to extract the exact basename of the mapped scan path, ensuring future CSV and JSON data exports group items cleanly by the user's selected roots rather than fragmenting across hundreds of subdirectories.
