@@ -387,7 +387,6 @@ export const TOUR_STEPS: Step[] = [
     content: (
       <div className="flex flex-col gap-2 text-left">
         <p>We stand on the shoulders of giants. This section honors the amazing open-source projects and communities that made BitScribe possible.</p>
-        <p className="text-indigo-700 font-bold text-xs mt-1 bg-indigo-100/50 px-2.5 py-1.5 rounded-lg border border-indigo-200 shadow-sm animate-pulse">👉 Click 'Show Demo' on the remote!</p>
       </div>
     ),
   },
@@ -401,7 +400,6 @@ export const TOUR_STEPS: Step[] = [
     content: (
       <div className="flex flex-col gap-2 text-left">
         <p>If you find BitScribe useful, consider supporting the development. Your contributions help keep the project alive! When you end this tour, you can choose to keep or clear the demo data.</p>
-        <p className="text-indigo-700 font-bold text-xs mt-1 bg-indigo-100/50 px-2.5 py-1.5 rounded-lg border border-indigo-200 shadow-sm animate-pulse">👉 Click 'Show Demo' on the remote!</p>
       </div>
     ),
   }

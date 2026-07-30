@@ -609,3 +609,7 @@ Update changelog
   - Increased the throttle for UI file-path updates during scans from 32ms to 200ms in `useLocalScanEngine.ts` to ensure stable 5-FPS rendering that doesn't block the main thread.
   - Implemented `WeakMap` caches for `getDisplayArtist`, `getDisplayAlbum`, and `getDisplaySongTitle` in `musicHelper.ts`, completely eliminating repetitive O(N) regex evaluation during column sorting/filtering. 
   - Reverted the previously imposed single-category restriction, fully restoring the user's ability to multi-select music categories without lag.
+
+### Product Tour Hotfix
+- **Problem**: The product tour slides 37 and 38 for the Open Source and Support sections unnecessarily prompted users with a "Show Demo" call-to-action, despite the fireworks and heart emitters triggering automatically when reaching those slides.
+- **Solution**: Removed the "Show Demo" CTA from the content definitions for these specific slides in `ProductTour.tsx` to reduce visual distraction.
