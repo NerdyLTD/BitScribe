@@ -590,3 +590,15 @@ Update changelog
   - Refactored `get_db_files` (Rust/TypeScript) to load database rows in paginated chunks of 5000 using `LIMIT` and `OFFSET`.
   - Moved the `filteredFilesData` processing out of a blocking `useMemo` into a `useEffect` wrapped with a `setTimeout` to prevent UI lockup.
   - Optimized the duplicate-helper's `isThemeMusic` lookup by pre-computing a `Set` of non-music directories, turning an O(N) array iteration into an O(1) hash map lookup.
+
+### UI Performance Enhancements (P2)
+- **Problem**: Selecting multiple large categories (such as Music) simultaneously in the library tab severely slowed down the UI during sorting and filtering.
+- **Solution**: Restricted the Library tab's category selection behavior to allow only one category to be selected at a time, preventing multi-selection performance degradation. Fixed residual lint syntax errors in `api.ts`.
+
+### UI Bugfix - Metrics Dashboard Visibility
+- **Problem**: On the Metrics dashboard, when the "Everything" option was selected, it was not showing all available metrics blocks. The visibility logic was inadvertently evaluating `selectedCategories` (from the Library tab) rather than `metricsSelected`. This also caused the product tour to halt when targeting missing metrics blocks (like Metadata Completeness).
+- **Solution**: Changed the filter logic inside `defaultBlockVisibility` to evaluate `metricsSelected` instead of `selectedCategories`. This ensures that when "Everything" is chosen, all applicable blocks properly render based on the current scan settings, restoring full functionality to both the dashboard view and the product tour.
+
+### UI Bugfix - Metrics Dashboard Block Visibility
+- **Problem**: In the Metrics dashboard, when "Everything" was selected, only some of the metrics blocks were visible (such as Video Codecs, etc.), causing slides 14-20 of the product tour to skip or fail to load.
+- **Solution**: Updated the `defaultBlockVisibility` logic to unconditionally render all metrics blocks whenever `Everything` is selected in the metrics filter, ensuring a uniform top-to-bottom viewing experience and restoring the complete product tour progression.

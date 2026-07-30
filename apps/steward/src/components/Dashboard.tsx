@@ -1192,9 +1192,9 @@ export default memo(function Dashboard({
   const isDiscoveryMode = customRules.useDiscoveryPreset || isTourActive || document.body.classList.contains("tour-active");
   const isStreamMode = customRules.useModernPreset || customRules.useLegacyPreset || isTourActive || document.body.classList.contains("tour-active") || customRules.useBleedingEdgePreset;
 
-  const isAnyVideoSelected = selectedCategories.length > 0 && selectedCategories.some(c => !isMusicCategory(c) && c !== 'Music Only' && c !== 'Corrupted');
-  const isAnyMusicSelected = selectedCategories.length > 0 && selectedCategories.some(c => isMusicCategory(c) || c === 'Music Only');
-  const isAllCategories = selectedCategories.length === 0;
+  const isAnyVideoSelected = metricsSelected.length > 0 && metricsSelected.some(c => !isMusicCategory(c) && c !== 'Music Only' && c !== 'Corrupted' && c !== 'Everything');
+  const isAnyMusicSelected = metricsSelected.length > 0 && metricsSelected.some(c => isMusicCategory(c) || c === 'Music Only');
+  const isAllCategories = metricsSelected.length === 0 || metricsSelected.includes("Everything");
 
   let defaultBlockVisibility: Record<string, boolean>;
 
@@ -1229,16 +1229,16 @@ export default memo(function Dashboard({
   } else {
     defaultBlockVisibility = {
       'library-overview-card': true,
-      'stream-audit-card': isStreamMode,
-      'video-codecs-card': isDiscoveryMode || isStreamMode,
-      'audio-codecs-card': isDiscoveryMode || isStreamMode,
-      'containers-card': isDiscoveryMode || isStreamMode,
-      'music-codecs-card': isDiscoveryMode,
-      'metadata-completeness-card': isMetadataScan,
-      'media-duplicates-card': isDuplicateScan,
-      'subtitle-audit-card': isSubtitleScan,
-      'quality-anomalies-card': isAnomalyScan,
-      'missing-metadata-card': isMetadataScan,
+      'stream-audit-card': isAllCategories || isStreamMode,
+      'video-codecs-card': isAllCategories || isDiscoveryMode || isStreamMode,
+      'audio-codecs-card': isAllCategories || isDiscoveryMode || isStreamMode,
+      'containers-card': isAllCategories || isDiscoveryMode || isStreamMode,
+      'music-codecs-card': isAllCategories || isDiscoveryMode,
+      'metadata-completeness-card': isAllCategories || isMetadataScan,
+      'media-duplicates-card': isAllCategories || isDuplicateScan,
+      'subtitle-audit-card': isAllCategories || isSubtitleScan,
+      'quality-anomalies-card': isAllCategories || isAnomalyScan,
+      'missing-metadata-card': isAllCategories || isMetadataScan,
     };
   }
 
@@ -1285,21 +1285,8 @@ export default memo(function Dashboard({
   const defaultMetricsOptions = ["Movies", "TV Shows", "Documentaries", "Plays", "Shorts", "Specials", "Music Videos", "Music", "Video Only", "Music Only"];
 
 const handleCategoryToggle = (cat: string) => {
-    let current = [...selectedCategories];
-    
-    if (current.includes(cat)) {
-      current = current.filter(c => c !== cat);
-    } else {
-      const selectedGroup = getCategoryGroup(cat);
-      current = current.filter(c => getCategoryGroup(c) === selectedGroup);
-      current.push(cat);
-    }
-    
-    if (current.length === 0 && categoriesSet.length > 0) {
-      current = [categoriesSet[0]];
-    }
     startTransition(() => {
-      setSelectedCategories(current);
+      setSelectedCategories([cat]);
     });
   };
 
