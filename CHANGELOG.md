@@ -1,4 +1,7 @@
 ## [Unreleased]
+- **macOS Empty Library & Missing Exports**: Fixed a critical issue where macOS Gatekeeper or `dyld` linking errors would cause `ffprobe` to fail instantly for all scanned files, miscategorizing the entire library as "Corrupted". The system now creates graceful fallback media items using filename-inferred categories so that files still populate the dashboard and export reports correctly even when native video probing is blocked.
+- **Mac Hidden Files Indexing**: Addressed a scanning variance where macOS hidden AppleDouble files (e.g. `._filename.mp4`) were incorrectly ingested as playable media, causing the index totals on Mac to differ from Windows. The scanner now strictly ignores all dot-prefixed hidden files.
+
 - **Library Index Count Variance**: Fixed an issue where the top header's 'items indexed' count did not match the Dashboard's Library Overview count because corrupted files were incorrectly excluded from the global header total.
 - **Mac Scanning UI Freeze**: Resolved a severe UI thread lockup on macOS by converting the core Tauri Rust backend file system commands (`walk_dir`, `get_db_files`, `save_db_files`) to asynchronous operations. This prevents the Mac UI from spinning a rainbow pinwheel while indexing tens of thousands of files across the IPC bridge.
 

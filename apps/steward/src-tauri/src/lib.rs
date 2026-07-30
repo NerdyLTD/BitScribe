@@ -222,6 +222,10 @@ async fn walk_dir(path: String) -> Result<Vec<FileEntry>, String> {
                 }
 
                 if entry.file_type().is_file() {
+                    let os_name_str = os_name.to_string_lossy();
+                    if os_name_str.starts_with('.') {
+                        continue;
+                    }
                     let path_ref = entry.path();
                     let ext_opt = path_ref.extension().and_then(|s| s.to_str());
 

@@ -780,7 +780,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 });
                 
                 if (output.code !== 0) {
-                    throw new Error("ffprobe returned non-zero code");
+                    throw new Error(`ffprobe returned non-zero code: ${output.stderr || "Unknown error"}`);
                 }
                 
                 // Clean stdout of any unexpected leading/trailing non-JSON warnings
@@ -954,19 +954,43 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 batch.push(hydratedItem);
                 
             } catch (e: any) {
-                const corrupted: MediaItem = {
-                    id: fileHash, filename: file.split(/[\\\/]/).pop()!, filePath: file, category: 'Corrupted' as any,
-                    container: 'unknown', sizeGB: 0, durationMins: 0, year: 0, videoCodec: '', videoResolution: '',
+                const filename = file.split(/[\\\/]/).pop()!;
+                const ext = filename.includes('.') ? filename.split('.').pop()!.toLowerCase() : 'unknown';
+                const topLevelFolder = getTopLevelFolder(file, paths);
+                const baseCategory = inferCategory(topLevelFolder, filename, '.' + ext, file, {});
+                
+                const errMsg = e.message || String(e);
+                const isRealError = errMsg.includes('Invalid data') || errMsg.includes('moov atom') || errMsg.includes('End of file');
+                
+                let cat = 'Corrupted';
+                let isCorrupt = true;
+                
+                if (!isRealError && baseCategory !== 'Other' && baseCategory !== 'Ignore') {
+                    cat = baseCategory;
+                    isCorrupt = false;
+                }
+                
+                const physicalSize = existingFilesMap.get(normPath + "_physical_size") || 0;
+                const sizeGB = (physicalSize as number) / (1024 * 1024 * 1024);
+
+                const fallbackItem: MediaItem = {
+                    id: fileHash, filename, filePath: file, category: cat as any,
+                    container: ext, sizeGB, durationMins: 0, year: 0, videoCodec: 'unknown', videoResolution: 'unknown',
                     videoBitrateMbps: 0, audioTracks: [], subtitleTracks: [], tags: {}, audioBitrate: 0,
-                    isCorrupted: true, errorMessage: e.message, hasEmbeddedPoster: false, bitrateAnomaly: false,
-                    bitrateAnomalyReason: '', topLevelFolder: getTopLevelFolder(file, paths), streamFriendlyLevel: 'corrupted',
-                    streamFriendlyReason: '', streamFriendlySuggestion: '', streamFriendlyEvaluated: 0,
+                    isCorrupted: isCorrupt, errorMessage: errMsg, hasEmbeddedPoster: false, bitrateAnomaly: false,
+                    bitrateAnomalyReason: '', topLevelFolder, streamFriendlyLevel: isCorrupt ? 'corrupted' : 'unfriendly',
+                    streamFriendlyReason: isCorrupt ? '' : 'Could not probe file natively (ffprobe failed/killed).', streamFriendlySuggestion: '', streamFriendlyEvaluated: 0,
                     rawAudioCodec: "", physicalAudioChannels: 0, matchedOnlineId: "",  hasExternalSubtitles: false, embeddedSubtitleLanguages: "",
                     author: "", narrator: "", publisher: "", bookSeries: "", seriesIndex: 0, isbn: "", pageCount: 0
                 };
-                onProgress({ current: i + 1, total: allFiles.length, error: true, item: corrupted });
-                onLog("PROBE ERROR: " + (e.message || String(e)));
-                batch.push(corrupted);
+                
+                if (isCorrupt) {
+                    onProgress({ current: i + 1, total: allFiles.length, error: true, item: fallbackItem });
+                } else {
+                    onProgress({ current: i + 1, total: allFiles.length, error: false, item: fallbackItem });
+                }
+                onLog("PROBE ERROR: " + errMsg);
+                batch.push(fallbackItem);
             }
             
             if (batch.length >= BATCH_SIZE) {
