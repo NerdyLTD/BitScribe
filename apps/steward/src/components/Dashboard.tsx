@@ -1441,7 +1441,7 @@ const handleCategoryToggle = (cat: string) => {
 
 
   return (
-    <div className="space-y-4 w-full">
+    <div className="flex flex-col gap-4 w-full h-full min-h-0 flex-1">
       {notification && !notificationDismissed && notificationString && (
         <div className={`p-4 rounded-xl border flex items-center justify-between gap-3 shadow-lg transition-all animate-in slide-in-from-top-3 duration-300 ${
           isErrorNotification
