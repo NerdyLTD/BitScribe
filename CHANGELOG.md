@@ -607,7 +607,7 @@ Update changelog
 - **Problem**: The UI would freeze significantly during live file scans due to the `currentScanFile` React state updating at 32ms intervals, causing expensive cascading re-renders. Additionally, selecting multiple music categories in the Library tab blocked the main thread for hundreds of milliseconds because sorting heavily utilized expensive string parsing and regex evaluations on 20,000+ files.
 - **Solution**: 
   - Increased the throttle for UI file-path updates during scans from 32ms to 200ms in `useLocalScanEngine.ts` to ensure stable 5-FPS rendering that doesn't block the main thread.
-  - Implemented `WeakMap` caches for `getDisplayArtist`, `getDisplayAlbum`, and `getDisplaySongTitle` in `musicHelper.ts`, completely eliminating repetitive O(N) regex evaluation during column sorting/filtering. 
+  - Implemented `Map` caches (keyed by string ID) for `getDisplayArtist`, `getDisplayAlbum`, and `getDisplaySongTitle` in `musicHelper.ts`, completely eliminating repetitive O(N) regex evaluation during column sorting/filtering. 
   - Reverted the previously imposed single-category restriction, fully restoring the user's ability to multi-select music categories without lag.
 
 ### Product Tour Hotfix

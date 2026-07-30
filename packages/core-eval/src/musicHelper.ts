@@ -26,14 +26,15 @@ export function cleanAlbumTitle(title: string): string {
   return clean || title;
 }
 
-const fallbackCache = new WeakMap<any, { fallbackArtist: string, fallbackAlbum: string }>();
+const fallbackCache = new Map<string, { fallbackArtist: string, fallbackAlbum: string }>();
 
-const displayArtistCache = new WeakMap<any, string>();
-const displayAlbumCache = new WeakMap<any, string>();
-const displaySongTitleCache = new WeakMap<any, string>();
+const displayArtistCache = new Map<string, string>();
+const displayAlbumCache = new Map<string, string>();
+const displaySongTitleCache = new Map<string, string>();
 
 export const getMusicFallback = (item: any) => {
-  if (fallbackCache.has(item)) return fallbackCache.get(item)!;
+  const cacheKey = item.id || item.filePath;
+  if (fallbackCache.has(cacheKey)) return fallbackCache.get(cacheKey)!;
 
   let fallbackArtist = '';
   let fallbackAlbum = '';
@@ -88,12 +89,13 @@ export const getMusicFallback = (item: any) => {
   }
 
   const result = { fallbackArtist, fallbackAlbum };
-  fallbackCache.set(item, result);
+  fallbackCache.set(cacheKey, result);
   return result;
 };
 
 export const getDisplayArtist = (item: any, rules?: any) => {
-  if (displayArtistCache.has(item)) return displayArtistCache.get(item)!;
+  const cacheKey = item.id || item.filePath;
+  if (displayArtistCache.has(cacheKey)) return displayArtistCache.get(cacheKey)!;
 
   const { fallbackArtist, fallbackAlbum } = getMusicFallback(item);
   let artist = item.tags?.album_artist || item.tags?.ALBUM_ARTIST || item.tags?.artist || item.tags?.ARTIST;
@@ -115,12 +117,13 @@ export const getDisplayArtist = (item: any, rules?: any) => {
   
   if (!artist || String(artist).toLowerCase() === '<unknown>') artist = fallbackArtist || 'Unknown Artist';
   const result = String(artist || '').trim();
-  displayArtistCache.set(item, result);
+  displayArtistCache.set(cacheKey, result);
   return result;
 };
 
 export const getDisplayAlbum = (item: any, rules?: any) => {
-  if (displayAlbumCache.has(item)) return displayAlbumCache.get(item)!;
+  const cacheKey = item.id || item.filePath;
+  if (displayAlbumCache.has(cacheKey)) return displayAlbumCache.get(cacheKey)!;
 
   const { fallbackAlbum } = getMusicFallback(item);
   let album = item.tags?.album || item.tags?.ALBUM;
@@ -172,12 +175,13 @@ export const getDisplayAlbum = (item: any, rules?: any) => {
   }
   
   const result = String(album || '').trim();
-  displayAlbumCache.set(item, result);
+  displayAlbumCache.set(cacheKey, result);
   return result;
 };
 
 export const getDisplaySongTitle = (item: any, rules?: any) => {
-  if (displaySongTitleCache.has(item)) return displaySongTitleCache.get(item)!;
+  const cacheKey = item.id || item.filePath;
+  if (displaySongTitleCache.has(cacheKey)) return displaySongTitleCache.get(cacheKey)!;
 
   let title = item.tags?.title || item.tags?.TITLE;
   const fileNameNoExt = item.filename ? item.filename.replace(/\.[^/.]+$/, '') : '';
@@ -195,7 +199,7 @@ export const getDisplaySongTitle = (item: any, rules?: any) => {
   }
   
   const result = String(title).trim();
-  displaySongTitleCache.set(item, result);
+  displaySongTitleCache.set(cacheKey, result);
   return result;
 };
 
