@@ -1177,26 +1177,62 @@ export default memo(function Dashboard({
     return totalIndexable > 0 ? Math.round((indexCount / totalIndexable) * 100) : 0;
   }, [stats, totalIndexable]);
 
-  const isMetadataScan = customRules.useMetadataScan || customRules.useVideoMetadataScan || customRules.useMusicMetadataScan || isTourActive || document.body.classList.contains("tour-active");
+    const isMetadataScan = customRules.useMetadataScan || customRules.useVideoMetadataScan || customRules.useMusicMetadataScan || isTourActive || document.body.classList.contains("tour-active");
   const isSubtitleScan = customRules.useSubtitleScan || isTourActive || document.body.classList.contains("tour-active");
   const isDuplicateScan = customRules.useDuplicationScan || customRules.useDuplicationVideoScan || customRules.useDuplicationMusicScan || isTourActive || document.body.classList.contains("tour-active");
   const isAnomalyScan = customRules.useAnomalyScan || isTourActive || document.body.classList.contains("tour-active");
   const isDiscoveryMode = customRules.useDiscoveryPreset || isTourActive || document.body.classList.contains("tour-active");
   const isStreamMode = customRules.useModernPreset || customRules.useLegacyPreset || isTourActive || document.body.classList.contains("tour-active") || customRules.useBleedingEdgePreset;
 
-  const defaultBlockVisibility: Record<string, boolean> = {
-    'library-overview-card': true,
-    'stream-audit-card': isStreamMode,
-    'video-codecs-card': isDiscoveryMode || isStreamMode,
-    'audio-codecs-card': isDiscoveryMode || isStreamMode,
-    'containers-card': isDiscoveryMode || isStreamMode,
-    'music-codecs-card': isDiscoveryMode,
-    'metadata-completeness-card': isMetadataScan,
-    'media-duplicates-card': isDuplicateScan,
-    'subtitle-audit-card': isSubtitleScan,
-    'quality-anomalies-card': isAnomalyScan,
-    'missing-metadata-card': isMetadataScan,
-  };
+  const isAnyVideoSelected = selectedCategories.length > 0 && selectedCategories.some(c => !isMusicCategory(c) && c !== 'Music Only' && c !== 'Corrupted');
+  const isAnyMusicSelected = selectedCategories.length > 0 && selectedCategories.some(c => isMusicCategory(c) || c === 'Music Only');
+  const isAllCategories = selectedCategories.length === 0;
+
+  let defaultBlockVisibility: Record<string, boolean>;
+
+  if (!isAllCategories && isAnyVideoSelected && !isAnyMusicSelected) {
+    defaultBlockVisibility = {
+      'library-overview-card': true,
+      'stream-audit-card': true,
+      'video-codecs-card': true,
+      'audio-codecs-card': true,
+      'containers-card': true,
+      'music-codecs-card': false,
+      'metadata-completeness-card': false,
+      'media-duplicates-card': false,
+      'subtitle-audit-card': false,
+      'quality-anomalies-card': false,
+      'missing-metadata-card': false,
+    };
+  } else if (!isAllCategories && isAnyMusicSelected && !isAnyVideoSelected) {
+    defaultBlockVisibility = {
+      'library-overview-card': true,
+      'stream-audit-card': false,
+      'video-codecs-card': false,
+      'audio-codecs-card': false,
+      'containers-card': false,
+      'music-codecs-card': true,
+      'metadata-completeness-card': true,
+      'media-duplicates-card': false,
+      'subtitle-audit-card': false,
+      'quality-anomalies-card': false,
+      'missing-metadata-card': true,
+    };
+  } else {
+    defaultBlockVisibility = {
+      'library-overview-card': true,
+      'stream-audit-card': isStreamMode,
+      'video-codecs-card': isDiscoveryMode || isStreamMode,
+      'audio-codecs-card': isDiscoveryMode || isStreamMode,
+      'containers-card': isDiscoveryMode || isStreamMode,
+      'music-codecs-card': isDiscoveryMode,
+      'metadata-completeness-card': isMetadataScan,
+      'media-duplicates-card': isDuplicateScan,
+      'subtitle-audit-card': isSubtitleScan,
+      'quality-anomalies-card': isAnomalyScan,
+      'missing-metadata-card': isMetadataScan,
+    };
+  }
 
   const effectiveVisibility = isCustomBlocksActive ? visibleBlocks : defaultBlockVisibility;
 
@@ -2431,10 +2467,11 @@ const handleCategoryToggle = (cat: string) => {
 
       {showFileRegistry && (
         <div
-          className="p-1 max-w-full overflow-hidden rounded-xl bg-gradient-to-br from-slate-800/40 border border-[#1e232e] to-transparent"
+          className="p-1 max-w-full rounded-xl bg-gradient-to-br from-slate-800/40 border border-[#1e232e] to-transparent flex-1 flex flex-col min-h-0"
           id="file-registry-section"
         >
-          <div className="p-4 bg-[#14171F] rounded-lg h-full">
+          <div className="p-4 bg-[#14171F] rounded-lg h-full flex flex-col min-h-0">
+            <div className="flex-none">
             <div id="file-registry-header" className="flex flex-col lg:flex-row justify-between lg:items-center gap-4 border-b border-[#1e232e] pb-4 mb-4">
               <div>
                 <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
@@ -2537,8 +2574,9 @@ const handleCategoryToggle = (cat: string) => {
             
             {/* Enhanced Pagination */}
             {paginationControls}
-            {/* Media List Grid */}
-            <div className={`overflow-x-auto max-w-full rounded-xl border border-slate-800 bg-[#14171F] transition-opacity duration-200 ${isPending ? 'opacity-50 pointer-events-none' : 'opacity-100'}`} style={{ resize: 'vertical', minHeight: '300px' }} id="table-scroll-container">
+          </div>
+
+            {/* Media List Grid */}            <div className={`flex-1 overflow-auto max-w-full rounded-xl border border-slate-800 bg-[#14171F] transition-opacity duration-200 min-h-0 ${isPending ? 'opacity-50 pointer-events-none' : 'opacity-100'}`} id="table-scroll-container">
               <LibraryView
     customRules={customRules}
     parsedMetadataMap={parsedMetadataMap}

@@ -637,7 +637,7 @@ export default function App() {
 
           {/* Sub-page display contents (Scrollable area) */}
           <div
-            className={`flex-1 overflow-y-auto px-4 pb-12 pt-0 scroll-pt-[200px] ${isPending ? "opacity-60 pointer-events-none transition-opacity duration-200" : "opacity-100 transition-opacity duration-200"}`}
+            className={`flex-1 flex flex-col ${activeTab === "library" ? "overflow-hidden px-4 pb-4 pt-4" : "overflow-y-auto px-4 pb-12 pt-0"} scroll-pt-[200px] ${isPending ? "opacity-60 pointer-events-none transition-opacity duration-200" : "opacity-100 transition-opacity duration-200"}`}
             id="applet-subpage-scroll-container"
           >
             {/* Global Notification Banner */}
@@ -671,7 +671,7 @@ export default function App() {
               </div>
             )}
 
-            <div className={(renderedTab === "scan" || renderedTab === "library") ? "block" : "hidden"}>
+            <div className={(renderedTab === "scan" || renderedTab === "library") ? "flex-1 flex flex-col min-h-0" : "hidden"}>
               <Dashboard
                 customRules={customRules}
                 onRulesChange={setCustomRules}

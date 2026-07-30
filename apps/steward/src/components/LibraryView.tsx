@@ -125,7 +125,7 @@ export function LibraryView({
 
   return (
     <table className="text-left border-collapse text-xs whitespace-nowrap" style={{ tableLayout: 'fixed', width: 'max-content', minWidth: '100%' }}>
-      <thead>
+      <thead className="sticky top-0 z-20 bg-[#1E232E] shadow-sm shadow-slate-900/50">
         <tr id="registry-table-header-row" className="border-b border-[#1e232e] bg-[#1E232E] text-slate-400 font-bold uppercase text-[10px] tracking-wide relative">
           {headers.filter(h => visibleColumns[h.key] !== false).map((h, i) => (
             <th 
