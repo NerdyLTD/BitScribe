@@ -613,3 +613,4 @@ Update changelog
 ### Product Tour Hotfix
 - **Problem**: The product tour slides 37 and 38 for the Open Source and Support sections unnecessarily prompted users with a "Show Demo" call-to-action, despite the fireworks and heart emitters triggering automatically when reaching those slides.
 - **Solution**: Removed the "Show Demo" CTA from the content definitions for these specific slides in `ProductTour.tsx` to reduce visual distraction.
+- Restrict category selection in Library tab to strictly one category at a time

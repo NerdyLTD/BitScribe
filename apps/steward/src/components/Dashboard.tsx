@@ -1287,9 +1287,7 @@ export default memo(function Dashboard({
     if (current.includes(cat)) {
       current = current.filter(c => c !== cat);
     } else {
-      const selectedGroup = getCategoryGroup(cat);
-      current = current.filter(c => getCategoryGroup(c) === selectedGroup);
-      current.push(cat);
+      current = [cat];
     }
     if (current.length === 0 && categoriesSet.length > 0) {
       current = [categoriesSet[0]];
