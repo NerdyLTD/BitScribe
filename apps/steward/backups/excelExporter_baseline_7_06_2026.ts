@@ -1,50 +1,127 @@
-import { formatCodecString, getPrimaryAudioCodec, getPrimaryVideoCodec, getContainerFormat, formatSubtitleSummary, formatSubtitleTechnical } from '@bitscribe/core-eval';
-import { isMusicCategory, sortCategories, getCategoryGroup } from '@bitscribe/core-types';
+import { formatCodecString, getPrimaryAudioCodec, getPrimaryVideoCodec, getContainerFormat, formatSubtitleSummary, formatSubtitleTechnical } from "./mediaFormatter";
+import { isMusicCategory, sortCategories } from "../types";
 import ExcelJS from "exceljs";
 import { downloadOrSaveFile } from "./downloader";
-import { MediaItem, RuleCriteria } from '@bitscribe/core-types';
-import { normalizeTitleForSort, getSectionHeaderForTitle, normalizeGroupTitle, getMusicGroupTitle, getGroupTitleInit } from '@bitscribe/core-eval';
-
+import { MediaItem, RuleCriteria } from "../types";
 import {
   evaluatePlexCompatibility,
   computeDuplicatesMap,
-} from '@bitscribe/core-eval';
-import { getDuplicatePairRows, DuplicatePairRow } from '@bitscribe/core-eval';
+} from "./plexEvaluator";
+import { getDuplicatePairRows } from "./duplicateHelper";
 import {
   getDisplayArtist,
   getDisplayAlbum,
   getDisplaySongTitle,
-} from '@bitscribe/core-eval';
-import { getScanType, getReportTitle, getFolderPath, getMissingMetadataTags, formatResolutionForExcel } from "@bitscribe/core-eval";
+} from "./musicHelper";
+import { getScanType, getReportTitle } from "./reportExporter";
 import {
   parseVideoMetadata,
   getExtrasGroupTitle,
   extractSeasonNumber,
-} from '@bitscribe/core-eval';
+} from "./mediaParser";
 
+export function formatResolutionForExcel(
+  videoResolution: string | undefined,
+): string {
+  if (!videoResolution || videoResolution === "-") return "-";
+  const val = videoResolution.trim();
+  const match = val.match(/^(\d+x\d+)\s*\[(.*?)\]/);
+  if (match) {
+    return `${match[2]} (${match[1]})`;
+  }
+  if (/^(4K|1080p|720p|SD|480p|360p)$/i.test(val)) {
+    const lower = val.toLowerCase();
+    if (lower === "4k") return "4K (3840x2160)";
+    if (lower === "1080p") return "1080p (1920x1080)";
+    if (lower === "720p") return "720p (1280x720)";
+    if (lower === "sd" || lower === "480p") return "SD (720x480)";
+    return val;
+  }
+  return val;
+}
 
+export function getMissingMetadataTags(item: MediaItem): string[] {
+  const tags = item.tags || {};
+  const missing: string[] = [];
 
+  if (item.category === "Static" || item.category === "Corrupted") {
+    return [];
+  }
 
+  const titleVal = tags.title || tags.TITLE || "";
+  const titleCleaned = titleVal.trim();
+  const hasTitle =
+    !!titleCleaned &&
+    titleCleaned.toLowerCase() !== (item.filename || "").toLowerCase();
+  if (!hasTitle) {
+    missing.push("Title");
+  }
 
+  const yearVal =
+    item.year ||
+    parseInt(tags.date || tags.DATE || tags.year || tags.YEAR || "0") ||
+    0;
+  if (!yearVal) {
+    missing.push("Release Year");
+  }
 
-  
+  const catLower = (item.category || "").toLowerCase();
+  const isTV = ["tv shows", "tv", "anime", "shorts"].includes(
+    catLower,
+  );
+  const isMovie = [
+    "movies",
+    "movie",
+    "documentaries",
+    "docuseries",
+    "concerts",
+    "education",
+    "plays",
+    "specials",
+  ].includes(catLower) || catLower.includes("docu");
+  const isMusic = [
+    "music",
+    "music albums",
+    "soundtracks",
+    "music compilations",
+    "audio",
+  ].includes(catLower);
 
+  if (isMovie) {
+    if (!tags.director && !tags.DIRECTOR) missing.push("Director");
+    if (!tags.writer && !tags.WRITER) missing.push("Writer");
+    if (!tags.cast && !tags.CAST && !tags.actors && !tags.ACTORS)
+      missing.push("Cast/Actors");
+    if (!tags.studio && !tags.STUDIO && !tags.publisher && !tags.PUBLISHER)
+      missing.push("Studio");
+  } else if (isTV) {
+    if (!tags.show && !tags.SHOW && !tags.series && !tags.SERIES)
+      missing.push("Show Title");
+    if (!tags.writer && !tags.WRITER) missing.push("Writer");
+    if (!tags.cast && !tags.CAST && !tags.actors && !tags.ACTORS)
+      missing.push("Cast/Actors");
+    if (!tags.studio && !tags.STUDIO && !tags.network && !tags.NETWORK)
+      missing.push("Studio");
+  } else if (isMusic) {
+    if (!tags.artist && !tags.ARTIST) missing.push("Artist");
+    if (!tags.album && !tags.ALBUM) missing.push("Album");
+  }
+
+  return missing;
+}
+
+export const getFolderPath = (filepath: string, filename: string) => {
+  const p = filepath.substring(0, filepath.lastIndexOf(filename));
+  return p.endsWith("/") || p.endsWith("\\") ? p.slice(0, -1) : p;
+};
 
 export async function exportMediaLibraryToExcel(
   items: MediaItem[],
   rules: RuleCriteria,
   columnVisibility?: Record<string, boolean>,
-  targetDir?: string,
-  allItems?: MediaItem[]
+  targetDir?: string
 ) {
   const globalScanType = getScanType(rules, items);
-  const itemsForDups = allItems && allItems.length > 0 ? allItems : items;
-  
-  // Get all pairs globally, then filter to only those visible in the current exported items list
-  const globalDupRows = globalScanType === "Duplication Scan" ? getDuplicatePairRows(itemsForDups, rules) : [];
-  const filteredItemIds = new Set(items.map(i => i.id));
-  const allDupRows = globalDupRows.filter(pair => filteredItemIds.has(pair.dupId) || filteredItemIds.has(pair.id));
-
   const wb = new ExcelJS.Workbook();
   wb.creator = "StreamFriendly Scanner";
   wb.created = new Date();
@@ -58,37 +135,48 @@ export async function exportMediaLibraryToExcel(
     return "Transcode Required";
   };
 
-
+  const getGroupTitleInit = (
+    item: MediaItem,
+    isTv: boolean = false,
+  ): string => {
+    if (item.category === "Extras") {
+      return getExtrasGroupTitle(item);
+    }
+    const meta = parseVideoMetadata(item);
+    if (isTv && meta.season && meta.season !== "-") {
+      const p = parseInt(meta.season, 10);
+      return `${meta.title || "Unknown"} - ${isNaN(p) ? meta.season : "Season " + p}`;
+    }
+    return meta.title || "Ungrouped";
+  };
 
   // 1. Create Overview Summary Sheet
   const overviewWs = wb.addWorksheet("Overview", {
     views: [{ showGridLines: false }],
   });
   overviewWs.columns = [
-    { header: "", key: "metricLeft", width: 42 },
+    { header: "", key: "metricLeft", width: 35 },
     { header: "", key: "valueLeft", width: 30 },
     { header: "", key: "gap", width: 30 },
-    { header: "", key: "metricRight", width: 42 },
+    { header: "", key: "metricRight", width: 35 },
     { header: "", key: "valueRight", width: 50 },
   ];
 
-  // Header text area (logo removed)
+  // Header / Logo area
   overviewWs.mergeCells("A1:E1");
   const titleCell = overviewWs.getCell("A1");
   titleCell.value = "BitScribe - Digital Media Library Steward";
   titleCell.font = { bold: true, size: 24, color: { argb: "FF8B5CF6" } };
   titleCell.alignment = { horizontal: "center", vertical: "middle" };
-  overviewWs.getRow(1).height = 40;
 
   overviewWs.mergeCells("A2:E2");
   const subTitleCell = overviewWs.getCell("A2");
   subTitleCell.value = getReportTitle(globalScanType)?.toString()?.toUpperCase();
   subTitleCell.font = { bold: true, size: 12, color: { argb: "FFCBD5E1" } };
   subTitleCell.alignment = { horizontal: "center", vertical: "middle" };
-  overviewWs.getRow(2).height = 25;
 
-  const corruptedFilesList = itemsForDups.filter((it) => it.category === "Corrupted");
-  const healthyFilesList = itemsForDups.filter(
+  const corruptedFilesList = items.filter((it) => it.category === "Corrupted");
+  const healthyFilesList = items.filter(
     (it) => it.category !== "Corrupted" && it.category !== "Static",
   );
   const totalAuditedCount = healthyFilesList.length;
@@ -103,7 +191,7 @@ export async function exportMediaLibraryToExcel(
   const containerCounts: Record<string, number> = {};
   const musicCounts: Record<string, number> = {};
 
-  itemsForDups.forEach((item) => {
+  items.forEach((item) => {
     if (item.category === "Static") {
       return;
     }
@@ -212,26 +300,19 @@ export async function exportMediaLibraryToExcel(
   };
 
   // Populate Left Block
-  const startRow = 4;
-  let leftRowIdx = startRow;
-  writeLeftCell(leftRowIdx++, "◆  GENERAL LIBRARY SUMMARY", "", true);
-  writeLeftCell(leftRowIdx++, "      Total Indexed Media", `${totalAuditedCount} items`);
+  writeLeftCell(4, "◆  GENERAL LIBRARY SUMMARY", "", true);
+  writeLeftCell(5, "      Total Indexed Media", `${totalAuditedCount} items`);
   writeLeftCell(
-    leftRowIdx++,
+    6,
     "      Corrupted/Failed Files",
-    `${corruptedCount} files ${
-      corruptedCount > 0
-        ? (globalScanType === "Corrupted Audit"
-          ? "(See 'Corrupted' tab)"
-          : "(See the Bad Files Audit report.)")
-        : ""
-    }`,
+    `${corruptedCount} files ${corruptedCount > 0 ? "(See 'Corrupted' tab)" : ""}`,
   );
-  writeLeftCell(leftRowIdx++, "      Library Size", formatSize(totalGB));
+  writeLeftCell(7, "      Library Size", formatSize(totalGB));
 
+  let leftRowIdx = 8;
   const isDiscovery = !!rules.useDiscoveryPreset;
 
-  let rightRowIdx = startRow;
+  let rightRowIdx = 4;
   writeRightCell(rightRowIdx++, "◆  SCAN SPECIFIC METRICS", "", true);
 
   if (!isDiscovery) {
@@ -240,39 +321,25 @@ export async function exportMediaLibraryToExcel(
       rules.useVideoMetadataScan ||
       rules.useMusicMetadataScan
     ) {
-      const auditVideo = rules.useMetadataScan || rules.useVideoMetadataScan;
-      const auditMusic = rules.useMetadataScan || rules.useMusicMetadataScan;
-
-      const targetItems = itemsForDups.filter(
-        (it) => {
-          if (it.category === "Corrupted" || it.category === "Static") return false;
-          const isMusic = isMusicCategory(it.category);
-          if (isMusic && !auditMusic) return false;
-          if (!isMusic && !auditVideo) return false;
-          return true;
-        }
-      );
-
-      const totalAudited = targetItems.length;
-      const completeCount = targetItems.filter(
-        (it) => getMissingMetadataTags(it).length === 0,
+      const totalAudited = items.filter(
+        (it) => it.category !== "Corrupted" && it.category !== "Static",
       ).length;
-
+      const completeCount = items.filter(
+        (it) =>
+          it.category !== "Corrupted" &&
+          it.category !== "Static" &&
+          evaluatePlexCompatibility(it, rules).level === "modern",
+      ).length;
       const pct =
         totalAudited > 0
           ? Math.round((completeCount / totalAudited) * 100)
           : 100;
-
-      const labelPrefix = rules.useVideoMetadataScan && !rules.useMusicMetadataScan 
-        ? "Video " 
-        : (rules.useMusicMetadataScan && !rules.useVideoMetadataScan ? "Music " : "");
-
-      writeLeftCell(leftRowIdx++, `      ${labelPrefix}Metadata Compliance`, `${pct}%`);
-      writeRightCell(rightRowIdx++, `      Files Missing ${labelPrefix}Metadata`, `${totalAudited - completeCount} files`);
+      writeLeftCell(leftRowIdx++, "      Metadata Compliance", `${pct}%`);
+      writeRightCell(rightRowIdx++, "      Files Missing Metadata", `${totalAudited - completeCount} files`);
     } else if (rules.useSubtitleScan) {
-      const videoItems = itemsForDups.filter(
+      const videoItems = items.filter(
         (it) =>
-          !isMusicCategory(it.category) &&
+          it.category !== "Music" &&
           it.category !== "Corrupted" &&
           it.category !== "Static",
       );
@@ -289,25 +356,33 @@ export async function exportMediaLibraryToExcel(
       writeLeftCell(leftRowIdx++, "      Subtitle Coverage Rate", `${subPct}%`);
       writeRightCell(rightRowIdx++, "      Missing Subtitles", `${missingSubsCount} files`);
     } else if (rules.useAnomalyScan) {
-      let bloated = 0, starved = 0;
-      const auditedItems = itemsForDups.filter(
-        (it) => it.category !== "Corrupted" && it.category !== "Static"
+      const videoBitrates = items.filter(
+        (it) =>
+          it.category !== "Music" &&
+          it.category !== "Corrupted" &&
+          it.category !== "Static" &&
+          it.videoBitrateMbps,
       );
-
-      auditedItems.forEach(item => {
-        const evalRes = evaluatePlexCompatibility(item, rules, false);
-        if (evalRes.isBloated) bloated++;
-        else if (evalRes.isStarved) starved++;
+      let bloated = 0,
+        starved = 0;
+      videoBitrates.forEach((it) => {
+        const res = (it.videoResolution || "").toLowerCase();
+        const br = it.videoBitrateMbps;
+        if (res.includes("4k") && br < 10) starved++;
+        else if (res.includes("1080p") && br > 20) bloated++;
+        else if (res.includes("1080p") && br < 2) starved++;
+        else if (res.includes("720p") && br > 10) bloated++;
+        else if ((res.includes("sd") || res.includes("480p")) && br > 4)
+          bloated++;
       });
-
       const totalAnomalies = bloated + starved;
       const healthyPct =
-        auditedItems.length > 0
+        videoBitrates.length > 0
           ? Math.round(
-              ((auditedItems.length - totalAnomalies) / auditedItems.length) * 100,
+              ((videoBitrates.length - totalAnomalies) / videoBitrates.length) *
+                100,
             )
           : 100;
-
       writeLeftCell(
         leftRowIdx++,
         "      Optimal Sizing Ratio",
@@ -316,15 +391,15 @@ export async function exportMediaLibraryToExcel(
       writeRightCell(rightRowIdx++, "      Bloated Bitrates", `${bloated} files`);
       writeRightCell(rightRowIdx++, "      Starved Bitrates", `${starved} files`);
     } else if (globalScanType === "Duplication Scan") {
-      const dupRows = getDuplicatePairRows(itemsForDups, rules);
+      const dupRows = getDuplicatePairRows(items, rules);
       const dupCount = dupRows.length;
       let spaceSavedGB = 0;
       dupRows.forEach(row => {
         spaceSavedGB += row.dupSizeGB || 0;
       });
 
-      const uniquePct = itemsForDups.length > 0
-        ? Math.round(((itemsForDups.length - dupCount) / itemsForDups.length) * 100)
+      const uniquePct = items.length > 0
+        ? Math.round(((items.length - dupCount) / items.length) * 100)
         : 100;
 
       writeLeftCell(
@@ -354,7 +429,7 @@ export async function exportMediaLibraryToExcel(
     // Discovery
     const videoCounts: Record<string, number> = {};
     const audioCounts: Record<string, number> = {};
-    itemsForDups.forEach(it => {
+    items.forEach(it => {
       if (!isMusicCategory(it.category) && it.category !== 'Corrupted' && it.category !== 'Static') {
         const vc = getPrimaryVideoCodec(it);
         if (vc && vc !== "-") videoCounts[vc] = (videoCounts[vc] || 0) + 1;
@@ -379,8 +454,8 @@ export async function exportMediaLibraryToExcel(
   writeLeftCell(leftRowIdx++, "◆  CATEGORY & TAB BREAKDOWNS", "", true);
 
   const categories = sortCategories(
-    Array.from(new Set(items.map((i) => i.category)))
-  ).filter(cat => !(globalScanType === "Discovery Scan" && cat === "Corrupted"));
+    Array.from(new Set(items.map((i) => i.category))),
+  );
   const halfLength = Math.floor(categories.length / 2);
   const leftCategories = categories.slice(0, halfLength);
   const rightCategories = categories.slice(halfLength);
@@ -454,8 +529,8 @@ export async function exportMediaLibraryToExcel(
         let bloatedCount = 0, starvedCount = 0;
         catItems.forEach(item => {
           const evalRes = evaluatePlexCompatibility(item, rules, false);
-          if (evalRes.isBloated) bloatedCount++;
-          else if (evalRes.isStarved) starvedCount++;
+          if (evalRes.level === "unfriendly" && evalRes.reason.includes("Bloated")) bloatedCount++;
+          else if (evalRes.level === "unfriendly" && evalRes.reason.includes("Starved")) starvedCount++;
         });
         if (bloatedCount > 0) writeCell(rIdx++, "            Bloated Bitrates", `${bloatedCount} files`);
         if (starvedCount > 0) writeCell(rIdx++, "            Starved Bitrates", `${starvedCount} files`);
@@ -470,11 +545,11 @@ export async function exportMediaLibraryToExcel(
         let missingCount = 0;
         catItems.forEach(item => {
           const evalRes = evaluatePlexCompatibility(item, rules, false);
-          if (evalRes.level === "legacy" && (evalRes.reason.includes("No embedded subtitles") || evalRes.reason.includes("No Embedded or External Subtitles"))) missingCount++;
+          if (evalRes.level === "legacy" && evalRes.reason.includes("No embedded subtitles")) missingCount++;
         });
         writeCell(rIdx++, "            Missing Subtitles", `${missingCount} files`);
       } else if (globalScanType === "Duplication Scan") {
-        const dupRows = allDupRows.filter(row => row.category === cat);
+        const dupRows = getDuplicatePairRows(catItems, rules);
         writeCell(rIdx++, "            Duplicates Found", `${dupRows.length} pairs`);
         let spaceSavedGB = 0;
         dupRows.forEach(row => {
@@ -556,7 +631,6 @@ export async function exportMediaLibraryToExcel(
     sheetName: string,
     dataItems: MediaItem[],
     catType: string,
-    dupRows?: DuplicatePairRow[],
   ) => {
     // Freeze top row for headers
     const ws = wb.addWorksheet(sheetName, {
@@ -566,13 +640,19 @@ export async function exportMediaLibraryToExcel(
 
     let headers: string[] = [];
     const catLower = catType.toLowerCase();
-    const isTv = getCategoryGroup(catType) === "TV";
+    const isTv =
+      !catLower.includes("docu") &&
+      (catLower.includes("tv") ||
+      catLower.includes("show") ||
+      catLower.includes("series") ||
+      catLower.includes("anime") ||
+      catLower.includes("shorts"));
 
     const isDoc = ["Documentaries", "Education", "Concerts"].includes(catType) || catLower.includes("docu");
     const isMusic = isMusicCategory(catType) || catType === "Audio";
     const isCorrupt = catType === "Corrupted";
     const isStatic = catType === "Static";
-    const isMovie = getCategoryGroup(catType) === "Movies";
+    const isMovie = ["Movies", "Movie", "Plays", "Specials"].includes(catType) || isDoc;
 
     const scanType = getScanType(rules, dataItems);
 
@@ -610,7 +690,6 @@ export async function exportMediaLibraryToExcel(
           "Container",
           "Video Codec",
           "Resolution",
-          "Frame Rate",
           "Video Bitrate",
           "HDR Format",
           "Audio Tracks",
@@ -627,7 +706,6 @@ export async function exportMediaLibraryToExcel(
           "Container",
           "Video Codec",
           "Resolution",
-          "Frame Rate",
           "Video Bitrate",
           "HDR Format",
           "Audio Tracks",
@@ -645,7 +723,6 @@ export async function exportMediaLibraryToExcel(
           "Container",
           "Video Codec",
           "Resolution",
-          "Frame Rate",
           "Video Bitrate",
           "HDR Format",
           "Audio Tracks",
@@ -687,7 +764,6 @@ export async function exportMediaLibraryToExcel(
           "File Name",
           "Video Codec",
           "Resolution",
-          "Frame Rate",
           "Video Bitrate",
           "Audio Codecs",
           "Audio Bitrate",
@@ -702,58 +778,14 @@ export async function exportMediaLibraryToExcel(
       scanType === "Video Metadata Scan" ||
       scanType === "Music Metadata Scan"
     ) {
-      if (isMusic) {
-        headers = [
-          "Cleaned Title",
-          "File Name",
-          "Title",
-          "Album Title",
-          "Artist",
-          "Year",
-          "Track",
-          "Audio Sample Rate",
-          "Cover Art",
-          "File Path"
-        ];
-      } else if (isTv) {
-        headers = [
-          "Cleaned Title",
-          "File Name",
-          "Title",
-          "Series Title",
-          "Episode Title",
-          "Season",
-          "Episode Number",
-          "Director",
-          "Writer",
-          "Year",
-          "Cast",
-          "Studio",
-          "Video Bit Depth",
-          "Audio Sample Rate",
-          "Chapters",
-          "Poster",
-          "File Path"
-        ];
-      } else { // Video
-        headers = [
-          "Cleaned Title",
-          "File Name",
-          "Title",
-          "Director",
-          "Writer",
-          "Year",
-          "Cast",
-          "Studio",
-          "Video Bit Depth",
-          "Audio Sample Rate",
-          "Chapters",
-          "Poster",
-          "File Path"
-        ];
-      }
+      headers = [
+        "File Name",
+        "Missing Metadata",
+        scanType === "Music Metadata Scan" || isMusic ? "Cover Art" : "Poster",
+        "File Path",
+      ];
     } else if (scanType === "Duplication Scan") {
-      headers = ["File", "Path", "Duplicate File", "Path", "Flag Reason"];
+      headers = ["File", "Path", "Duplicate File", "Path"];
     } else if (scanType === "Anomaly Scan") {
       if (isMusic) {
         headers = [
@@ -781,7 +813,7 @@ export async function exportMediaLibraryToExcel(
         "Alert Level",
         "File Name",
         "Subtitles",
-        "Subtitle Type",
+        "Subtitle Technical Data",
         "Analysis Notes",
         "Remediation Action",
         "File Path",
@@ -799,13 +831,9 @@ export async function exportMediaLibraryToExcel(
       let width = 15;
       if (h === "Alert Level") {
         width = 15;
-      } else if (h === "File Path" || h === "Path" || h === "Duplicate Path") {
-        width = 65; // wider for file paths to avoid cutoffs
-      } else if (h === "Analysis Notes" || h === "Recommendation" || h === "Remediation Action" || h === "Flag Reason") {
-        width = 52; // wider for text columns to prevent bleeding
-      } else if (h === "Missing Metadata" || h === "Missing Tags") {
+      } else if (h === "File Path" || h === "Analysis Notes" || h === "Recommendation" || h === "Remediation Action" || h === "Missing Metadata" || h === "Missing Tags" || h === "Path") {
         width = 45;
-      } else if (h === "File Name" || h === "Title" || h === "Series Title" || h === "File" || h === "Duplicate File" || h === "Cleaned Title") {
+      } else if (h === "File Name" || h === "Title" || h === "Series Title" || h === "File" || h === "Duplicate File") {
         width = 35;
       } else if (h.length + 5 > 15) {
         width = h.length + 5;
@@ -817,30 +845,13 @@ export async function exportMediaLibraryToExcel(
     ws.getRow(1).values = visibleHeaders;
 
     // Style the actual table header (now at Row 1!)
-    const factualCols = new Set(["Cleaned Title", "File Name", "File Path", "Path", "File", "Duplicate File", "Duplicate Path", "Flag Reason"]);
     ws.getRow(1).eachCell((cell) => {
-      const colName = String(cell.value || "");
-      const isFactual = factualCols.has(colName);
-      const isMetadataScan = scanType === "Metadata Scan" || scanType === "Video Metadata Scan" || scanType === "Music Metadata Scan";
-
-      if (isMetadataScan && !isFactual) {
-        // Metadata header coloring (Elegant Indigo theme)
-        cell.font = { size: 11, bold: true, color: { argb: "FFE0E7FF" } }; // Light indigo text
-        cell.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "FF312E81" }, // Deep Indigo-900 background
-        };
-      } else {
-        // Factual or non-metadata-scan header coloring (Standard Dark Slate)
-        cell.font = { size: 11, bold: true, color: { argb: "FFFFFFFF" } }; // White text
-        cell.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "FF0F172A" }, // Dark slate background
-        };
-      }
-
+      cell.font = { size: 11, bold: true, color: { argb: "FFFFFFFF" } };
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF0F172A" },
+      }; // Dark slate
       cell.alignment = {
         vertical: "top",
         horizontal: "center",
@@ -852,25 +863,17 @@ export async function exportMediaLibraryToExcel(
     let currentGroup = "";
 
     if (scanType === "Duplication Scan") {
-      const rows = dupRows || getDuplicatePairRows(dataItems, rules);
-      rows.forEach((row) => {
-        const sanitize = (val: string | undefined | null) => {
-          if (!val) return "";
-          if (val.startsWith("=") || val.startsWith("+") || val.startsWith("-") || val.startsWith("@")) {
-            return `'${val}`;
-          }
-          return val;
-        };
+      const dupRows = getDuplicatePairRows(dataItems, rules);
+      dupRows.forEach((row) => {
         ws.addRow([
-          sanitize(row.fileName),
-          sanitize(row.filePath),
-          sanitize(row.dupFileName),
-          sanitize(row.dupFilePath),
-          sanitize(row.flagReason)
+          row.fileName,
+          row.filePath,
+          row.dupFileName,
+          row.dupFilePath
         ]);
       });
     } else {
-      const duplicatesMap = computeDuplicatesMap(itemsForDups, rules);
+      const duplicatesMap = computeDuplicatesMap(dataItems, rules);
 
     dataItems.forEach((item) => {
       const isDuplicate = duplicatesMap.get(item.id) ?? false;
@@ -883,19 +886,31 @@ export async function exportMediaLibraryToExcel(
           : "None";
       const subStr = formatSubtitleSummary(item);
       const folderPath = getFolderPath(item.filePath, item.filename);
-      const parsedMeta = parseVideoMetadata(item);
 
       const catLower = catType.toLowerCase();
-      const isTv = getCategoryGroup(catType) === "TV";
-      const isDoc = ["Documentaries", "Education", "Concerts"].includes(catType) || catLower.includes("docu");
-      const isMovie = getCategoryGroup(catType) === "Movies";
+      const isTv =
+        !catLower.includes("docu") &&
+        (catLower.includes("tv") ||
+        catLower.includes("show") ||
+        catLower.includes("series") ||
+        catLower.includes("anime") ||
+        catLower.includes("shorts"));
+      const isDoc = catLower.includes("doc");
       const isMusic = isMusicCategory(catType);
 
-      const normCurrentGroup = normalizeGroupTitle(currentGroup);
+      const normCurrentGroup = String(currentGroup)
+        .replace(/['"\[\]()]/g, "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .toLowerCase();
 
       if (isTv) {
         const groupTitle = getGroupTitleInit(item, isTv) || "Ungrouped";
-        const normGroupTitle = normalizeGroupTitle(groupTitle);
+        const normGroupTitle = String(groupTitle)
+          .replace(/['"\[\]()]/g, "")
+          .replace(/\s+/g, " ")
+          .trim()
+          .toLowerCase();
 
         if (normGroupTitle !== normCurrentGroup) {
           currentGroup = groupTitle;
@@ -907,8 +922,6 @@ export async function exportMediaLibraryToExcel(
             visibleHeaders.length,
           );
           groupRow.getCell(1).font = {
-            name: "Calibri",
-            size: 12,
             bold: true,
             color: { argb: "FF000000" },
           };
@@ -918,45 +931,17 @@ export async function exportMediaLibraryToExcel(
             fgColor: { argb: "FFADD8E6" },
           };
           groupRow.getCell(1).alignment = {
-            vertical: "middle",
+            vertical: "top",
             horizontal: "left",
           };
-          groupRow.height = 14;
-        }
-      } else if (isMovie) {
-        const rawTitle = parsedMeta?.title || item.filename || '';
-        const sectionHeader = getSectionHeaderForTitle(rawTitle);
-        const normSectionHeader = sectionHeader.trim().toLowerCase();
-
-        if (normSectionHeader !== normCurrentGroup) {
-          currentGroup = sectionHeader;
-          const groupRow = ws.addRow([sectionHeader]);
-          ws.mergeCells(
-            groupRow.number,
-            1,
-            groupRow.number,
-            visibleHeaders.length,
-          );
-          groupRow.getCell(1).font = {
-            name: "Calibri",
-            size: 12,
-            color: { argb: "FFFFFFFF" },
-            bold: true,
-          };
-          groupRow.getCell(1).fill = {
-            type: "pattern",
-            pattern: "solid",
-            fgColor: { argb: "FF00B0F0" },
-          };
-          groupRow.getCell(1).alignment = {
-            vertical: "middle",
-            horizontal: "left",
-          };
-          groupRow.height = 14;
         }
       } else if (catType === "Extras") {
         const groupTitle = getExtrasGroupTitle(item);
-        const normGroupTitle = normalizeGroupTitle(groupTitle);
+        const normGroupTitle = String(groupTitle)
+          .replace(/['"\[\]()]/g, "")
+          .replace(/\s+/g, " ")
+          .trim()
+          .toLowerCase();
 
         if (normGroupTitle !== normCurrentGroup) {
           currentGroup = groupTitle;
@@ -968,8 +953,6 @@ export async function exportMediaLibraryToExcel(
             visibleHeaders.length,
           );
           groupRow.getCell(1).font = {
-            name: "Calibri",
-            size: 12,
             bold: true,
             color: { argb: "FF000000" },
           };
@@ -979,16 +962,22 @@ export async function exportMediaLibraryToExcel(
             fgColor: { argb: "FFFBCFE8" },
           }; // Soft pink/magenta for extras grouping
           groupRow.getCell(1).alignment = {
-            vertical: "middle",
+            vertical: "top",
             horizontal: "left",
           };
-          groupRow.height = 14;
         }
       } else if (isMusic) {
         const dArtist = getDisplayArtist(item, rules);
         const dAlbum = getDisplayAlbum(item, rules);
-        const groupTitle = getMusicGroupTitle(item, rules, catType);
-        const normGroupTitle = normalizeGroupTitle(groupTitle);
+        const groupTitle =
+          catType === "Soundtracks" || catType === "Music Compilations"
+            ? dAlbum
+            : `${dArtist} - ${dAlbum}`;
+        const normGroupTitle = String(groupTitle)
+          .replace(/['"\[\]()]/g, "")
+          .replace(/\s+/g, " ")
+          .trim()
+          .toLowerCase();
 
         if (normGroupTitle !== normCurrentGroup) {
           currentGroup = groupTitle;
@@ -1000,8 +989,6 @@ export async function exportMediaLibraryToExcel(
             visibleHeaders.length,
           );
           groupRow.getCell(1).font = {
-            name: "Calibri",
-            size: 12,
             bold: true,
             color: { argb: "FF000000" },
           };
@@ -1011,14 +998,14 @@ export async function exportMediaLibraryToExcel(
             fgColor: { argb: "FF98FF98" },
           };
           groupRow.getCell(1).alignment = {
-            vertical: "middle",
+            vertical: "top",
             horizontal: "left",
           };
-          groupRow.height = 14;
         }
       }
 
       const rowValues: Record<string, any> = {};
+      const parsedMeta = parseVideoMetadata(item);
 
       const missing = getMissingMetadataTags(item);
       const missingTagsStr = missing.length > 0 ? missing.join(", ") : "None";
@@ -1029,216 +1016,138 @@ export async function exportMediaLibraryToExcel(
       const isQuality = scanType === "Anomaly Scan";
       const isMetadata = scanType === "Metadata Scan" || scanType === "Video Metadata Scan" || scanType === "Music Metadata Scan";
 
-      if (isMetadata) {
-        const missingFmt = (val: any) => {
-          if (val === undefined || val === null) return "[MISSING]";
-          let s = String(val).trim();
-          if (s.length > 500) s = s.substring(0, 500) + "... [TRUNCATED]";
-          if (s === "" || s === "-" || s === "0" || s === "None" || s === "Unknown") return "[MISSING]";
-          return s;
-        };
-
-        const posterFmt = (hasEmb: boolean | undefined, hasExt: boolean | undefined) => {
-          if (hasEmb) return "Embedded";
-          if (hasExt) return "External";
-          return "[MISSING]";
-        };
-
-        const yearVal = item.year || parseInt(item.tags?.date || item.tags?.DATE || item.tags?.year || item.tags?.YEAR || "0") || 0;
-
-        if (isMusic) {
-          const songTitle = item.tags?.title || item.tags?.TITLE || "";
-          const hasSongTitle = songTitle && songTitle.toLowerCase() !== (item.filename || "").toLowerCase();
-          
-          rowValues["Cleaned Title"] = missingFmt(parsedMeta.title);
-          rowValues["Title"] = hasSongTitle ? missingFmt(songTitle) : "[MISSING]";
-          rowValues["File Name"] = item.filename;
-          rowValues["Artist"] = missingFmt(item.tags?.artist || item.tags?.ARTIST);
-          rowValues["Album Title"] = missingFmt(item.tags?.album || item.tags?.ALBUM);
-          rowValues["Year"] = missingFmt(yearVal);
-          rowValues["Track"] = missingFmt(item.tags?.track || item.tags?.TRACK || item.tags?.tracknumber || item.tags?.TRACKNUMBER);
-          rowValues["Audio Sample Rate"] = item.audioSampleRate ? `${item.audioSampleRate / 1000} kHz` : "[MISSING]";
-          rowValues["Cover Art"] = posterFmt(item.hasEmbeddedPoster, item.hasExternalPoster);
-          rowValues["File Path"] = item.filePath;
-        } else if (isTv) {
-          const tvTitle = item.tags?.title || item.tags?.TITLE || "";
-          const hasTvTitle = tvTitle && tvTitle.toLowerCase() !== (item.filename || "").toLowerCase();
-
-          rowValues["Cleaned Title"] = missingFmt(parsedMeta.title);
-          rowValues["Title"] = hasTvTitle ? missingFmt(tvTitle) : missingFmt(parsedMeta.title);
-          rowValues["File Name"] = item.filename;
-          rowValues["Series Title"] = missingFmt(parsedMeta.title || item.tags?.show || item.tags?.SHOW || item.tags?.series || item.tags?.SERIES);
-          rowValues["Season"] = missingFmt(parsedMeta.season);
-          rowValues["Episode Number"] = missingFmt(parsedMeta.episode);
-          rowValues["Episode Title"] = missingFmt(parsedMeta.epTitle);
-          rowValues["Director"] = missingFmt(item.tags?.director || item.tags?.DIRECTOR);
-          rowValues["Writer"] = missingFmt(item.tags?.writer || item.tags?.WRITER);
-          rowValues["Year"] = missingFmt(yearVal);
-          rowValues["Cast"] = missingFmt(item.tags?.cast || item.tags?.CAST || item.tags?.actors || item.tags?.ACTORS);
-          rowValues["Online ID"] = missingFmt(item.matchedOnlineId);
-          rowValues["Studio"] = missingFmt(item.tags?.studio || item.tags?.STUDIO || item.tags?.publisher || item.tags?.PUBLISHER || item.tags?.network || item.tags?.NETWORK);
-          rowValues["Video Bit Depth"] = missingFmt(item.videoBitDepth);
-          rowValues["Audio Sample Rate"] = item.audioSampleRate ? `${item.audioSampleRate / 1000} kHz` : "[MISSING]";
-          rowValues["Chapters"] = item.chapterCount !== undefined ? (item.chapterCount > 0 ? `${item.chapterCount} chapters` : "[MISSING]") : "[MISSING]";
-          rowValues["Poster"] = posterFmt(item.hasEmbeddedPoster, item.hasExternalPoster);
-          rowValues["File Path"] = item.filePath;
-        } else {
-          // Movies / Video
-          const videoTitle = item.tags?.title || item.tags?.TITLE || "";
-          const hasVideoTitle = videoTitle && videoTitle.toLowerCase() !== (item.filename || "").toLowerCase();
-
-          rowValues["Cleaned Title"] = missingFmt(parsedMeta.title);
-          rowValues["Title"] = hasVideoTitle ? missingFmt(videoTitle) : missingFmt(parsedMeta.title);
-          rowValues["File Name"] = item.filename;
-          rowValues["Director"] = missingFmt(item.tags?.director || item.tags?.DIRECTOR);
-          rowValues["Writer"] = missingFmt(item.tags?.writer || item.tags?.WRITER);
-          rowValues["Year"] = missingFmt(yearVal);
-          rowValues["Cast"] = missingFmt(item.tags?.cast || item.tags?.CAST || item.tags?.actors || item.tags?.ACTORS);
-          rowValues["Online ID"] = missingFmt(item.matchedOnlineId);
-          rowValues["Studio"] = missingFmt(item.tags?.studio || item.tags?.STUDIO || item.tags?.publisher || item.tags?.PUBLISHER || item.tags?.network || item.tags?.NETWORK);
-          rowValues["Video Bit Depth"] = missingFmt(item.videoBitDepth);
-          rowValues["Audio Sample Rate"] = item.audioSampleRate ? `${item.audioSampleRate / 1000} kHz` : "[MISSING]";
-          rowValues["Chapters"] = item.chapterCount !== undefined ? (item.chapterCount > 0 ? `${item.chapterCount} chapters` : "[MISSING]") : "[MISSING]";
-          rowValues["Poster"] = posterFmt(item.hasEmbeddedPoster, item.hasExternalPoster);
-          rowValues["File Path"] = item.filePath;
-        }
+      if (catType === "Corrupted") {
+        analysisNotes = "Corrupted file";
+        remediationAction = "Replace file";
       } else {
-        if (catType === "Corrupted") {
-          analysisNotes = "Corrupted file";
-          remediationAction = "Replace file";
+        if (isSubtitle || isQuality || isMetadata) {
+          analysisNotes = evalResult.reason;
+          remediationAction = evalResult.suggestion;
         } else {
-          if (isSubtitle || isQuality || isMetadata) {
-            analysisNotes = evalResult.reason;
-            remediationAction = evalResult.suggestion;
-          } else {
-            if (!isMusicCategory(item.category)) {
-              let notes = "";
-              if (evalResult.level === "modern") {
-                notes = "Direct Play on newer HW";
-              } else if (evalResult.level === "legacy") {
-                notes = "Direct Play on most HW";
-              } else if (evalResult.level === "unfriendly") {
-                notes = evalResult.reason || "Will transcode";
-              } else {
-                notes = evalResult.reason || "Will transcode";
-              }
-              if (notes) analysisNotes = notes;
-              
-              if (evalResult.level === "unfriendly" && evalResult.suggestion) {
-                remediationAction = evalResult.suggestion;
-              }
+          if (!isMusicCategory(item.category)) {
+            let notes = "";
+            if (evalResult.level === "modern") {
+              notes = "Direct Play on newer HW";
+            } else if (evalResult.level === "legacy") {
+              notes = "Direct Play on most HW";
+            } else if (evalResult.level === "unfriendly") {
+              notes = evalResult.reason || "Will transcode";
+            } else {
+              notes = evalResult.reason || "Will transcode";
+            }
+            if (notes) analysisNotes = notes;
+            
+            if (evalResult.level === "unfriendly" && evalResult.suggestion) {
+              remediationAction = evalResult.suggestion;
             }
           }
         }
+      }
 
-        if (isMusicCategory(catType)) {
-          rowValues["Artist"] = getDisplayArtist(item, rules);
-          rowValues["Album Title"] = getDisplayAlbum(item, rules);
-          rowValues["Album/Folder Title"] = getDisplayAlbum(item, rules);
-          rowValues["Stream Friendly?"] = getCompatibilityLabel(evalResult.level);
-          rowValues["Song Title"] = getDisplaySongTitle(item, rules);
-          rowValues["File Name"] = item.filename;
-          rowValues["Filename"] = item.filename;
-          rowValues["File Format/Codec"] =
-            getPrimaryAudioCodec(item) ||
-            getContainerFormat(item);
-          rowValues["Bitrate"] = `${Math.round((item.audioBitrate || 0) / 1000)} kbps`;
-          rowValues["Audio Bitrate"] = `${Math.round((item.audioBitrate || 0) / 1000)} kbps`;
-          rowValues["Missing Tags"] = missingTagsStr;
-          rowValues["Missing Metadata"] = missingTagsStr;
-          rowValues["Poster"] = item.hasEmbeddedPoster
-            ? "Embedded"
-            : item.hasExternalPoster
-              ? "External"
-              : "None";
-          rowValues["Cover Art"] = item.hasEmbeddedPoster
-            ? "Embedded"
-            : item.hasExternalPoster
-              ? "External"
-              : "None";
-          rowValues["Bitrate Anomaly"] = item.bitrateAnomaly
-            ? item.bitrateAnomalyReason
+      if (isMusicCategory(catType)) {
+        rowValues["Artist"] = getDisplayArtist(item, rules);
+        rowValues["Album Title"] = getDisplayAlbum(item, rules);
+        rowValues["Album/Folder Title"] = getDisplayAlbum(item, rules);
+        rowValues["Stream Friendly?"] = getCompatibilityLabel(evalResult.level);
+        rowValues["Song Title"] = getDisplaySongTitle(item, rules);
+        rowValues["File Name"] = item.filename;
+        rowValues["Filename"] = item.filename;
+        rowValues["File Format/Codec"] =
+          getPrimaryAudioCodec(item) ||
+          getContainerFormat(item);
+        rowValues["Bitrate"] = `${Math.round((item.audioBitrate || 0) / 1000)} kbps`;
+        rowValues["Audio Bitrate"] = `${Math.round((item.audioBitrate || 0) / 1000)} kbps`;
+        rowValues["Missing Tags"] = missingTagsStr;
+        rowValues["Missing Metadata"] = missingTagsStr;
+        rowValues["Poster"] = item.hasEmbeddedPoster
+          ? "Embedded"
+          : item.hasExternalPoster
+            ? "External"
             : "None";
-          rowValues["File Path"] = item.filePath;
-          rowValues["Analysis Notes"] = analysisNotes || ((evalResult.level === "unfriendly" || evalResult.level === "legacy") ? evalResult.reason : "");
-          rowValues["Remediation Action"] = remediationAction || ((evalResult.level === "unfriendly" || evalResult.level === "legacy") ? evalResult.suggestion : "");
-          rowValues["Recommendation"] = remediationAction || ((evalResult.level === "unfriendly" || evalResult.level === "legacy") ? evalResult.suggestion : "");
-        } else {
-          const c = getContainerFormat(item);
-          const baseValues = {
-            "Missing Metadata": missingTagsStr,
-            "Stream Friendly?": getCompatibilityLabel(evalResult.level),
-            "Missing Tags": missingTagsStr,
-            Poster: item.hasEmbeddedPoster
-              ? "Embedded"
-              : item.hasExternalPoster
-                ? "External"
-                : "None",
-            "Cover Art": item.hasEmbeddedPoster
-              ? "Embedded"
-              : item.hasExternalPoster
-                ? "External"
-                : "None",
-            "Bitrate Anomaly": item.bitrateAnomaly
-              ? item.bitrateAnomalyReason
+        rowValues["Cover Art"] = item.hasEmbeddedPoster
+          ? "Embedded"
+          : item.hasExternalPoster
+            ? "External"
+            : "None";
+        rowValues["Bitrate Anomaly"] = item.bitrateAnomaly
+          ? item.bitrateAnomalyReason
+          : "None";
+        rowValues["File Path"] = item.filePath;
+        rowValues["Analysis Notes"] = analysisNotes || ((evalResult.level === "unfriendly" || evalResult.level === "legacy") ? evalResult.reason : "");
+        rowValues["Remediation Action"] = remediationAction || ((evalResult.level === "unfriendly" || evalResult.level === "legacy") ? evalResult.suggestion : "");
+        rowValues["Recommendation"] = remediationAction || ((evalResult.level === "unfriendly" || evalResult.level === "legacy") ? evalResult.suggestion : "");
+      } else {
+        const c = getContainerFormat(item);
+        const baseValues = {
+          "Missing Metadata": missingTagsStr,
+          "Stream Friendly?": getCompatibilityLabel(evalResult.level),
+          "Missing Tags": missingTagsStr,
+          Poster: item.hasEmbeddedPoster
+            ? "Embedded"
+            : item.hasExternalPoster
+              ? "External"
               : "None",
-            Filename: item.filename,
-            "File Name": item.filename,
-            "Video Codec": getPrimaryVideoCodec(item),
-            Resolution: formatResolutionForExcel(item.videoResolution),
-            "Frame Rate": isMusicCategory(item.category) || !item.videoFrameRate
-              ? ""
-              : `${item.videoFrameRate} fps`,
-            "Video Bitrate": item.videoBitrateMbps
-              ? item.videoBitrateMbps.toFixed(2) + " Mbps"
-              : "",
-            "Audio Bitrate": item.audioBitrate ? Math.round(item.audioBitrate / 1000) + " kbps" : "",
-            "HDR Format": item.hdrFormat || "SDR",
-            "Audio Codec": audioStr,
-            "Audio Codecs": audioStr,
-            "Audio Tracks": (item.audioTracks || []).length,
-            Container: c,
-            Subtitles: subStr,
-            "Subtitle Type": formatSubtitleTechnical(item),
-            "File Path": item.filePath,
-            "Analysis Notes": analysisNotes || ((evalResult.level === "unfriendly" || evalResult.level === "legacy") ? evalResult.reason : ""),
-            "Remediation Action": remediationAction || ((evalResult.level === "unfriendly" || evalResult.level === "legacy") ? evalResult.suggestion : ""),
-            Recommendation: remediationAction || ((evalResult.level === "unfriendly" || evalResult.level === "legacy") ? evalResult.suggestion : ""),
-          };
+          "Cover Art": item.hasEmbeddedPoster
+            ? "Embedded"
+            : item.hasExternalPoster
+              ? "External"
+              : "None",
+          "Bitrate Anomaly": item.bitrateAnomaly
+            ? item.bitrateAnomalyReason
+            : "None",
+          Filename: item.filename,
+          "File Name": item.filename,
+          "Video Codec": getPrimaryVideoCodec(item),
+          Resolution: formatResolutionForExcel(item.videoResolution),
+          "Video Bitrate": item.videoBitrateMbps
+            ? item.videoBitrateMbps.toFixed(2) + " Mbps"
+            : "",
+          "Audio Bitrate": item.audioBitrate ? Math.round(item.audioBitrate / 1000) + " kbps" : "",
+          "HDR Format": item.hdrFormat || "SDR",
+          "Audio Codec": audioStr,
+          "Audio Codecs": audioStr,
+          "Audio Tracks": (item.audioTracks || []).length,
+          Container: c,
+          Subtitles: subStr,
+          "Subtitle Technical Data": formatSubtitleTechnical(item),
+          "File Path": item.filePath,
+          "Analysis Notes": analysisNotes || ((evalResult.level === "unfriendly" || evalResult.level === "legacy") ? evalResult.reason : ""),
+          "Remediation Action": remediationAction || ((evalResult.level === "unfriendly" || evalResult.level === "legacy") ? evalResult.suggestion : ""),
+          Recommendation: remediationAction || ((evalResult.level === "unfriendly" || evalResult.level === "legacy") ? evalResult.suggestion : ""),
+        };
 
-          if (catType === "Corrupted") {
-            Object.assign(rowValues, {
-              "File Name": item.filename,
-              Filename: item.filename,
-              "Corruption Type": item.tags?.artist || "Read error / 0-byte file",
-              Recommendation: "Replace file",
-              "File Path": item.filePath,
-            });
-          } else if (catType === "Static") {
-            Object.assign(rowValues, {
-              "File Name": item.filename,
-              Filename: item.filename,
-              "File Path": item.filePath,
-            });
-          } else if (isTv) {
-            Object.assign(rowValues, baseValues, {
-              "Series Title": parsedMeta.title || item.tags?.show || item.tags?.SHOW || item.tags?.series || item.tags?.SERIES || "",
-              Season: parsedMeta.season,
-              Episode: parsedMeta.episode,
-              "Episode Title": parsedMeta.epTitle,
-              "Release Year": parsedMeta.year,
-            });
-          } else if (catType === "Extras") {
-            Object.assign(rowValues, baseValues, {
-              Title: ((item.filePath || "").split(/[\\\/]/).filter(Boolean).slice(-2, -1)[0] || "Extras") + " - " + (parsedMeta.epTitle && parsedMeta.epTitle !== "-" ? parsedMeta.epTitle : parsedMeta.title),
-              "Release Year": parsedMeta.year,
-            });
-          } else {
-            Object.assign(rowValues, baseValues, {
-              Title: parsedMeta.title,
-              "Release Year": parsedMeta.year,
-            });
-          }
+        if (catType === "Corrupted") {
+          Object.assign(rowValues, {
+            "File Name": item.filename,
+            Filename: item.filename,
+            "Corruption Type": item.tags?.artist || "Read error / 0-byte file",
+            Recommendation: "Replace file",
+            "File Path": item.filePath,
+          });
+        } else if (catType === "Static") {
+          Object.assign(rowValues, {
+            "File Name": item.filename,
+            Filename: item.filename,
+            "File Path": item.filePath,
+          });
+        } else if (isTv) {
+          Object.assign(rowValues, baseValues, {
+            "Series Title": parsedMeta.title,
+            Season: parsedMeta.season,
+            Episode: parsedMeta.episode,
+            "Episode Title": parsedMeta.epTitle,
+            "Release Year": parsedMeta.year,
+          });
+        } else if (catType === "Extras") {
+          Object.assign(rowValues, baseValues, {
+            Title: ((item.filePath || "").split(/[\\\/]/).filter(Boolean).slice(-2, -1)[0] || "Extras") + " - " + (parsedMeta.epTitle && parsedMeta.epTitle !== "-" ? parsedMeta.epTitle : parsedMeta.title),
+            "Release Year": parsedMeta.year,
+          });
+        } else {
+          Object.assign(rowValues, baseValues, {
+            Title: parsedMeta.title,
+            "Release Year": parsedMeta.year,
+          });
         }
       }
 
@@ -1252,35 +1161,8 @@ export async function exportMediaLibraryToExcel(
         }
       }
 
-      const orderedValues = visibleHeaders.map((h) => {
-        let val = rowValues[h];
-        if (typeof val === "string") {
-          // Prevent Excel Formula Injection
-          if (val.startsWith("=") || val.startsWith("+") || val.startsWith("-") || val.startsWith("@")) {
-            val = `'${val}`;
-          }
-        }
-        return val ?? "";
-      });
+      const orderedValues = visibleHeaders.map((h) => rowValues[h] || "");
       const addedRow = ws.addRow(orderedValues);
-
-      if (isMetadata) {
-        visibleHeaders.forEach((h, index) => {
-          const cellVal = rowValues[h];
-          if (cellVal === "[MISSING]") {
-            const cell = addedRow.getCell(index + 1);
-            cell.fill = {
-              type: "pattern",
-              pattern: "solid",
-              fgColor: { argb: "FFFFE4E6" }, // light pink (Rose-100)
-            };
-            cell.font = {
-              color: { argb: "FF9F1239" }, // deep rose text
-              bold: true
-            };
-          }
-        });
-      }
 
       if (scanType === "Subtitle Scan") {
         const alertIdx = visibleHeaders.indexOf("Alert Level");
@@ -1419,10 +1301,10 @@ export async function exportMediaLibraryToExcel(
 
   categories.forEach((cat) => {
     const catItems = items.filter((i) => i.category === cat);
-    const sheetDupRows = globalScanType === "Duplication Scan" ? allDupRows.filter(row => row.category === cat) : undefined;
 
     if (globalScanType === "Duplication Scan") {
-      if (!sheetDupRows || sheetDupRows.length === 0) {
+      const dupRows = getDuplicatePairRows(catItems, rules);
+      if (dupRows.length === 0) {
         return; // Skip empty sheets for Duplication Scan
       }
     }
@@ -1439,25 +1321,31 @@ export async function exportMediaLibraryToExcel(
           (cat.toLowerCase().includes("tv") ||
           cat.toLowerCase().includes("show") ||
           cat.toLowerCase().includes("series") ||
-          cat.toLowerCase().includes("anime"));
-        const titleA = isMusicCategory(cat) 
-            ? getMusicGroupTitle(a, rules, cat)
-            : getGroupTitleInit(a, isTvCat) || "";
-        const titleB = isMusicCategory(cat) 
-            ? getMusicGroupTitle(b, rules, cat)
-            : getGroupTitleInit(b, isTvCat) || "";
+          cat.toLowerCase().includes("anime") ||
+          cat.toLowerCase().includes("shorts"));
+        const titleA =
+          cat === "Soundtracks" || cat === "Music Compilations"
+            ? getDisplayAlbum(a, rules)
+            : (isMusicCategory(cat)
+                ? `${getDisplayArtist(a, rules)} - ${getDisplayAlbum(a, rules)}`
+                : getGroupTitleInit(a, isTvCat)) || "";
+        const titleB =
+          cat === "Soundtracks" || cat === "Music Compilations"
+            ? getDisplayAlbum(b, rules)
+            : (isMusicCategory(cat)
+                ? `${getDisplayArtist(b, rules)} - ${getDisplayAlbum(b, rules)}`
+                : getGroupTitleInit(b, isTvCat)) || "";
 
-        let normA = normalizeGroupTitle(titleA);
-        let normB = normalizeGroupTitle(titleB);
-
-        const catLower = cat.toLowerCase();
-        const isDocCat = ["documentaries", "education", "concerts"].includes(catLower) || catLower.includes("docu");
-        const isMovieCat = ["movies", "movie", "plays", "specials", "shorts", "music videos"].includes(catLower) || isDocCat;
-
-        if (isMovieCat) {
-          normA = normalizeTitleForSort(normA).toLowerCase();
-          normB = normalizeTitleForSort(normB).toLowerCase();
-        }
+        const normA = String(titleA)
+          .replace(/['"\[\]()]/g, "")
+          .replace(/\s+/g, " ")
+          .trim()
+          .toLowerCase();
+        const normB = String(titleB)
+          .replace(/['"\[\]()]/g, "")
+          .replace(/\s+/g, " ")
+          .trim()
+          .toLowerCase();
 
         if (normA !== normB) {
           return normA.localeCompare(normB, undefined, {
@@ -1489,7 +1377,7 @@ export async function exportMediaLibraryToExcel(
     }
 
     usedSheetNames.add(sheetName.toLowerCase());
-    createGroupedSheet(sheetName, catItems, cat, sheetDupRows);
+    createGroupedSheet(sheetName, catItems, cat);
   });
 
   // --- Create "Changes" Tab ---
@@ -1506,79 +1394,77 @@ export async function exportMediaLibraryToExcel(
     console.warn("Failed to retrieve media changes for Excel export:", e);
   }
 
-  if (storedChanges.length > 0 && globalScanType === "Discovery Scan") {
-    const changesWs = wb.addWorksheet("Changes", {
-      views: [{ showGridLines: true }],
+  const changesWs = wb.addWorksheet("Changes", {
+    views: [{ showGridLines: true }],
+  });
+
+  changesWs.columns = [
+    { header: "Filename", key: "filename", width: 35 },
+    { header: "Path", key: "path", width: 60 },
+    { header: "Change Found", key: "changeFound", width: 40 },
+    { header: "Date", key: "date", width: 15 },
+  ];
+
+  const changesHeaderRow = changesWs.getRow(1);
+  changesHeaderRow.values = ["Filename", "Path", "Change Found", "Date"];
+  changesHeaderRow.eachCell((cell) => {
+    cell.font = { size: 11, bold: true, color: { argb: "FFFFFFFF" } };
+    cell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FF0F172A" }, // Slate-900 background
+    };
+    cell.alignment = {
+      vertical: "middle",
+      horizontal: "left",
+    };
+  });
+  changesHeaderRow.height = 24;
+
+  storedChanges.forEach((change) => {
+    const row = changesWs.addRow({
+      filename: change.filename || "",
+      path: change.path || "",
+      changeFound: change.changeFound || "",
+      date: change.date || "",
     });
 
-    changesWs.columns = [
-      { header: "Filename", key: "filename", width: 35 },
-      { header: "Path", key: "path", width: 60 },
-      { header: "Change Found", key: "changeFound", width: 40 },
-      { header: "Date", key: "date", width: 15 },
-    ];
+    row.eachCell((cell) => {
+      cell.border = {
+        top: { style: "hair", color: { argb: "FFCBD5E1" } },
+        left: { style: "hair", color: { argb: "FFCBD5E1" } },
+        bottom: { style: "hair", color: { argb: "FFCBD5E1" } },
+        right: { style: "hair", color: { argb: "FFCBD5E1" } },
+      };
+      cell.alignment = { vertical: "middle", horizontal: "left" };
+    });
 
-    const changesHeaderRow = changesWs.getRow(1);
-    changesHeaderRow.values = ["Filename", "Path", "Change Found", "Date"];
-    changesHeaderRow.eachCell((cell) => {
-      cell.font = { size: 11, bold: true, color: { argb: "FFFFFFFF" } };
-      cell.fill = {
+    // Style the "Change Found" column cell
+    const cfCell = row.getCell(3);
+    const cfVal = cfCell.value ? String(cfCell.value).toLowerCase() : "";
+    if (cfVal.includes("moved")) {
+      cfCell.fill = {
         type: "pattern",
         pattern: "solid",
-        fgColor: { argb: "FF0F172A" }, // Slate-900 background
+        fgColor: { argb: "FFFEF9C3" }, // Soft Yellow background
       };
-      cell.alignment = {
-        vertical: "middle",
-        horizontal: "left",
+      cfCell.font = { color: { argb: "FF854D0E" }, bold: true };
+    } else if (cfVal.includes("deleted") || cfVal.includes("removed")) {
+      cfCell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFFEE2E2" }, // Soft Red background
       };
-    });
-    changesHeaderRow.height = 24;
-
-    storedChanges.forEach((change) => {
-      const row = changesWs.addRow({
-        filename: change.filename || "",
-        path: change.path || "",
-        changeFound: change.changeFound || "",
-        date: change.date || "",
-      });
-
-      row.eachCell((cell) => {
-        cell.border = {
-          top: { style: "hair", color: { argb: "FFCBD5E1" } },
-          left: { style: "hair", color: { argb: "FFCBD5E1" } },
-          bottom: { style: "hair", color: { argb: "FFCBD5E1" } },
-          right: { style: "hair", color: { argb: "FFCBD5E1" } },
-        };
-        cell.alignment = { vertical: "middle", horizontal: "left" };
-      });
-
-      // Style the "Change Found" column cell
-      const cfCell = row.getCell(3);
-      const cfVal = cfCell.value ? String(cfCell.value).toLowerCase() : "";
-      if (cfVal.includes("moved")) {
-        cfCell.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "FFFEF9C3" }, // Soft Yellow background
-        };
-        cfCell.font = { color: { argb: "FF854D0E" }, bold: true };
-      } else if (cfVal.includes("deleted") || cfVal.includes("removed")) {
-        cfCell.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "FFFEE2E2" }, // Soft Red background
-        };
-        cfCell.font = { color: { argb: "FFEF4444" }, bold: true };
-      } else if (cfVal.includes("added")) {
-        cfCell.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "FFDCFCE7" }, // Soft Green background
-        };
-        cfCell.font = { color: { argb: "FF166534" }, bold: true };
-      }
-    });
-  }
+      cfCell.font = { color: { argb: "FFEF4444" }, bold: true };
+    } else if (cfVal.includes("added")) {
+      cfCell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFDCFCE7" }, // Soft Green background
+      };
+      cfCell.font = { color: { argb: "FF166534" }, bold: true };
+    }
+  });
 
   const formatDateMMDDYY = (date: Date = new Date()) => {
     const mm = String(date.getMonth() + 1).padStart(2, "0");

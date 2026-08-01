@@ -1,18 +1,15 @@
-import { formatCodecString, getPrimaryAudioCodec, getPrimaryVideoCodec, getContainerFormat } from "./mediaFormatter";
-import { isMusicCategory } from '@bitscribe/core-types';
-import { MediaItem, EvaluationResult, RuleCriteria, PlexFriendlyLevel } from '@bitscribe/core-types';
+import { isMusicCategory } from '../types';
+import { MediaItem, EvaluationResult, RuleCriteria } from '../types';
 import { getDisplayArtist } from './musicHelper';
-import { EXTRAS_REGEX, extractSeasonNumber } from './mediaParser';
-import { computeDuplicatesMap, getDuplicatePairRows } from "./duplicateHelper";
 
 export const DEFAULT_RULES: RuleCriteria = {
   useBleedingEdgePreset: false,
-  bleedingEdgeVideoCodecs: ['av1', 'vvc', 'vp9'],
-  bleedingEdgeSurroundAudioCodecs: ['truehd', 'dtshd', 'opus'],
-  bleedingEdgeStereoAudioCodecs: ['flac', 'pcm', 'opus'],
-  useModernPreset: false,
-  useLegacyPreset: false,
-  useDiscoveryPreset: true,
+  bleedingEdgeVideoCodecs: ['av1', 'hevc'],
+  bleedingEdgeSurroundAudioCodecs: ['truehd', 'dtshd'],
+  bleedingEdgeStereoAudioCodecs: ['flac', 'pcm'],
+  useModernPreset: true,
+  useLegacyPreset: true,
+  useDiscoveryPreset: false,
   useSubtitleScan: false,
   useDuplicationScan: false,
   useDuplicationVideoScan: false,
@@ -22,14 +19,14 @@ export const DEFAULT_RULES: RuleCriteria = {
   useMusicMetadataScan: false,
   useCleanNonLatinTags: true,
 
-  modernVideoCodecs: ['hevc', 'h264'],
-  modernSurroundAudioCodecs: ['ac3', 'eac3'],
-  modernStereoAudioCodecs: ['aac', 'mp3', 'ac3', 'eac3'],
-  modernMusicCodecs: ['flac', 'aac', 'mp3', 'alac', 'wav'],
+  modernVideoCodecs: ['hevc', 'h264', 'vp9'],
+  modernSurroundAudioCodecs: ['ac3', 'eac3', 'dts', 'opus'],
+  modernStereoAudioCodecs: ['aac', 'mp3', 'opus', 'flac', 'pcm'],
+  modernMusicCodecs: ['flac', 'aac', 'mp3', 'alac', 'wav', 'ogg', 'opus'],
 
   legacyVideoCodecs: ['h264'],
   legacySurroundAudioCodecs: ['ac3', 'aac'],
-  legacyStereoAudioCodecs: ['aac', 'mp3', 'ac3'],
+  legacyStereoAudioCodecs: ['aac', 'mp3'],
   legacyMusicCodecs: ['mp3', 'aac'],
 
   discoveryVideoCodecs: [
@@ -46,75 +43,10 @@ export const DEFAULT_RULES: RuleCriteria = {
   ],
   discoveryContainers: [
     'mkv', 'mp4', 'm4v', 'avi', 'ts', 'mov', 'flv', 'webm', 'wmv', 'mpg', 'vob', 'm2ts', 'ogg', 'wav', 'mp3', 'flac'
-  ],
-  discoveryHdrFormats: [
-    'SDR', 'HDR10', 'HDR10+', 'Dolby Vision', 'HLG', 'Advanced HDR'
   ]
 };
 
-export function isMissingSubtitles(item: MediaItem): boolean {
-  if (isMusicCategory(item.category) || item.category === "Static" || item.category === "Corrupted") return false;
-  return !item.subtitleTracks || item.subtitleTracks.length === 0;
-}
-
-export function hasBadSubtitles(item: MediaItem): boolean {
-  if (isMusicCategory(item.category) || item.category === "Static" || item.category === "Corrupted") return false;
-  return !!item.subtitleTracks?.some(s => s.codec?.toLowerCase() === "pgs" || s.codec?.toLowerCase() === "vobsub");
-}
-
-export function evaluatePlexCompatibility(item: MediaItem, customRules: RuleCriteria = DEFAULT_RULES, isDuplicate: boolean = false, forceEvaluate: boolean = false): EvaluationResult {
-  const result = _evaluatePlexCompatibility(item, customRules, isDuplicate, forceEvaluate);
-  
-  // Set central source of truth for Anomaly metrics
-  const reason = result.reason || "";
-  const isBloated = reason.includes("Bloated");
-  const isStarved = reason.includes("Starved");
-  const isAnomaly = isBloated || isStarved || reason.includes("Anomaly") || result.level === "unfriendly" && result.suggestion?.includes("Transcode Required");
-
-  return {
-    ...result,
-    isBloated,
-    isStarved,
-    isAnomaly
-  };
-}
-
-function _evaluatePlexCompatibility(item: MediaItem, customRules: RuleCriteria = DEFAULT_RULES, isDuplicate: boolean = false, forceEvaluate: boolean = false): EvaluationResult {
-  if (item.category === 'Corrupted') {
-    return {
-      level: 'unfriendly',
-      reason: 'Corrupted file: Cannot evaluate compatibility.',
-      suggestion: 'Replace corrupted file.'
-    };
-  }
-
-  const isStandardStreamingScan = !(
-    customRules.useMetadataScan ||
-    customRules.useVideoMetadataScan ||
-    customRules.useMusicMetadataScan ||
-    customRules.useSubtitleScan ||
-    customRules.useDuplicationScan ||
-    customRules.useDuplicationVideoScan ||
-    customRules.useDuplicationMusicScan ||
-    customRules.useAnomalyScan
-  );
-
-  if (!forceEvaluate) {
-    if (isStandardStreamingScan) {
-      if (item.streamFriendlyEvaluated && item.streamFriendlyEvaluated > 0 && item.streamFriendlyLevel) {
-        return {
-          level: item.streamFriendlyLevel as PlexFriendlyLevel,
-          reason: item.streamFriendlyReason || '',
-          suggestion: item.streamFriendlySuggestion || ''
-        };
-      }
-      return {
-        level: 'pending',
-        reason: 'This file has not been evaluated by the Streaming compatibility scanner yet.',
-        suggestion: 'Please run a scan with Streaming preset or click Evaluate Streaming Compatibility.'
-      };
-    }
-  }
+export function evaluatePlexCompatibility(item: MediaItem, customRules: RuleCriteria = DEFAULT_RULES, isDuplicate: boolean = false): EvaluationResult {
   if (item.category === 'Static') {
     return {
       level: 'modern',
@@ -233,55 +165,21 @@ function _evaluatePlexCompatibility(item: MediaItem, customRules: RuleCriteria =
         suggestion: 'Replace corrupted file.'
       };
     }
-    const embeddedSubs = subs.filter(s => !s.isExternal);
-    const externalSubs = subs.filter(s => s.isExternal);
-    const embeddedCount = embeddedSubs.length;
-    const externalCount = externalSubs.length;
-
-    const hasImageSub = subs.some(s => {
-      const c = (s.codec || '').toLowerCase();
-      return c.includes('pgs') || c.includes('vob') || c.includes('dvd') || c.includes('ass') || c.includes('ssa');
-    });
-
-    if (embeddedCount === 0 && externalCount === 0) {
+    const hasSubs = subs && subs.length > 0;
+    if (hasSubs) {
+      const subFormats = subs.map(s => s.codec.toUpperCase()).join(', ');
       return {
-        level: 'legacy',
-        reason: 'No Embedded or External Subtitles found.',
-        suggestion: 'Add or embed SRT subtitle file.'
+        level: 'modern',
+        reason: `Subtitles Complete: ${subs.length} tracks detected (${subFormats})`,
+        suggestion: 'None required. Subtitles are available inside container.'
       };
-    }
-
-    if (hasImageSub) {
-      const extMsg = externalCount > 0 
-        ? `${externalCount} external/sidecar track(s) found` 
-        : 'no external/sidecar subtitles found';
+    } else {
       return {
         level: 'unfriendly',
-        reason: `Image-based Subtitles (PGS/VOB/ASS) may force video transcoding. (${extMsg})`,
-        suggestion: 'Extract and convert subtitles to text-based SRT format, or sideload clean external SRTs.'
+        reason: 'Incomplete: No embedded subtitles found',
+        suggestion: 'Sideload clean external text SRT subtitles, or embed internal subtitle tracks.'
       };
     }
-
-    const subFormats = subs.map(s => formatCodecString(s.codec)).join(', ');
-    let reason = '';
-    let suggestion = '';
-
-    if (embeddedCount > 0 && externalCount > 0) {
-      reason = `Subtitles Complete: ${embeddedCount} embedded and ${externalCount} external/sidecar tracks detected (${subFormats})`;
-      suggestion = 'None required. Subtitles are available both embedded and as external sidecars.';
-    } else if (embeddedCount > 0) {
-      reason = `Subtitles Complete: ${embeddedCount} embedded tracks detected (${subFormats}) | No external/sidecar`;
-      suggestion = 'None required. Subtitles are available inside container.';
-    } else {
-      reason = `Subtitles Complete: ${externalCount} external/sidecar tracks detected (${subFormats}) | No embedded`;
-      suggestion = 'None required. External sidecar subtitles are available.';
-    }
-
-    return {
-      level: 'modern',
-      reason,
-      suggestion
-    };
   }
 
   const isVideoDuplicationActive = customRules.useDuplicationVideoScan || (customRules.useDuplicationScan && !isMusicCategory(item.category));
@@ -338,7 +236,7 @@ function _evaluatePlexCompatibility(item: MediaItem, customRules: RuleCriteria =
     }
 
     if (isMusicCategory(item.category)) {
-      const br = (item.audioBitrate || 0) / 1000;
+      const br = item.audioBitrate || 0;
       const isLossless = (audios[0]?.codec ?? container).toLowerCase().includes('flac');
       
       if (isLossless) {
@@ -363,7 +261,7 @@ function _evaluatePlexCompatibility(item: MediaItem, customRules: RuleCriteria =
             reason: `Starved (Music): Lossy audio bitrate is too low for quality streaming (${br} kbps).`,
             suggestion: 'Obtain high-quality AAC (~256 kbps) or MP3 (~320 kbps) copy.'
           };
-        } else if (br > 350) {
+        } else if (br > 320) {
           return {
             level: 'unfriendly',
             reason: `Bloated (Music): Lossy file exceeds standard compression limits (${br} kbps).`,
@@ -380,62 +278,6 @@ function _evaluatePlexCompatibility(item: MediaItem, customRules: RuleCriteria =
       const res = (item.videoResolution || '').toLowerCase();
       const br = item.videoBitrateMbps || 0;
       const displayRes = item.videoResolution || 'Unknown Res';
-
-      if (br > 0) {
-        let isStarved = false;
-        let isBloated = false;
-        let starvedThreshold = 0;
-        let bloatedThreshold = 0;
-
-        // Base thresholds assuming H.264 / AVC
-        if (res.includes('4k') || res.includes('2160')) {
-          starvedThreshold = 10.0;
-          bloatedThreshold = 65.0;
-        } else if (res.includes('1080')) {
-          starvedThreshold = 1.5;
-          bloatedThreshold = 25.0;
-        } else if (res.includes('720')) {
-          starvedThreshold = 1.0;
-          bloatedThreshold = 10.0;
-        } else if (res.includes('sd') || res.includes('480') || res.includes('576') || res.includes('360')) {
-          starvedThreshold = 0.3;
-          bloatedThreshold = 4.0;
-        }
-
-        // Adjust thresholds based on codec efficiency
-        let codecMultiplier = 1.0;
-        const codecLabel = vCodec.toUpperCase();
-        if (['hevc', 'h265', 'av1'].includes(vCodec)) {
-          codecMultiplier = 0.6; // High efficiency codecs require less bitrate
-        } else if (['mpeg2video', 'mpeg2', 'mpeg4', 'xvid', 'divx', 'vp8'].includes(vCodec)) {
-          codecMultiplier = 1.5; // Older/less efficient codecs require more bitrate
-        }
-
-        if (starvedThreshold > 0) {
-          starvedThreshold = Number((starvedThreshold * codecMultiplier).toFixed(2));
-          bloatedThreshold = Number((bloatedThreshold * codecMultiplier).toFixed(2));
-          
-          if (br < starvedThreshold) {
-            isStarved = true;
-          } else if (br > bloatedThreshold) {
-            isBloated = true;
-          }
-        }
-
-        if (isStarved) {
-          return {
-            level: 'unfriendly',
-            reason: `Starved (Video): Bitrate (${br} Mbps) is too low for ${displayRes} resolution with ${codecLabel} codec (min ${starvedThreshold} Mbps).`,
-            suggestion: 'Re-encode from a higher quality source or replace with a better release.'
-          };
-        } else if (isBloated) {
-          return {
-            level: 'unfriendly',
-            reason: `Bloated (Video): Bitrate (${br} Mbps) is unnecessarily high for ${displayRes} resolution with ${codecLabel} codec (max ${bloatedThreshold} Mbps).`,
-            suggestion: 'Transcode to HEVC/H.265 or AV1 to significantly reduce file size without losing perceived quality.'
-          };
-        }
-      }
 
       if (item.bitrateAnomaly) {
         return {
@@ -454,12 +296,72 @@ function _evaluatePlexCompatibility(item: MediaItem, customRules: RuleCriteria =
   }
 
   if (customRules.useDiscoveryPreset) {
-    return {
-      level: 'pending',
-      reason: 'This file has not been evaluated by the Streaming compatibility scanner yet.',
-      suggestion: 'Please run a scan with Streaming preset or click Evaluate Streaming Compatibility.'
-    };
+    if (isMusicCategory(item.category)) {
+      const discoveryMusic = customRules.discoveryMusicCodecs || DEFAULT_RULES.discoveryMusicCodecs;
+      const codecToCheck = (audios.length > 0 ? audios[0].codec : vCodec || container).toLowerCase();
+      if (discoveryMusic.includes(codecToCheck)) {
+        return {
+          level: 'modern',
+          reason: `Cataloged: Matches discovered music format (${codecToCheck.toUpperCase()})`,
+          suggestion: 'Track successfully discovered and cataloged.'
+        };
+      } else {
+        return {
+          level: 'unfriendly',
+          reason: `Discovery Skip: Unsupported music codec (${codecToCheck.toUpperCase()})`,
+          suggestion: 'Select a matching discovery music audio codec in settings or transcode.'
+        };
+      }
+    }
+
+    if (item.category === 'Corrupted') {
+      return {
+        level: 'unfriendly',
+        reason: 'Corrupted file: Cannot catalog file parameters.',
+        suggestion: 'Replace corrupted/broken media file.'
+      };
+    }
+
+    const valVid = customRules.discoveryVideoCodecs || DEFAULT_RULES.discoveryVideoCodecs;
+    const valCont = customRules.discoveryContainers || DEFAULT_RULES.discoveryContainers;
+    const valSurr = customRules.discoverySurroundAudioCodecs || DEFAULT_RULES.discoverySurroundAudioCodecs;
+    const valSter = customRules.discoveryStereoAudioCodecs || DEFAULT_RULES.discoveryStereoAudioCodecs;
+
+    const vCompat = valVid.includes(vCodec);
+    const cCompat = valCont.includes(container);
+    
+    let aCompat = true;
+    if (audios.length > 0) {
+      for (const track of audios) {
+        const codec = (track.codec || '').toLowerCase();
+        const ch = track.channels;
+        if (ch > 2) {
+          if (!valSurr.includes(codec)) aCompat = false;
+        } else {
+          if (!valSter.includes(codec)) aCompat = false;
+        }
+      }
+    }
+
+    if (vCompat && cCompat && aCompat) {
+      return {
+        level: 'modern',
+        reason: `Cataloged: Format found and successfully cataloged (${vCodec.toUpperCase()} / ${container.toUpperCase()}).`,
+        suggestion: 'File discovery complete. Ready for database indexing.'
+      };
+    } else {
+      const issues: string[] = [];
+      if (!vCompat) issues.push(`Rare/Unknown video codec (${vCodec.toUpperCase() || 'none'})`);
+      if (!cCompat) issues.push(`Unsupported container (${container.toUpperCase()})`);
+      if (!aCompat) issues.push(`Rare/Non-cataloged audio track formats`);
+      return {
+        level: 'unfriendly',
+        reason: `Discovery Skip: ${issues.join('; ')}`,
+        suggestion: 'Check file headers or adjust your discovery codecs definition in settings.'
+      };
+    }
   }
+
   // Music files are processed separately (audio only)
   if (isMusicCategory(item.category)) {
     const modernMusic = customRules.modernMusicCodecs || DEFAULT_RULES.modernMusicCodecs;
@@ -479,6 +381,12 @@ function _evaluatePlexCompatibility(item: MediaItem, customRules: RuleCriteria =
         level: 'modern',
         reason: `Modern music format (${codecToCheck})`,
         suggestion: 'Standard modern music format. Good to go.'
+      };
+    } else if (customRules.useDiscoveryPreset && discoveryMusic.includes(codecToCheck)) {
+      return {
+        level: 'modern',
+        reason: `Matches custom discovery music format (${codecToCheck})`,
+        suggestion: 'Configured Discovery compliance.'
       };
     } else {
       return {
@@ -503,9 +411,9 @@ function _evaluatePlexCompatibility(item: MediaItem, customRules: RuleCriteria =
 
   // 0. Evaluate for Bleeding Edge Standards
   if (activeBleedingEdge) {
-    const beVCodecs = customRules.bleedingEdgeVideoCodecs || DEFAULT_RULES.bleedingEdgeVideoCodecs || ['av1', 'vvc', 'vp9'];
-    const beSurrounds = customRules.bleedingEdgeSurroundAudioCodecs || DEFAULT_RULES.bleedingEdgeSurroundAudioCodecs || ['truehd', 'dtshd', 'opus'];
-    const beStereos = customRules.bleedingEdgeStereoAudioCodecs || DEFAULT_RULES.bleedingEdgeStereoAudioCodecs || ['flac', 'pcm', 'opus'];
+    const beVCodecs = customRules.bleedingEdgeVideoCodecs || ['av1', 'hevc'];
+    const beSurrounds = customRules.bleedingEdgeSurroundAudioCodecs || ['truehd', 'dtshd'];
+    const beStereos = customRules.bleedingEdgeStereoAudioCodecs || ['flac', 'pcm'];
 
     const vCompat = beVCodecs.includes(vCodec);
     const cCompat = ['mkv', 'mp4', 'm4v'].includes(container);
@@ -528,7 +436,7 @@ function _evaluatePlexCompatibility(item: MediaItem, customRules: RuleCriteria =
     if (vCompat && cCompat && aCompat && !hasImageSub && !isProfile5) {
       return {
         level: 'bleeding',
-        reason: 'Direct Plays: 2015+ HW (Bleeding Edge)',
+        reason: `Direct Plays on Bleeding Edge: Uses ${vCodec.toUpperCase()} video with lossless/modern audio.`,
         suggestion: 'Perfect. Peak efficiency and audio fidelity.'
       };
     } else if (vCompat || cCompat || aCompat) {
@@ -537,7 +445,7 @@ function _evaluatePlexCompatibility(item: MediaItem, customRules: RuleCriteria =
            return {
              level: 'unfriendly',
              reason: 'Fails Bleeding Edge standards.',
-             suggestion: 'Upgrade internal streams to AV1/VVC or lossless audio formats.'
+             suggestion: 'Upgrade internal streams to AV1/HEVC or lossless audio formats.'
            };
        }
     }
@@ -545,11 +453,10 @@ function _evaluatePlexCompatibility(item: MediaItem, customRules: RuleCriteria =
 
   // 1. Evaluate for Legacy Streaming Standards
   if (activeLegacy && !isProfile5) {
-    const legacyVideoCodecsList = customRules.legacyVideoCodecs || DEFAULT_RULES.legacyVideoCodecs || ['h264'];
-    const legacySurrounds = customRules.legacySurroundAudioCodecs || DEFAULT_RULES.legacySurroundAudioCodecs || ['ac3', 'aac'];
-    const legacyStereos = customRules.legacyStereoAudioCodecs || DEFAULT_RULES.legacyStereoAudioCodecs || ['aac', 'mp3', 'ac3'];
+    const legacySurrounds = customRules.legacySurroundAudioCodecs || ['ac3', 'aac'];
+    const legacyStereos = customRules.legacyStereoAudioCodecs || ['aac', 'mp3'];
 
-    const vCompat = legacyVideoCodecsList.includes(vCodec) || (legacyVideoCodecsList.includes('h264') && vCodec === 'avc');
+    const vCompat = ['h264', 'avc'].includes(vCodec);
     const cCompat = ['mkv', 'mp4', 'm4v'].includes(container);
 
     let aCompat = true;
@@ -570,7 +477,7 @@ function _evaluatePlexCompatibility(item: MediaItem, customRules: RuleCriteria =
     if (vCompat && cCompat && aCompat && !hasImageSub) {
       return {
         level: 'legacy',
-        reason: 'Direct Plays: Broad/Legacy HW',
+        reason: `Direct Plays on Legacy HW: H.264 wrapper with low-spec audio streams.`,
         suggestion: 'Compatible stream, but candidate for improvement. Smooth legacy streaming, but could upgrade to HEVC for space savings.'
       };
     }
@@ -578,9 +485,9 @@ function _evaluatePlexCompatibility(item: MediaItem, customRules: RuleCriteria =
 
   // 2. Evaluate for Modern Streaming Standards
   if (activeModern && !isProfile5) {
-    const modernVCodecs = customRules.modernVideoCodecs || DEFAULT_RULES.modernVideoCodecs || ['hevc', 'h264'];
-    const modernSurrounds = customRules.modernSurroundAudioCodecs || DEFAULT_RULES.modernSurroundAudioCodecs || ['ac3', 'eac3'];
-    const modernStereos = customRules.modernStereoAudioCodecs || DEFAULT_RULES.modernStereoAudioCodecs || ['aac', 'mp3', 'ac3', 'eac3'];
+    const modernVCodecs = customRules.modernVideoCodecs || ['hevc', 'h264', 'av1'];
+    const modernSurrounds = customRules.modernSurroundAudioCodecs || ['ac3', 'eac3', 'dts', 'opus'];
+    const modernStereos = customRules.modernStereoAudioCodecs || ['aac', 'mp3', 'opus', 'flac', 'pcm'];
 
     const vCompat = modernVCodecs.includes(vCodec);
     const cCompat = ['mkv', 'mp4', 'm4v'].includes(container);
@@ -604,41 +511,16 @@ function _evaluatePlexCompatibility(item: MediaItem, customRules: RuleCriteria =
       if (['h264', 'avc'].includes(vCodec)) {
         return {
           level: 'legacy',
-          reason: 'Direct Plays: Broad/Legacy HW',
+          reason: `Direct Plays on Modern HW: Uses ${vCodec.toUpperCase()} video with compatible audio streams.`,
           suggestion: 'Compatible stream, but candidate for improvement. Upgrade to HEVC for better compression.'
         };
       }
       return {
         level: 'modern',
-        reason: 'Direct Plays: 2015+ HW',
+        reason: `Direct Plays on Modern HW: Uses ${vCodec.toUpperCase()} video with compatible audio streams.`,
         suggestion: 'Perfect. Ready to scan sync and stream natively.'
       };
     }
-  }
-
-  // 3. Fallback check: If it didn't match Legacy or Modern, but contains Bleeding Edge codecs
-  const fallbackBeVCodecs = customRules.bleedingEdgeVideoCodecs || DEFAULT_RULES.bleedingEdgeVideoCodecs || ['av1', 'vvc', 'vp9'];
-  const fallbackBeSurrounds = customRules.bleedingEdgeSurroundAudioCodecs || DEFAULT_RULES.bleedingEdgeSurroundAudioCodecs || ['truehd', 'dtshd', 'opus'];
-  const fallbackBeStereos = customRules.bleedingEdgeStereoAudioCodecs || DEFAULT_RULES.bleedingEdgeStereoAudioCodecs || ['flac', 'pcm', 'opus'];
-
-  const hasBleedingVideo = fallbackBeVCodecs.includes(vCodec);
-  let hasBleedingAudio = false;
-  for (const track of audios) {
-    const codec = (track.codec || '').toLowerCase();
-    const ch = track.channels;
-    if (ch > 2) {
-      if (fallbackBeSurrounds.includes(codec)) hasBleedingAudio = true;
-    } else {
-      if (fallbackBeStereos.includes(codec)) hasBleedingAudio = true;
-    }
-  }
-
-  if ((hasBleedingVideo || hasBleedingAudio) && !isProfile5 && !hasImageSub) {
-    return {
-      level: 'bleeding',
-      reason: 'Bleeding Edge: High transcode & buffering risk (lossless/uncommon streams)',
-      suggestion: 'Keep standard H.264/HEVC and AAC/AC3 transcodes or secondary audio tracks on hand for broader compatibility.'
-    };
   }
 
   // Compile remediation details / reasons
@@ -649,14 +531,14 @@ function _evaluatePlexCompatibility(item: MediaItem, customRules: RuleCriteria =
   if (activeModern) validVid.push('hevc', 'h255', 'h265');
 
   if (!validVid.includes(vCodec)) {
-    causes.push(`Suboptimal video codec (${formatCodecString(vCodec) || 'UNKNOWN'})`);
+    causes.push(`Suboptimal video codec (${vCodec.toUpperCase() || 'UNKNOWN'})`);
     suggestions.push(`Transcode stream to HEVC/H.264 standard profiles.`);
   }
 
   const validConts = ['mkv', 'mp4', 'm4v'];
 
   if (!validConts.includes(container)) {
-    causes.push(`Complex container format wrap (${formatCodecString(container)})`);
+    causes.push(`Complex container format wrap (${container.toUpperCase()})`);
     suggestions.push(`Remux stream wrap to clean MP4 or MKV without transcoding.`);
   }
 
@@ -681,7 +563,7 @@ function _evaluatePlexCompatibility(item: MediaItem, customRules: RuleCriteria =
         let allowed = ['ac3', 'eac3', 'dts', 'truehd', 'flac'];
         if (!allowed.includes(codec)) auditFailed = true;
       } else {
-        let allowed = ['aac', 'mp3', 'flac', 'pcm', 'ac3', 'eac3'];
+        let allowed = ['aac', 'mp3', 'flac', 'pcm'];
         if (!allowed.includes(codec)) auditFailed = true;
       }
     }
@@ -704,4 +586,137 @@ function _evaluatePlexCompatibility(item: MediaItem, customRules: RuleCriteria =
   };
 }
 
-export { computeDuplicatesMap, getDuplicatePairRows };
+export function computeDuplicatesMap(items: MediaItem[], rules: RuleCriteria): Map<string, boolean> {
+  const duplicateMap = new Map<string, boolean>();
+  const isVideoActive = rules.useDuplicationVideoScan || rules.useDuplicationScan;
+  const isMusicActive = rules.useDuplicationMusicScan || rules.useDuplicationScan;
+
+  if (!isVideoActive && !isMusicActive) {
+    return duplicateMap;
+  }
+
+  // --- VIDEO DUPLICATIONS ---
+  if (isVideoActive) {
+    const videoItems = items.filter(it => it.category !== 'Music' && it.category !== 'Corrupted' && it.category !== 'Static');
+    
+    // Clean function for video names
+    const cleanVideoName = (filename: string) => {
+      let cleaned = filename
+        .replace(/\.[a-zA-Z0-9]+$/, '') // strip extension
+        .replace(/[-_.(](1080p|720p|4k|2160p|x264|x265|hevc|h264|h265|av1|bluray|web-?dl|webrip|dd5\.1|dts|aac|truehd|hdr|dovi|remux)[-_.)]*/gi, '') // strip codecs/res/ratings
+        .replace(/\s*[\(\[]\d{4}[\)\]]\s*/g, ' ') // strip year e.g. (2024)
+        .replace(/[^a-zA-Z0-9 ]/g, ' ') // alphanumeric
+        .replace(/\s+/g, ' ') // collapse multi-spaces
+        .trim()
+        .toLowerCase();
+      return cleaned;
+    };
+
+    // Grouping by cleaned video name
+    const videoGroups = new Map<string, MediaItem[]>();
+    videoItems.forEach(item => {
+      const key = cleanVideoName(item.filename);
+      if (!videoGroups.has(key)) {
+        videoGroups.set(key, []);
+      }
+      videoGroups.get(key)!.push(item);
+    });
+
+    // Pairwise duration check to confirm duplication (within 3 minutes)
+    for (const [key, group] of videoGroups.entries()) {
+      if (group.length > 1) {
+        for (let i = 0; i < group.length; i++) {
+          const itemA = group[i];
+          let isDupA = false;
+          for (let j = 0; j < group.length; j++) {
+            if (i === j) continue;
+            const itemB = group[j];
+            // If durations match within 180 seconds or of similar length, or if either duration is zero (corrupted/missing metadata)
+            const durationDiff = Math.abs(itemA.durationMins - itemB.durationMins);
+            const sizeDiffRatio = Math.abs(itemA.sizeGB - itemB.sizeGB) / Math.max(itemA.sizeGB, itemB.sizeGB || 1);
+            
+            // If durations are close (within 3 minutes), it's highly likely to be a quality copy/version of the same file
+            if (durationDiff <= 3 || itemA.durationMins === 0 || itemB.durationMins === 0) {
+              isDupA = true;
+              break;
+            }
+          }
+          if (isDupA) {
+            duplicateMap.set(itemA.id, true);
+          }
+        }
+      }
+    }
+  }
+
+  // --- MUSIC DUPLICATIONS ---
+  if (isMusicActive) {
+    const musicItems = items.filter(it => it.category === 'Music');
+
+    const cleanMusicTrack = (title: string) => {
+      return title
+        .replace(/\.[a-zA-Z0-9]+$/, '') // strip extension
+        .replace(/^\d+[-_.\s]+/, '') // strip track number prefix like "01 - " or "01. "
+        .replace(/[^a-zA-Z0-9 ]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase();
+    };
+
+    const cleanArtist = (artist: string) => {
+      return artist.replace(/[^a-zA-Z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+    };
+
+    const getMusicProperties = (item: MediaItem) => {
+      const title = cleanMusicTrack(item.tags?.title || item.filename);
+      let artist = cleanArtist(item.tags?.artist || '');
+      
+      // If artist is empty, try to parse from the parent directory of filePath
+      if (!artist && item.filePath) {
+        const parts = item.filePath.split(/[\\/]/).filter(Boolean);
+        // Usually: D:\Media\Music\ArtistName\AlbumName\Song.mp3
+        if (parts.length > 2) {
+          artist = cleanArtist(parts[parts.length - 3]);
+        }
+      }
+      return { title, artist };
+    };
+
+    const musicGroups = new Map<string, MediaItem[]>();
+    musicItems.forEach(item => {
+      const { title, artist } = getMusicProperties(item);
+      const key = `${artist || 'unknown'} - ${title}`;
+      if (!musicGroups.has(key)) {
+        musicGroups.set(key, []);
+      }
+      musicGroups.get(key)!.push(item);
+    });
+
+    for (const [key, group] of musicGroups.entries()) {
+      if (group.length > 1) {
+        // Since different tracks on different albums could have same name (e.g. Intro), we check duration match (within 30 seconds)
+        for (let i = 0; i < group.length; i++) {
+          const itemA = group[i];
+          let isDupA = false;
+          for (let j = 0; j < group.length; j++) {
+            if (i === j) continue;
+            const itemB = group[j];
+            
+            const durationDiffMins = Math.abs(itemA.durationMins - itemB.durationMins);
+            const durationDiffMs = durationDiffMins * 60; // minutes to seconds check
+            
+            if (durationDiffMs <= 30 || itemA.durationMins === 0 || itemB.durationMins === 0) {
+              isDupA = true;
+              break;
+            }
+          }
+          if (isDupA) {
+            duplicateMap.set(itemA.id, true);
+          }
+        }
+      }
+    }
+  }
+
+  return duplicateMap;
+}

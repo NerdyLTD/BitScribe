@@ -1,4 +1,4 @@
-import { MediaItem } from '@bitscribe/core-types';
+import { MediaItem } from "../types";
 
 export function formatCodecString(codec: string | undefined | null | unknown): string {
   if (codec == null) return "";
@@ -14,16 +14,6 @@ export function getPrimaryAudioCodec(item: MediaItem): string {
     return formatCodecString(item.audioTracks[0].codec);
   }
   return getContainerFormat(item);
-}
-
-export function getFormattedAudioTracks(item: MediaItem): string {
-  if (!item.audioTracks || item.audioTracks.length === 0) return "-";
-  return item.audioTracks
-    .map(t => {
-      const codec = formatCodecString(t.codec);
-      return t.channels ? `${codec} (${t.channels}ch)` : codec;
-    })
-    .join(", ");
 }
 
 export function getContainerFormat(item: MediaItem): string {

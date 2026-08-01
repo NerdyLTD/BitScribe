@@ -22,3 +22,4 @@ src-tauri/bin/*
 !Suite/
 !github_pages_website.html
 
+apps/steward/BitScribe Website/
