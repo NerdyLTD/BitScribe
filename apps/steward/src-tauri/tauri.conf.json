@@ -46,7 +46,7 @@
     "android": {
       "debugApplicationIdSuffix": ".debug"
     },
-    "resources": ["resources/*"],
+    
     "externalBin": [
       "bin/ffprobe"
     ]
