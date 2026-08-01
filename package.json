@@ -1,6 +1,6 @@
 {
   "name": "bitscribe-suite",
-  "version": "1.0.0",
+  "version": "1.5.0",
   "private": true,
   "workspaces": [
     "apps/*",
@@ -13,6 +13,7 @@
     "tauri": "npm run tauri --workspace=apps/steward"
   },
   "dependencies": {
+    "adm-zip": "^0.6.0",
     "express": "^5.2.1",
     "puppeteer": "^25.3.0"
   }

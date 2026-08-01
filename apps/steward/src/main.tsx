@@ -66,7 +66,7 @@ import './index.css';
         
       const logFile = await join(exportDir, `${safeTs}_debuglog.txt`);
       const timestamp = now.toISOString();
-      const APP_VERSION = "1.4.8"; // Hardcoded for this script context
+      const APP_VERSION = "1.5.0"; // Hardcoded for this script context
       
       const logContent = `[${timestamp}] App launched successfully. 
 Version: ${APP_VERSION}

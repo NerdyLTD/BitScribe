@@ -891,7 +891,8 @@ export default function HelpSection({ highlightId, isTourActive, tourStepIndex, 
                   <li><strong className="text-slate-300">v1.4.0</strong>: Restored full-stack scanning environment through Tauri, resolved directory mapping bugs for Docuseries/Documentary Series to guarantee database column parity, and established automated linter validation.</li>
                   <li><strong className="text-slate-300">v1.4.1</strong>: Resolved Discovery Mode grid spacing stretching on standard screens, and introduced adaptive flex-wrap layout wrappers on Discovery Mode headers to prevent overlapping control links.</li>
                   <li><strong className="text-slate-300">v1.4.2</strong>: Implemented toggling for custom metric presets (C1, C2, C3) on a second click, and streamlined Media Discovery audits by excluding the "Corrupted" category from report exports.</li>
-                  <li><strong className="text-slate-300">v1.4.3 (Latest Release)</strong>: Split missing Title/Year tags into distinct Video/Music categories to guarantee pristine metrics, renamed metrics filter to "Music Only", and established strict asset protections for core branding files.</li>
+                  <li><strong className="text-slate-300">v1.4.3</strong>: Split missing Title/Year tags into distinct Video/Music categories to guarantee pristine metrics, renamed metrics filter to "Music Only", and established strict asset protections for core branding files.</li>
+                  <li><strong className="text-slate-300">v1.5.0 (Latest Release)</strong>: Major performance pass optimizing scanning UI updates and implementing lazy evaluation for secondary sorts. Strictly restricted the Library tab to single-category selection to preserve stability for massive datasets.</li>
                 </ul>
               </div>
             </div>

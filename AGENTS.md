@@ -1,33 +1,57 @@
-# Workflow and Fix Standards
+# Agent Operating Rules
 
-To prevent regression and ensure a stable iterative process, all agents must adhere to the following standards:
+## Mission
+Make focused, minimal, and safe changes in this repository. Preserve existing fixes, performance work, and user assets.
 
-1. **Document Fixes Contextually:** When a problem is fixed and verified, document what was fixed and the specific context or problem it was meant to solve. Maintain this context in code comments where applicable.
+## Non-Negotiable Rules
+- Never overwrite a tracked file without first verifying the exact source path, destination path, and current working directory.
+- Never use shell redirection or in-place text replacement to modify tracked source files unless the workflow writes to a temp file first and then renames it atomically.
+- Never use patterns like `cat source > source`, `echo ... > tracked-file`, or any command that can truncate a file before content is safely written.
+- Never use `sed -i`, recursive replacement scripts, or broad repo-wide text replacements on tracked files.
+- Never modify binary or graphics assets as text.
+- Never touch protected assets unless explicitly requested.
+- Push changes only to the `tauri` branch.
 
-2. **Review Change History:** When implementing new features or fixing subsequent problems, always review previous changes and their rationale to ensure new work does not discard or overwrite previous improvements.
+## Safe Edit Workflow
+1. Inspect the target file and confirm the intended path.
+2. Check the current working directory and resolve source and destination paths.
+3. Confirm source and destination are not the same file.
+4. Write changes to a temp file in the same directory.
+5. Verify temp file size and contents before replacing anything.
+6. Rename the temp file into place atomically.
+7. Re-open the final file and confirm it is non-empty and contains the expected symbols.
 
-3. **Preserve Performance Optimizations:** If performance improvements (e.g., worker pools, chunked processing, dynamic batching) or UX enhancements (e.g., detailed progress logs, specific status messages) are present in the code, they must be preserved during refactoring. Do not regress to simpler, slower implementations without explicit prior justification and permission.
+## Stop Conditions
+- Stop immediately if a file becomes empty or unexpectedly small.
+- Stop if a command would write to a path that has not been re-checked.
+- Stop if the change affects more files than intended.
+- Stop and ask before any potentially destructive file operation.
 
-4. **Maintain a Project Changelog:** Every agent must log significant fixes and feature updates in a `CHANGELOG.md` file in the root directory. This log must include the exact problem solved, the files modified, and the rationale for the fix to prevent regressions.
+## Change Discipline
+- Preserve prior fixes, performance improvements, and UX enhancements unless a regression-free alternative is intentionally approved.
+- Review existing history and changelog context before editing.
+- Update the changelog when significant fixes or behavioral changes are made.
+- Provide a brief summary of actions taken after changes.
 
-5. **Always Read the Changelog First:** Before beginning any implementation or modification, agents MUST read the `CHANGELOG.md` file to understand the history of fixes and ensure they do not revert or break previously solved problems.
+## Performance Constraints
 
-6. **Provide Action Summaries:** Always provide a brief summary to the user outlining what actions were taken in terms of modifying the app or applying their requested changes. This ensures the user is kept informed of the work completed.
+- Preserve the current Library tab performance model:
+  - one category at a time only,
+  - paginated display by default,
+  - no “Show All” or equivalent unbounded page-size option.
 
-7. **Verify All Pipeline Mapping Endpoints (Anti-Regression):** When modifying category groups, item classifications, or any data structural mapping (e.g., reclassifying docuseries, specials, or custom categories), agents **MUST** audit every output channel. This includes checking:
-   - The UI Dashboard (React components and column layout builders).
-   - The Excel generator (`excelExporter.ts`) row assignments and headers.
-   - The HTML, CSV, and other report exporters (`reportExporter.ts` and related).
-   Ensure that critical string fields like `Title` vs. `Series Title`, or `Release Year` vs. `Year` match the category layout criteria identically so no column is left blank or silently omitted.
+- Preserve bounded scan behavior:
+  - keep the scan log buffer capped,
+  - do not remove or loosen throttling without a clear performance reason,
+  - do not let scan UI updates devolve into unbounded render churn.
 
-8. **Never Modify or Overwrite PayPal QR Code Assets (CRITICAL PROTECTION):** The PayPal QR code files (`src/assets/paypal_qr.png` and `src/assets/paypal_qr_backup_DO_NOT_DELETE.png`) are authentic, production-ready assets containing the user's real payment QR code. Under no circumstances may any agent delete, regenerate, modify, compress, or overwrite these files. They must be preserved exactly as they are. Any automated script, image-generation tool, or manual file replacement must strictly exclude these files.
+- Preserve lazy derived-data handling:
+  - keep expensive secondary sort data computed lazily,
+  - do not move parsing or extraction into the initial full-item mapping loop,
+  - do not precompute deep metadata for every item unless explicitly justified.
 
+- Treat these behaviors as intentional performance guards, not incidental implementation details.
 
+- Do not “simplify” or refactor away these protections unless the change is explicitly approved and accompanied by a regression-safe replacement.
 
-9. **Safe File Modification:** NEVER use recursive `sed -i` or apply text-replacement scripts globally across the repository. Binary files (e.g., `.png`, `.ico`, `.icns`) will be destroyed if interpreted as text. Always target specific, known text files when using tools like `sed`.
-
-10. **Strict Graphics and Binary Protection (CRITICAL):** Agents are strictly forbidden from modifying, overwriting, recreating, or echoing string data into ANY existing graphics files (including but not limited to `.png`, `.svg`, `.ico`, `.icns`, `.jpg`). Graphics files must NEVER be treated or processed as text files under any circumstance. Do not use tools like `echo`, `sed`, `awk`, or text editors on them. If a graphics file exists, it is the user's authentic asset and must be left completely untouched.
-
-11. **Push Changes ONLY to the `tauri` Branch (CRITICAL):** All agents must push code, updates, and releases strictly to the `tauri` branch. There is no `master` branch. Pushing to any other branch or creating new branches is strictly forbidden. All git push and branch operations must target the `tauri` branch exclusively.
-
-12. **Do Not Repeat Previous Responses (CRITICAL CONVERSATIONAL STANDARD):** Before answering or providing any message, the agent must check its last two responses and ensure that the next response does not repeat explanations, definitions, or answers to previous questions. Unnecessary repetition of previously established facts or context is strictly forbidden. Keep responses progressive, concise, and focused on new information.
+- If a future change affects list rendering, filtering, scanning, sorting, or page sizing, verify that these constraints still hold before merging.
