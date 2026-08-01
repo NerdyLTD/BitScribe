@@ -962,7 +962,7 @@ export default function HelpSection({ highlightId, isTourActive, tourStepIndex, 
                   BitScribe Digital Media Library Steward (DMLS) is the direct product of a close, highly iterative creative partnership between a <strong>Human Product Director</strong> and an <strong>AI Software Architect</strong>.
                 </p>
                 <p className="text-xs text-slate-400 leading-relaxed font-sans">
-                  Together, we have invested well over <strong className="text-emerald-400 font-semibold">300 combined hours</strong> of dedication across 22+ consecutive versions—from a tiny experimental command line script (v0.1) into this production-grade, highly-optimized full-stack management dashboard. 
+                  Together, we have invested well over <strong className="text-emerald-400 font-semibold">400 combined hours</strong> of dedication across 22+ consecutive versions—from a tiny experimental command line script (v0.1) into this production-grade, highly-optimized full-stack management dashboard. 
                 </p>
                 <p className="text-xs text-slate-400 leading-relaxed font-sans">
                   The human half of the team provided a comprehensive vision, direction, usability standards, and hours of hands-on testing. The AI half of the team built complex analytics engines, database integrations and responsive UI components.
