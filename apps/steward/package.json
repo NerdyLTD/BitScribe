@@ -10,7 +10,7 @@
     "start": "vite",
     "clean": "rm -rf dist dist-electron server.js src-tauri/target",
     "lint": "tsc --noEmit",
-    "tauri": "tauri",
+    "tauri": "node scripts/setup-ffprobe.cjs && tauri",
     "postinstall": "node scripts/setup-ffprobe.cjs"
   },
   "dependencies": {
