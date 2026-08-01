@@ -7,7 +7,8 @@ if (!fs.existsSync(srcTauriBin)) {
 }
 
 try {
-    const staticPath = path.join(__dirname, '..', 'node_modules', 'ffprobe-static', 'bin');
+    const ffprobeStaticPkg = require.resolve('ffprobe-static/package.json');
+    const staticPath = path.join(path.dirname(ffprobeStaticPkg), 'bin');
     
     if (fs.existsSync(path.join(staticPath, 'linux', 'x64', 'ffprobe'))) {
         fs.copyFileSync(path.join(staticPath, 'linux', 'x64', 'ffprobe'), path.join(srcTauriBin, 'ffprobe-x86_64-unknown-linux-gnu'));

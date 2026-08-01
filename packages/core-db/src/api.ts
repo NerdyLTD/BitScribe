@@ -664,24 +664,23 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
 
             if (skipProbe && cachedItem) {
                 // Re-evaluate Plex compatibility based on latest rules without calling ffprobe
-                const evalResult = evaluatePlexCompatibility(cachedItem, rules, false, true);
-                const prevLevel = cachedItem.streamFriendlyLevel;
-                const prevReason = cachedItem.streamFriendlyReason;
-                const prevSuggestion = cachedItem.streamFriendlySuggestion;
-                const prevExternalSubs = cachedItem.hasExternalSubtitles || false;
+                let hasChanged = false;
 
-                const hasChanged = prevLevel !== evalResult.level ||
-                                   prevReason !== evalResult.reason ||
-                                   prevSuggestion !== evalResult.suggestion ||
-                                   prevExternalSubs !== hasExternalSubtitles;
-
-                if (hasChanged) {
+                if (cachedItem.streamFriendlyEvaluated !== 1 && !rules.useDiscoveryPreset) {
+                    const evalResult = evaluatePlexCompatibility(cachedItem, rules, false, true);
                     cachedItem.streamFriendlyLevel = evalResult.level as any;
                     cachedItem.streamFriendlyReason = evalResult.reason;
                     cachedItem.streamFriendlySuggestion = evalResult.suggestion;
-                    cachedItem.streamFriendlyEvaluated = Date.now();
+                    cachedItem.streamFriendlyEvaluated = 1;
+                    hasChanged = true;
+                }
+
+                if (cachedItem.hasExternalSubtitles !== hasExternalSubtitles) {
                     cachedItem.hasExternalSubtitles = hasExternalSubtitles;
-                    
+                    hasChanged = true;
+                }
+
+                if (hasChanged) {
                     changedCachedBatch.push(cachedItem);
                     if (changedCachedBatch.length >= BATCH_SIZE) {
                         const toSave = changedCachedBatch.splice(0, BATCH_SIZE);
@@ -773,7 +772,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                     hydratedItem.streamFriendlyLevel = evalResult.level as any;
                     hydratedItem.streamFriendlyReason = evalResult.reason;
                     hydratedItem.streamFriendlySuggestion = evalResult.suggestion;
-                    hydratedItem.streamFriendlyEvaluated = Date.now();
+                    hydratedItem.streamFriendlyEvaluated = rules.useDiscoveryPreset ? 0 : 1;
                     
                     onProgress({ current: i + 1, total: allFiles.length, item: hydratedItem });
                     batch.push(hydratedItem);
@@ -1011,7 +1010,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 hydratedItem.streamFriendlyLevel = evalResult.level as any;
                 hydratedItem.streamFriendlyReason = evalResult.reason;
                 hydratedItem.streamFriendlySuggestion = evalResult.suggestion;
-                hydratedItem.streamFriendlyEvaluated = Date.now();
+                hydratedItem.streamFriendlyEvaluated = rules.useDiscoveryPreset ? 0 : 1;
                 
                 onProgress({ current: i + 1, total: allFiles.length, item: hydratedItem });
                 batch.push(hydratedItem);
