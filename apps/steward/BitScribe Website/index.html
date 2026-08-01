@@ -110,6 +110,7 @@
     <div class="hidden md:flex gap-6 text-sm font-medium text-slate-300">
       <a href="#features" class="hover:text-white transition-colors">Features</a>
       <a href="#screenshots" class="hover:text-white transition-colors">Gallery</a>
+      <a href="#blog" class="hover:text-white transition-colors">Blog</a>
       <a href="#faq" class="hover:text-white transition-colors">FAQ</a>
       <a href="#acknowledgements" class="hover:text-white transition-colors">Acknowledgements</a>
       <a href="#story" class="hover:text-white transition-colors">Our Story</a>
@@ -571,6 +572,43 @@
     </section>
 
     <!-- Wiki FAQ Section -->
+    <section id="blog" class="py-24 px-6 md:px-12 bg-[#0e1015] border-y border-slate-800/50">
+      <div class="max-w-4xl mx-auto">
+        <div class="flex justify-between items-end mb-12">
+          <h2 class="text-3xl md:text-5xl font-extrabold tracking-tight">Dev Blog</h2>
+          <a href="portal/index.html" class="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors">Manage Blog &rarr;</a>
+        </div>
+        <div id="blog-posts-container" class="space-y-8">
+          <!-- Blog posts will be loaded here via JS -->
+          <p class="text-slate-400">Loading latest updates...</p>
+        </div>
+      </div>
+    </section>
+
+    <script>
+      fetch('blog-data.json')
+        .then(response => response.json())
+        .then(data => {
+          const container = document.getElementById('blog-posts-container');
+          if (data.posts && data.posts.length > 0) {
+            container.innerHTML = data.posts.sort((a,b) => new Date(b.date) - new Date(a.date)).map(post => `
+              <div class="bg-[#13161c] p-8 rounded-2xl border border-slate-800/50 hover:border-slate-700 transition-colors">
+                <h3 class="text-2xl font-bold text-white mb-2">${post.title}</h3>
+                <time class="text-xs text-blue-400 font-medium uppercase tracking-wider block mb-4">${new Date(post.date).toLocaleDateString(undefined, {year: 'numeric', month: 'long', day: 'numeric'})}</time>
+                <div class="prose prose-invert prose-slate max-w-none text-slate-300">
+                  ${post.body.replace(/\n/g, '<br/>')}
+                </div>
+              </div>
+            `).join('');
+          } else {
+            container.innerHTML = '<p class="text-slate-400">No blog posts yet. Check back soon!</p>';
+          }
+        })
+        .catch(error => {
+          console.error("Error loading blog data:", error);
+          document.getElementById('blog-posts-container').innerHTML = '<p class="text-red-400 text-sm">Unable to load blog posts at this time.</p>';
+        });
+    </script>
     <section id="faq" class="py-24 px-6 md:px-12 max-w-4xl mx-auto">
       <div class="text-center mb-16">
         <h2 class="text-3xl md:text-4xl font-bold mb-4">Frequently Asked Questions</h2>

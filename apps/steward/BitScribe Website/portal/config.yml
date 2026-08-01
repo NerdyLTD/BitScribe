@@ -1,0 +1,23 @@
+backend:
+  name: github
+  repo: your-username/your-repo-name # Update this to your actual GitHub repo!
+  branch: main
+
+media_folder: "Screenshots/Blog"
+public_folder: "Screenshots/Blog"
+
+collections:
+  - name: "blog"
+    label: "Dev Blog"
+    files:
+      - label: "Blog Posts"
+        name: "posts"
+        file: "blog-data.json"
+        fields:
+          - label: "Posts"
+            name: "posts"
+            widget: "list"
+            fields:
+              - {label: "Title", name: "title", widget: "string"}
+              - {label: "Publish Date", name: "date", widget: "datetime"}
+              - {label: "Body", name: "body", widget: "markdown"}
