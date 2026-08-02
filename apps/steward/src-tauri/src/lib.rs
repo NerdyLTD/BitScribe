@@ -92,8 +92,7 @@ fn clear_db(state: State<'_, DbState>) -> Result<(), String> {
 }
 
 #[tauri::command]
-async fn delete_db_files,
-            log_event(state: State<'_, DbState>, ids: Vec<String>) -> Result<(), String> {
+async fn delete_db_files(state: State<'_, DbState>, ids: Vec<String>) -> Result<(), String> {
     let mut conn = state.conn.lock().unwrap();
     let tx = conn.transaction().map_err(|e| e.to_string())?;
     
