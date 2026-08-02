@@ -1903,41 +1903,6 @@ const toggleBleedingEdgePreset = (checked: boolean) => {
               </span>
             </label>
 
-            {/* Box 2: Export Directory */}
-            <div className="p-3 bg-[#1E232E] border border-slate-700/30 rounded-xl flex flex-col justify-between h-auto min-h-[7rem]">
-              <div>
-                <span className="text-xs font-semibold text-slate-300 block mb-1">Export Directory</span>
-                <span className="text-[10px] text-slate-400 leading-relaxed block">
-                  Default report folder. Leave empty to prompt.
-                </span>
-              </div>
-              <div className="flex flex-row gap-1.5 items-center mt-auto">
-                <input 
-                  type="text" 
-                  value={exportDirectory || ""}
-                  onChange={(e) => setExportDirectory && setExportDirectory(e.target.value)}
-                  placeholder="No default selected" 
-                  className="flex-1 bg-[#0F1117] border border-[#2A303C] rounded px-2 text-[10px] focus:outline-none focus:border-blue-500 text-slate-300 h-6 min-w-0"
-                />
-                <button 
-                  onClick={async () => {
-                    if (typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__) {
-                      const { open } = await import('@bitscribe/desktop-api');
-                      const selected = await open({ directory: true, multiple: false });
-                      if (selected && typeof selected === "string" && setExportDirectory) {
-                        setExportDirectory(selected);
-                      }
-                    } else {
-                       alert('Directory selection is only available in the desktop app.');
-                    }
-                  }}
-                  className="shrink-0 bg-[#2A303C] hover:bg-[#343B4A] text-slate-200 px-2.5 rounded text-[10px] font-medium transition-colors shadow-md cursor-pointer h-6 flex items-center justify-center"
-                >
-                  Browse
-                </button>
-              </div>
-            </div>
-
             {/* Box 3: App Layout Mode */}
             <label className="flex flex-col p-3 bg-[#1E232E] border border-slate-700/30 rounded-xl cursor-pointer hover:bg-slate-700 transition-colors h-auto min-h-[7rem] justify-between">
               <div className="flex items-start gap-2.5">
@@ -1974,6 +1939,41 @@ const toggleBleedingEdgePreset = (checked: boolean) => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Box 2: Export Directory */}
+            <div className="p-3 bg-[#1E232E] border border-slate-700/30 rounded-xl flex flex-col justify-between h-auto min-h-[7rem]">
+              <div>
+                <span className="text-xs font-semibold text-slate-300 block mb-1">Export Directory</span>
+                <span className="text-[10px] text-slate-400 leading-relaxed block">
+                  Default report folder. Leave empty to prompt.
+                </span>
+              </div>
+              <div className="flex flex-row gap-1.5 items-center mt-auto">
+                <input 
+                  type="text" 
+                  value={exportDirectory || ""}
+                  onChange={(e) => setExportDirectory && setExportDirectory(e.target.value)}
+                  placeholder="No default selected" 
+                  className="flex-1 bg-[#0F1117] border border-[#2A303C] rounded px-2 text-[10px] focus:outline-none focus:border-blue-500 text-slate-300 h-6 min-w-0"
+                />
+                <button 
+                  onClick={async () => {
+                    if (typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__) {
+                      const { open } = await import('@bitscribe/desktop-api');
+                      const selected = await open({ directory: true, multiple: false });
+                      if (selected && typeof selected === "string" && setExportDirectory) {
+                        setExportDirectory(selected);
+                      }
+                    } else {
+                       alert('Directory selection is only available in the desktop app.');
+                    }
+                  }}
+                  className="shrink-0 bg-[#2A303C] hover:bg-[#343B4A] text-slate-200 px-2.5 rounded text-[10px] font-medium transition-colors shadow-md cursor-pointer h-6 flex items-center justify-center"
+                >
+                  Browse
+                </button>
+              </div>
+            </div>
+
             {/* Box 3: Backup & Restore */}
             <div className="p-3 bg-[#1E232E] border border-slate-700/30 rounded-xl flex flex-col xl:flex-row items-start xl:items-center gap-3 xl:gap-2 h-auto min-h-[7rem]">
               <div className="flex-1 flex flex-col h-full justify-start">
