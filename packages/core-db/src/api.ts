@@ -363,7 +363,12 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
         
         onLog("Validating native ffprobe execution...");
         try {
-            await invoke("run_ffprobe", { binPath: ffprobePath, args: ['-version'] });
+            const isMac = navigator.userAgent.toLowerCase().indexOf('mac') > -1;
+            if (isTauri() && isMac) {
+                await invoke("run_ffprobe", { binPath: ffprobePath, args: ['-version'] });
+            } else {
+                await Command.sidecar('bin/ffprobe', ['-version']).execute();
+            }
         } catch (e: any) {
             const errMsg = e.message || String(e);
             stdLog("ERROR", "FFprobe validation failed: " + errMsg);
@@ -809,7 +814,8 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 ffprobeArgs.push('-analyzeduration', '500000', '-probesize', '500000', file);
 
                 let probePromise: Promise<{code: number, stdout: string, stderr: string}>;
-                if (isTauri()) {
+                const isMac = navigator.userAgent.toLowerCase().indexOf('mac') > -1;
+                if (isTauri() && isMac) {
                     probePromise = invoke("run_ffprobe", { binPath: ffprobePath, args: ffprobeArgs }).then((stdout: any) => {
                         return { code: 0, stdout: String(stdout), stderr: "" };
                     }).catch(err => {

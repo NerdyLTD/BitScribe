@@ -456,25 +456,28 @@ fn setup_ffprobe(app: tauri::AppHandle) -> Result<String, String> {
 
 #[tauri::command]
 async fn run_ffprobe(bin_path: String, args: Vec<String>) -> Result<String, String> {
+    // Add a 15-second timeout in Rust so processes don't become orphaned zombies
     let mut command = tokio::process::Command::new(bin_path);
     command.args(&args);
+    // tokio::process::Command natively handles killing the child if the command is dropped,
+    // but since we await output(), we need to wrap it in a tokio::time::timeout
+    
+    // We also use kill_on_drop(true) to ensure the child is killed if the future is dropped
+    command.kill_on_drop(true);
 
-    #[cfg(target_os = "windows")]
-    {
-        const CREATE_NO_WINDOW: u32 = 0x08000000;
-        command.creation_flags(CREATE_NO_WINDOW);
+    let output_future = command.output();
+    let result = tokio::time::timeout(std::time::Duration::from_secs(15), output_future).await;
+
+    match result {
+        Ok(Ok(output)) => {
+            if !output.status.success() {
+                return Err(String::from_utf8_lossy(&output.stderr).to_string());
+            }
+            Ok(String::from_utf8_lossy(&output.stdout).to_string())
+        }
+        Ok(Err(e)) => Err(e.to_string()),
+        Err(_) => Err("ffprobe execution timed out after 15 seconds".to_string()),
     }
-
-    let output = command
-        .output()
-        .await
-        .map_err(|e| e.to_string())?;
-
-    if !output.status.success() {
-        return Err(String::from_utf8_lossy(&output.stderr).to_string());
-    }
-
-    Ok(String::from_utf8_lossy(&output.stdout).to_string())
 }
 
 
