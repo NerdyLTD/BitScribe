@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/NerdyLTD/BitScribe/6d31db7/apps/steward/BitScribe%20Website/BitScribe_Logo_Full_Transparent.svg" alt="BitScribe Logo" width="600" />
+  <img src="docs/assets/BitScribe_Logo_Full_Transparent.svg" alt="BitScribe Logo" width="600" />
   
   # Welcome to BitScribe DMLS
   
@@ -18,7 +18,7 @@
 ---
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/NerdyLTD/BitScribe/6d31db7/apps/steward/BitScribe%20Website/Screenshots/Library%20Page.jpg" alt="BitScribe Library Interface" width="800" />
+  <img src="docs/assets/Library%20Page.jpg" alt="BitScribe Library Interface" width="800" />
 </div>
 
 ## 👋 Hello and Welcome!
@@ -48,13 +48,13 @@ BitScribe runs specialized (but totally safe!) scans on your media folders. It *
 
 ### 📺 1. Streaming Compatibility Check
 Ever try to play a video and it keeps pausing to buffer? BitScribe checks your movies to see if they're in modern, efficient formats that stream smoothly to smart TVs and mobile devices. 
-<div align="center"><img src="https://raw.githubusercontent.com/NerdyLTD/BitScribe/6d31db7/apps/steward/BitScribe%20Website/Screenshots/Analyze%20Page.jpg" width="600" /></div>
+<div align="center"><img src="docs/assets/Analyze%20Page.jpg" width="600" /></div>
 
 ### 🧹 2. The Duplicate Hunter
 We all accidentally save things twice. 
 - **For Video:** It looks past confusing file names to find actual duplicates (like having both a 4K and a 1080p version of the same movie). 
 - **For Music:** It checks song titles, artists, and track lengths to find hidden duplicate audio files.
-<div align="center"><img src="https://raw.githubusercontent.com/NerdyLTD/BitScribe/6d31db7/apps/steward/BitScribe%20Website/Screenshots/Duplicates-Block-Dashboard.jpg" width="600" /></div>
+<div align="center"><img src="docs/assets/Duplicates-Block-Dashboard.jpg" width="600" /></div>
 
 ### 🩺 3. Health & Anomaly Scan
 Is a file corrupted and unplayable? Is a song taking up way too much space for its quality? BitScribe flags these anomalies so you can fix or replace them.
@@ -69,12 +69,12 @@ If you rely on subtitles, BitScribe can scan your library to ensure your videos 
 When you open BitScribe, you get five beautiful, easy-to-use workspaces:
 
 1. **📊 Scan Dashboard:** A beautiful visual overview with charts and immediate alerts for duplicates or broken files.
-<div align="center"><img src="https://raw.githubusercontent.com/NerdyLTD/BitScribe/6d31db7/apps/steward/BitScribe%20Website/Screenshots/Media%20Scanner.jpg" width="600" /></div>
+<div align="center"><img src="docs/assets/Media%20Scanner.jpg" width="600" /></div>
 2. **📚 Library Registry:** A highly searchable, sortable list of every single piece of media you scanned.
 3. **⚙️ Rules Editor:** Want to tell BitScribe exactly what to look for? Use simple toggles to adjust what counts as "good" or "bad" media.
-<div align="center"><img src="https://raw.githubusercontent.com/NerdyLTD/BitScribe/6d31db7/apps/steward/BitScribe%20Website/Screenshots/Options%20Page.jpg" width="600" /></div>
+<div align="center"><img src="docs/assets/Options%20Page.jpg" width="600" /></div>
 4. **💬 Help Hub:** A friendly guide explaining technical terms (like "transcoding" or "bitrate") in plain English.
-<div align="center"><img src="https://raw.githubusercontent.com/NerdyLTD/BitScribe/6d31db7/apps/steward/BitScribe%20Website/Screenshots/Help%20Page.jpg" width="600" /></div>
+<div align="center"><img src="docs/assets/Help%20Page.jpg" width="600" /></div>
 5. **💻 Logs Terminal:** For the technical folks, a real-time stream showing exactly what the engine is reading.
 
 ---
@@ -84,10 +84,10 @@ When you open BitScribe, you get five beautiful, easy-to-use workspaces:
 Once your scan is done, you aren't trapped in the app! You can export your results in ways that make sense for you:
 
 - **Excel Spreadsheets:** Beautifully formatted, color-coded sheets that are ready to print or share.
-<div align="center"><img src="https://raw.githubusercontent.com/NerdyLTD/BitScribe/6d31db7/apps/steward/BitScribe%20Website/Screenshots/BitScribe%20Metadata%20Excel%20Report%20Overview.jpg" width="600" /></div>
+<div align="center"><img src="docs/assets/BitScribe%20Metadata%20Excel%20Report%20Overview.jpg" width="600" /></div>
 - **Interactive Web Reports:** A standalone web page you can save and open anywhere, complete with charts and a searchable grid.
 - **Raw Data (CSV/JSON):** Perfect for power users who want to plug their data into other tools.
-<div align="center"><img src="https://raw.githubusercontent.com/NerdyLTD/BitScribe/6d31db7/apps/steward/BitScribe%20Website/Screenshots/Export%20Block.jpg" width="600" /></div>
+<div align="center"><img src="docs/assets/Export%20Block.jpg" width="600" /></div>
 
 ---
 
