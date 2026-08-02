@@ -325,6 +325,8 @@ function getTrackLanguage(stream: any): string {
 
 export async function scanDirectories(paths: string[], rules: any, onStart: (total: number) => void, onLog: (msg: string) => void, onProgress: (prog: any) => void, isResume: boolean = false, isQuickRefresh: boolean = false, signal?: AbortSignal) {
     onLog("Initializing scan...");
+    stdLog("INFO", "ScanEngine started on paths: " + paths.join(", "));
+    diagLog("Scan", "INFO", "Initializing fast multi-threaded scan sequence...");
 
     const shouldLogStd = rules?.enableStandardLogging !== false;
     const shouldLogDiagScan = rules?.diagnosticLoggingEnabled === true && rules?.diagLogScanEngine !== false;
@@ -363,8 +365,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
         
         onLog("Validating native ffprobe execution...");
         try {
-            const isMac = navigator.userAgent.toLowerCase().indexOf('mac') > -1;
-            if (isTauri() && isMac) {
+            if (isTauri()) {
                 await invoke("run_ffprobe", { binPath: ffprobePath, args: ['-version'] });
             } else {
                 await Command.sidecar('bin/ffprobe', ['-version']).execute();
@@ -469,6 +470,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
         const results = await Promise.all(walkPromises);
     const walkEndTime = performance.now();
     console.info(`[PROFILER] Directory walk completed in ${(walkEndTime - walkStartTime).toFixed(2)}ms for ${paths.length} paths.`);
+    diagLog("System", "INFO", `Directory walk completed in ${(walkEndTime - walkStartTime).toFixed(2)}ms. Found ${allFiles.length} files.`);
         if (signal?.aborted) {
             onLog("Scan aborted by user during directory walk.");
             return;
@@ -703,6 +705,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
             }
             
             onLog(`Probing (${i+1}/${allFiles.length}): ${file.substring(Math.max(0, file.length - 40))}`);
+                diagLog("Media", "INFO", `Probing: ${file}`);
             
             if (!isTauri()) {
                 const normPath = fileObjItem.normPath;
@@ -814,8 +817,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 ffprobeArgs.push('-analyzeduration', '500000', '-probesize', '500000', file);
 
                 let probePromise: Promise<{code: number, stdout: string, stderr: string}>;
-                const isMac = navigator.userAgent.toLowerCase().indexOf('mac') > -1;
-                if (isTauri() && isMac) {
+                if (isTauri()) {
                     probePromise = invoke("run_ffprobe", { binPath: ffprobePath, args: ffprobeArgs }).then((stdout: any) => {
                         return { code: 0, stdout: String(stdout), stderr: "" };
                     }).catch(err => {
