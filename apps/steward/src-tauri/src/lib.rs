@@ -456,8 +456,16 @@ fn setup_ffprobe(app: tauri::AppHandle) -> Result<String, String> {
 
 #[tauri::command]
 async fn run_ffprobe(bin_path: String, args: Vec<String>) -> Result<String, String> {
-    let output = tokio::process::Command::new(bin_path)
-        .args(&args)
+    let mut command = tokio::process::Command::new(bin_path);
+    command.args(&args);
+
+    #[cfg(target_os = "windows")]
+    {
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        command.creation_flags(CREATE_NO_WINDOW);
+    }
+
+    let output = command
         .output()
         .await
         .map_err(|e| e.to_string())?;
