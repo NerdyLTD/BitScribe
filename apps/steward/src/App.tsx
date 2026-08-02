@@ -451,17 +451,6 @@ export default function App() {
   }, [showCustomColumnsMenu]);
 
 
-  useEffect(() => {
-    const handleStartTour = () => {
-      handleTabChange("dashboard");
-      setShowTour(true);
-      setTourStepIndex(0);
-    };
-    
-    window.addEventListener('bitscribe:start-tour', handleStartTour as any);
-    return () => window.removeEventListener('bitscribe:start-tour', handleStartTour as any);
-  }, []);
-
   const activeModeName = 
     customRules.useMetadataScan ? "Metadata Scan" : 
     customRules.useDuplicationScan ? "Dupe Scan" : 

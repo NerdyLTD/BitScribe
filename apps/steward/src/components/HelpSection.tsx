@@ -358,28 +358,14 @@ export default function HelpSection({ highlightId, isTourActive, tourStepIndex, 
     <div className="space-y-3 pt-4 animate-fadeIn" id="help-tab-panel">
       
       {/* Header Bar */}
-      <div className="py-2.5 px-4 bg-[#14171F] border border-[#1e232e] rounded-xl shadow-2xl animate-slideDown flex justify-between items-center" id="help-header-bar">
-        <div>
-          <h2 className="text-sm font-bold text-slate-100 flex items-center gap-2">
-            <BookOpen className="w-4 h-4 text-blue-500 font-bold" />
-            {APP_NAME} Help Center & Learn Docs
-          </h2>
-          <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-            The help you need, when you need it.
-          </p>
-        </div>
-        <button
-          onClick={() => {
-            if (typeof window !== 'undefined') {
-              const startTourEvent = new CustomEvent('bitscribe:start-tour');
-              window.dispatchEvent(startTourEvent);
-            }
-          }}
-          className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-semibold shadow flex items-center gap-1.5 transition-colors cursor-pointer"
-        >
-          <HelpCircle className="w-3.5 h-3.5" />
-          Interactive Tour
-        </button>
+      <div className="py-2.5 px-4 bg-[#14171F] border border-[#1e232e] rounded-xl shadow-2xl animate-slideDown" id="help-header-bar">
+        <h2 className="text-sm font-bold text-slate-100 flex items-center gap-2">
+          <BookOpen className="w-4 h-4 text-blue-500 font-bold" />
+          {APP_NAME} Help Center & Learn Docs
+        </h2>
+        <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+          The help you need, when you need it.
+        </p>
       </div>
 
       {/* Side-by-side Tutorials and FAQs row under header */}
