@@ -55,3 +55,13 @@ Make focused, minimal, and safe changes in this repository. Preserve existing fi
 - Do not “simplify” or refactor away these protections unless the change is explicitly approved and accompanied by a regression-safe replacement.
 
 - If a future change affects list rendering, filtering, scanning, sorting, or page sizing, verify that these constraints still hold before merging.
+## Binary File Anti-Corruption Protocol (IRON-CLAD)
+- **NEVER** run recursive search-and-replace scripts (e.g. `find . | xargs sed`, or Python scripts that loop over directories and read files as text) against unknown file types.
+- Text processing scripts will silently decode binary files (like PNGs, PDFs, archives) as UTF-8, replacing invalid byte sequences with the Unicode replacement character (`\xef\xbf\xbd`) and permanently destroying the binary structure when written back.
+- **NEVER** use Python `open(..., "r", encoding="utf-8")` inside a loop that iterates over multiple files without strict explicit extension filtering (e.g., ONLY targeting `.ts`, `.tsx`, `.rs`).
+- Any programmatic search-and-replace operation MUST explicitly whitelist the specific text file extensions it intends to target.
+- Do NOT use the `file` command to determine if something is text, as it can mistakenly identify some binary formats as `data` or misidentify them. Rely purely on explicit safe-extension whitelisting (`*.ts`, `*.tsx`, etc.).
+
+## Asset Handling Protocol
+- **NEVER** generate a fake or substitute asset programmatically (e.g., using `qrcode` or placeholder scripts) when a user explicitly uploads or references a specific visual asset (like a QR code, logo, etc.).
+- If a user uploads an image via the chat, you do not have direct filesystem access to that chat attachment. You MUST instruct the user to upload it directly to the workspace via the Code Editor's file explorer so it can be used authentically. Do NOT attempt to reconstruct it from scratch.

@@ -191,7 +191,11 @@ export interface RuleCriteria {
   useVideoMetadataScan?: boolean;
   useMusicMetadataScan?: boolean;
   useCleanNonLatinTags?: boolean;
+  enableStandardLogging?: boolean;
   diagnosticLoggingEnabled?: boolean;
+  diagLogScanEngine?: boolean;
+  diagLogMediaParsing?: boolean;
+  diagLogSystem?: boolean;
   bleedingEdgeVideoCodecs?: string[];
   bleedingEdgeSurroundAudioCodecs?: string[];
   bleedingEdgeStereoAudioCodecs?: string[];

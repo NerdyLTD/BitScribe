@@ -613,3 +613,7 @@ Update changelog
 ### Product Tour Hotfix
 - **Problem**: The product tour slides 37 and 38 for the Open Source and Support sections unnecessarily prompted users with a "Show Demo" call-to-action, despite the fireworks and heart emitters triggering automatically when reaching those slides.
 - **Solution**: Removed the "Show Demo" CTA from the content definitions for these specific slides in `ProductTour.tsx` to reduce visual distraction.
+
+### Logging Enhancements
+- **Problem**: Logs were not separated into basic and diagnostic levels, and unconstrained log files could bloat indefinitely.
+- **Solution**: Implemented a custom Rust-based logging system that creates a `logs` directory on launch, appends date and time to log files, and applies strict file size constraints and rotation (5MB/3 files for standard logs, 10MB/2 files for diagnostic logs). Also added granular checkboxes for diagnostic logging to the Rules Editor and integrated an instructional Logging tutorial in the Help section.

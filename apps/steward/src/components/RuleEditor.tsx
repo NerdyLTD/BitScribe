@@ -1812,12 +1812,29 @@ const toggleBleedingEdgePreset = (checked: boolean) => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {/* Box 1: Fix Music Grouping */}            {/* Box 1.5: Diagnostic Logging */}
-            <label className="flex flex-col p-3 bg-[#1E232E] border border-slate-700/30 rounded-xl cursor-pointer hover:bg-slate-700 transition-colors h-auto min-h-[7rem] justify-between">
-              <div className="flex items-start gap-2.5">
+            {/* Box 1: Fix Music Grouping */}            
+            {/* Logging Options */}
+            <div className="col-span-1 sm:col-span-2 flex flex-col gap-2 p-3 bg-[#1E232E] border border-slate-700/30 rounded-xl">
+              <span className="text-sm font-semibold text-slate-200 border-b border-slate-700/50 pb-2 mb-1">Logging Configuration</span>
+              
+              <label className="flex items-start gap-2.5 cursor-pointer hover:bg-slate-700/30 p-2 rounded transition-colors">
                 <input
                   type="checkbox"
-                  id="toggle-diagnostic-logging"
+                  checked={rules.enableStandardLogging !== false}
+                  onChange={(e) => onRulesChange({ ...rules, enableStandardLogging: e.target.checked })}
+                  className="mt-0.5 rounded border-slate-700 text-[#8B5CF6] focus:ring-[#8B5CF6] bg-slate-800 h-3 w-3 cursor-pointer shrink-0"
+                />
+                <div className="flex flex-col">
+                  <span className="text-xs font-semibold text-slate-300">Enable Standard Logging</span>
+                  <span className="text-[10px] text-slate-400 leading-relaxed mt-0.5 block">
+                    Save basic application events (max 5MB, keeps 3 most recent).
+                  </span>
+                </div>
+              </label>
+
+              <label className="flex items-start gap-2.5 cursor-pointer hover:bg-slate-700/30 p-2 rounded transition-colors">
+                <input
+                  type="checkbox"
                   checked={rules.diagnosticLoggingEnabled === true}
                   onChange={(e) => {
                     const checked = e.target.checked;
@@ -1827,13 +1844,46 @@ const toggleBleedingEdgePreset = (checked: boolean) => {
                   className="mt-0.5 rounded border-slate-700 text-[#8B5CF6] focus:ring-[#8B5CF6] bg-slate-800 h-3 w-3 cursor-pointer shrink-0"
                 />
                 <div className="flex flex-col">
-                  <span className="text-xs font-semibold text-slate-300">Diagnostic Logging</span>
+                  <span className="text-xs font-semibold text-slate-300">Enable Diagnostic Logging (Master Toggle)</span>
+                  <span className="text-[10px] text-slate-400 leading-relaxed mt-0.5 block">
+                    Capture deep application logs (max 10MB, keeps 2 most recent).
+                  </span>
                 </div>
-              </div>
-              <span className="text-[10px] text-slate-400 leading-relaxed mt-1 block">
-                Capture deep application logs to the Export Directory for troubleshooting.
-              </span>
-            </label>
+              </label>
+
+              {rules.diagnosticLoggingEnabled && (
+                <div className="pl-6 grid grid-cols-1 sm:grid-cols-3 gap-2 mt-1">
+                  <label className="flex items-start gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={rules.diagLogScanEngine !== false}
+                      onChange={(e) => onRulesChange({ ...rules, diagLogScanEngine: e.target.checked })}
+                      className="mt-0.5 rounded border-slate-700 text-[#8B5CF6] focus:ring-[#8B5CF6] bg-slate-800 h-2.5 w-2.5 cursor-pointer shrink-0"
+                    />
+                    <span className="text-[11px] text-slate-300">Scan Engine</span>
+                  </label>
+                  <label className="flex items-start gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={rules.diagLogMediaParsing !== false}
+                      onChange={(e) => onRulesChange({ ...rules, diagLogMediaParsing: e.target.checked })}
+                      className="mt-0.5 rounded border-slate-700 text-[#8B5CF6] focus:ring-[#8B5CF6] bg-slate-800 h-2.5 w-2.5 cursor-pointer shrink-0"
+                    />
+                    <span className="text-[11px] text-slate-300">Media Parsing</span>
+                  </label>
+                  <label className="flex items-start gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={rules.diagLogSystem !== false}
+                      onChange={(e) => onRulesChange({ ...rules, diagLogSystem: e.target.checked })}
+                      className="mt-0.5 rounded border-slate-700 text-[#8B5CF6] focus:ring-[#8B5CF6] bg-slate-800 h-2.5 w-2.5 cursor-pointer shrink-0"
+                    />
+                    <span className="text-[11px] text-slate-300">System Events</span>
+                  </label>
+                </div>
+              )}
+            </div>
+
 
             <label className="flex flex-col p-3 bg-[#1E232E] border border-slate-700/30 rounded-xl cursor-pointer hover:bg-slate-700 transition-colors h-auto min-h-[7rem] justify-between">
               <div className="flex items-start gap-2.5">

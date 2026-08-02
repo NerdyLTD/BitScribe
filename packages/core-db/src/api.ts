@@ -325,44 +325,49 @@ function getTrackLanguage(stream: any): string {
 
 export async function scanDirectories(paths: string[], rules: any, onStart: (total: number) => void, onLog: (msg: string) => void, onProgress: (prog: any) => void, isResume: boolean = false, isQuickRefresh: boolean = false, signal?: AbortSignal) {
     onLog("Initializing scan...");
+
+    const shouldLogStd = rules?.enableStandardLogging !== false;
+    const shouldLogDiagScan = rules?.diagnosticLoggingEnabled === true && rules?.diagLogScanEngine !== false;
+    const shouldLogDiagMedia = rules?.diagnosticLoggingEnabled === true && rules?.diagLogMediaParsing !== false;
+    const shouldLogDiagSystem = rules?.diagnosticLoggingEnabled === true && rules?.diagLogSystem !== false;
+    
+    const stdLog = (lvl: "INFO"|"WARN"|"ERROR", msg: string) => {
+        if (shouldLogStd) logEvent(lvl, "ScanEngine", msg, false);
+    };
+    const diagLog = (sys: "Scan"|"Media"|"System", lvl: "INFO"|"WARN"|"ERROR", msg: string) => {
+        if (sys === "Scan" && shouldLogDiagScan) logEvent(lvl, "ScanEngine", msg, true);
+        if (sys === "Media" && shouldLogDiagMedia) logEvent(lvl, "MediaParsing", msg, true);
+        if (sys === "System" && shouldLogDiagSystem) logEvent(lvl, "System", msg, true);
+    };
+
     const scanStartTime = performance.now();
     console.info("[PROFILER] Scan started.");
     
     let isMac = false;
-    let macFfprobePath = "";
+    let ffprobePath = "";
     if (isTauri()) {
         try {
             const diag = await invoke("get_diagnostic") as any;
             isMac = diag.platform === 'macos';
         } catch (e) {}
         
-        if (isMac) {
-            onLog("Extracting bundled Mac ffprobe to bypass Gatekeeper...");
-            try {
-                macFfprobePath = await invoke("setup_mac_ffprobe") as string;
-                onLog("Mac ffprobe extracted to: " + macFfprobePath);
-            } catch (e: any) {
-                const errMsg = e.message || String(e);
-                throw new Error("Failed to extract Mac ffprobe: " + errMsg);
-            }
-            onLog("Validating extracted native ffprobe execution...");
-            try {
-                await invoke("run_mac_ffprobe", { binPath: macFfprobePath, args: ['-version'] });
-            } catch (e: any) {
-                const errMsg = e.message || String(e);
-                throw new Error(`CRITICAL NATIVE COMPATIBILITY ERROR:\nThe video parsing engine (ffprobe) is blocked or incompatible with your operating system.\n\nTechnical Details: ${errMsg}`);
-            }
-        } else {
-            onLog("Validating native ffprobe execution...");
-            try {
-                const output = await Command.sidecar('bin/ffprobe', ['-version']).execute();
-                if (output.code !== 0) {
-                    throw new Error(`Execution returned code ${output.code}. Stderr: ${output.stderr}`);
-                }
-            } catch (e: any) {
-                const errMsg = e.message || String(e);
-                throw new Error(`CRITICAL NATIVE COMPATIBILITY ERROR:\nThe video parsing engine (ffprobe) is blocked or incompatible with your operating system.\n\nTechnical Details: ${errMsg}`);
-            }
+        onLog("Extracting and verifying bundled ffprobe engine...");
+        try {
+            ffprobePath = await invoke("setup_ffprobe") as string;
+            onLog("ffprobe extracted to: " + ffprobePath);
+        } catch (e: any) {
+            const errMsg = e.message || String(e);
+            stdLog("ERROR", "Failed to extract ffprobe: " + errMsg);
+            throw new Error("Failed to extract ffprobe: " + errMsg);
+        }
+        
+        onLog("Validating native ffprobe execution...");
+        try {
+            await invoke("run_ffprobe", { binPath: ffprobePath, args: ['-version'] });
+        } catch (e: any) {
+            const errMsg = e.message || String(e);
+            stdLog("ERROR", "FFprobe validation failed: " + errMsg);
+            throw new Error(`CRITICAL NATIVE COMPATIBILITY ERROR:\nThe video parsing engine (ffprobe) is blocked or incompatible with your operating system.\n\nTechnical Details: ${errMsg}`);
         }
     }
     
@@ -804,10 +809,9 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 ffprobeArgs.push('-analyzeduration', '500000', '-probesize', '500000', file);
 
                 let probePromise: Promise<{code: number, stdout: string, stderr: string}>;
-                if (isTauri() && isMac) {
-                    probePromise = invoke("run_mac_ffprobe", { binPath: macFfprobePath, args: ffprobeArgs }).then((stdout: any) => {
+                if (isTauri()) {
+                    probePromise = invoke("run_ffprobe", { binPath: ffprobePath, args: ffprobeArgs }).then((stdout: any) => {
                         return { code: 0, stdout: String(stdout), stderr: "" };
-                        return { code: 0, stdout, stderr: "" };
                     }).catch(err => {
                         throw new Error(`ffprobe returned non-zero code: ${err}`);
                     });
@@ -1187,3 +1191,16 @@ export async function loadSettings(): Promise<Record<string, any>> {
     }
 }
 
+
+
+export async function logEvent(level: "INFO" | "WARN" | "ERROR", system: string, message: string, isDiagnostic: boolean = false) {
+    if (isTauri()) {
+        try {
+            await invoke("log_event", { level, system, message, isDiagnostic });
+        } catch (e) {
+            console.warn("Failed to write to native log:", e);
+        }
+    } else {
+        console.log(`[${level}] [${system}] ${message}`);
+    }
+}

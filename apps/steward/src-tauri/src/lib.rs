@@ -92,7 +92,8 @@ fn clear_db(state: State<'_, DbState>) -> Result<(), String> {
 }
 
 #[tauri::command]
-async fn delete_db_files(state: State<'_, DbState>, ids: Vec<String>) -> Result<(), String> {
+async fn delete_db_files,
+            log_event(state: State<'_, DbState>, ids: Vec<String>) -> Result<(), String> {
     let mut conn = state.conn.lock().unwrap();
     let tx = conn.transaction().map_err(|e| e.to_string())?;
     
@@ -377,78 +378,85 @@ fn save_file(path: String, contents_b64: String) -> Result<(), String> {
 }
 
 
+
 #[tauri::command]
-fn setup_mac_ffprobe(app: tauri::AppHandle) -> Result<String, String> {
-    if std::env::consts::OS != "macos" {
-        return Ok("Not macOS".to_string());
-    }
-
-    let resource_path = app
-        .path()
-        .resolve("resources/mac_ffprobe.tar.gz", tauri::path::BaseDirectory::Resource)
-        .map_err(|e| e.to_string())?;
-
+fn setup_ffprobe(app: tauri::AppHandle) -> Result<String, String> {
     let app_data_dir = app
         .path()
         .app_data_dir()
         .map_err(|e| e.to_string())?;
-
     std::fs::create_dir_all(&app_data_dir).map_err(|e| e.to_string())?;
 
-    let dest_bin_name = "ffprobe-aarch64-apple-darwin";
-    let target_bin = app_data_dir.join(dest_bin_name);
-
-    // Force purge old extracted binaries so fresh bundle binaries are always unpacked
-    let _ = std::fs::remove_file(&target_bin);
-    let _ = std::fs::remove_file(app_data_dir.join("ffprobe-x86_64-apple-darwin"));
-    let _ = std::fs::remove_file(app_data_dir.join("ffprobe-aarch64-apple-darwin"));
-    let _ = std::fs::remove_file(app_data_dir.join("ffprobe"));
-
-    let output = std::process::Command::new("tar")
-        .arg("-xzf")
-        .arg(&resource_path)
-        .arg("-C")
-        .arg(&app_data_dir)
-        .output()
-        .map_err(|e| format!("Failed to execute tar: {}", e))?;
-
-    if !output.status.success() {
-        return Err(format!("Tar extraction failed: {}", String::from_utf8_lossy(&output.stderr)));
+    #[cfg(target_os = "windows")]
+    {
+        let target_bin = app_data_dir.join("ffprobe.exe");
+        if !target_bin.exists() {
+            let bytes = include_bytes!("../bin/ffprobe-x86_64-pc-windows-msvc.exe");
+            std::fs::write(&target_bin, bytes).map_err(|e| e.to_string())?;
+        }
+        return Ok(target_bin.to_string_lossy().to_string());
     }
 
-    let mut final_bin = target_bin.clone();
-    if !final_bin.exists() {
-        let fallback = app_data_dir.join("ffprobe-x86_64-apple-darwin");
-        if fallback.exists() {
-            final_bin = fallback;
-        } else {
-            let fallback_generic = app_data_dir.join("ffprobe");
-            if fallback_generic.exists() {
-                final_bin = fallback_generic;
+    #[cfg(target_os = "linux")]
+    {
+        let target_bin = app_data_dir.join("ffprobe");
+        if !target_bin.exists() {
+            let bytes = include_bytes!("../bin/ffprobe-x86_64-unknown-linux-gnu");
+            std::fs::write(&target_bin, bytes).map_err(|e| e.to_string())?;
+            use std::os::unix::fs::PermissionsExt;
+            if let Ok(metadata) = std::fs::metadata(&target_bin) {
+                let mut perms = metadata.permissions();
+                perms.set_mode(0o755);
+                let _ = std::fs::set_permissions(&target_bin, perms);
             }
         }
+        return Ok(target_bin.to_string_lossy().to_string());
     }
 
-    #[cfg(unix)]
+    #[cfg(target_os = "macos")]
     {
-        use std::os::unix::fs::PermissionsExt;
-        if let Ok(mut perms) = std::fs::metadata(&final_bin).map(|m| m.permissions()) {
-            perms.set_mode(0o755);
-            let _ = std::fs::set_permissions(&final_bin, perms);
+        #[cfg(target_arch = "aarch64")]
+        let target_bin = app_data_dir.join("ffprobe-aarch64-apple-darwin");
+        #[cfg(target_arch = "x86_64")]
+        let target_bin = app_data_dir.join("ffprobe-x86_64-apple-darwin");
+
+        if !target_bin.exists() {
+            #[cfg(target_arch = "aarch64")]
+            {
+                let bytes = include_bytes!("../bin/ffprobe-aarch64-apple-darwin");
+                std::fs::write(&target_bin, bytes).map_err(|e| e.to_string())?;
+            }
+            #[cfg(target_arch = "x86_64")]
+            {
+                let bytes = include_bytes!("../bin/ffprobe-x86_64-apple-darwin");
+                std::fs::write(&target_bin, bytes).map_err(|e| e.to_string())?;
+            }
+            
+            use std::os::unix::fs::PermissionsExt;
+            if let Ok(metadata) = std::fs::metadata(&target_bin) {
+                let mut perms = metadata.permissions();
+                perms.set_mode(0o755);
+                let _ = std::fs::set_permissions(&target_bin, perms);
+            }
+            
+            let _ = std::process::Command::new("xattr")
+                .arg("-d")
+                .arg("com.apple.quarantine")
+                .arg(&target_bin)
+                .output();
         }
+        return Ok(target_bin.to_string_lossy().to_string());
     }
 
-    let _ = std::process::Command::new("xattr")
-        .arg("-d")
-        .arg("com.apple.quarantine")
-        .arg(&final_bin)
-        .output();
-
-    Ok(final_bin.to_string_lossy().to_string())
+    #[cfg(not(any(target_os = "windows", target_os = "linux", target_os = "macos")))]
+    {
+        return Err("Unsupported OS".to_string());
+    }
 }
 
+
 #[tauri::command]
-async fn run_mac_ffprobe(bin_path: String, args: Vec<String>) -> Result<String, String> {
+async fn run_ffprobe(bin_path: String, args: Vec<String>) -> Result<String, String> {
     let output = tokio::process::Command::new(bin_path)
         .args(&args)
         .output()
@@ -460,6 +468,85 @@ async fn run_mac_ffprobe(bin_path: String, args: Vec<String>) -> Result<String, 
     }
 
     Ok(String::from_utf8_lossy(&output.stdout).to_string())
+}
+
+
+use std::fs::{self, OpenOptions};
+use std::io::Write;
+use std::path::{Path, PathBuf};
+use chrono::Local;
+
+#[tauri::command]
+fn log_event(
+    app: tauri::AppHandle,
+    level: String,
+    system: String,
+    message: String,
+    is_diagnostic: bool,
+) -> Result<(), String> {
+    let app_data_dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
+    let logs_dir = app_data_dir.join("logs");
+    
+    if !logs_dir.exists() {
+        fs::create_dir_all(&logs_dir).map_err(|e| e.to_string())?;
+    }
+
+    let date_str = Local::now().format("%Y-%m-%d").to_string();
+    
+    let prefix = if is_diagnostic { "diagnostic_" } else { "standard_" };
+    
+    // We will append to a single active file for the day
+    let log_file_name = format!("{}{}.txt", prefix, date_str);
+    let log_file_path = logs_dir.join(&log_file_name);
+
+    let timestamp = Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
+    let log_entry = format!("[{}] [{}] [{}] {}\n", timestamp, level.to_uppercase(), system, message);
+
+    if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(&log_file_path) {
+        let _ = file.write_all(log_entry.as_bytes());
+    }
+
+    // Check sizes and rotate
+    let max_size: u64 = if is_diagnostic { 10 * 1024 * 1024 } else { 5 * 1024 * 1024 };
+    let max_files = if is_diagnostic { 2 } else { 3 };
+
+    if let Ok(metadata) = fs::metadata(&log_file_path) {
+        if metadata.len() > max_size {
+            let time_str = Local::now().format("%H-%M-%S").to_string();
+            let rotated_name = format!("{}{}_{}.txt", prefix, date_str, time_str);
+            let rotated_path = logs_dir.join(rotated_name);
+            let _ = fs::rename(&log_file_path, &rotated_path);
+        }
+    }
+
+    cleanup_old_logs(&logs_dir, prefix, max_files);
+
+    Ok(())
+}
+
+fn cleanup_old_logs(logs_dir: &Path, prefix: &str, max_files: usize) {
+    if let Ok(entries) = fs::read_dir(logs_dir) {
+        let mut files: Vec<PathBuf> = entries
+            .filter_map(Result::ok)
+            .map(|e| e.path())
+            .filter(|p| {
+                p.is_file() 
+                && p.file_name().and_then(|n| n.to_str()).map(|s| s.starts_with(prefix)).unwrap_or(false)
+            })
+            .collect();
+
+        files.sort_by(|a, b| {
+            let meta_a = fs::metadata(a).and_then(|m| m.modified()).unwrap_or(std::time::SystemTime::UNIX_EPOCH);
+            let meta_b = fs::metadata(b).and_then(|m| m.modified()).unwrap_or(std::time::SystemTime::UNIX_EPOCH);
+            meta_b.cmp(&meta_a) // Newest first
+        });
+
+        if files.len() > max_files {
+            for file in files.into_iter().skip(max_files) {
+                let _ = fs::remove_file(file);
+            }
+        }
+    }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -485,10 +572,7 @@ pub fn run() {
                 tauri_plugin_log::Builder::default()
                     .targets([
                         tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Stdout),
-                        tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Folder {
-                            path: data_dir.clone(),
-                            file_name: None,
-                        })
+                        
                     ])
                     .level(log::LevelFilter::Info)
                     .build(),
@@ -506,12 +590,13 @@ pub fn run() {
             clear_db,
             save_db_files,
             get_diagnostic,
-            setup_mac_ffprobe,
-            run_mac_ffprobe,
+            setup_ffprobe,
+            run_ffprobe,
             walk_dir,
             save_settings,
             load_settings,
-            delete_db_files
+            delete_db_files,
+            log_event
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
