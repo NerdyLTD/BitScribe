@@ -325,8 +325,6 @@ function getTrackLanguage(stream: any): string {
 
 export async function scanDirectories(paths: string[], rules: any, onStart: (total: number) => void, onLog: (msg: string) => void, onProgress: (prog: any) => void, isResume: boolean = false, isQuickRefresh: boolean = false, signal?: AbortSignal) {
     onLog("Initializing scan...");
-    stdLog("INFO", "ScanEngine started on paths: " + paths.join(", "));
-    diagLog("Scan", "INFO", "Initializing fast multi-threaded scan sequence...");
 
     const shouldLogStd = rules?.enableStandardLogging !== false;
     const shouldLogDiagScan = rules?.diagnosticLoggingEnabled === true && rules?.diagLogScanEngine !== false;
@@ -341,6 +339,9 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
         if (sys === "Media" && shouldLogDiagMedia) logEvent(lvl, "MediaParsing", msg, true);
         if (sys === "System" && shouldLogDiagSystem) logEvent(lvl, "System", msg, true);
     };
+    
+    stdLog("INFO", "ScanEngine started on paths: " + paths.join(", "));
+    diagLog("Scan", "INFO", "Initializing fast multi-threaded scan sequence...");
 
     const scanStartTime = performance.now();
     console.info("[PROFILER] Scan started.");
