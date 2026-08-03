@@ -380,10 +380,8 @@ fn save_file(path: String, contents_b64: String) -> Result<(), String> {
 
 #[tauri::command]
 fn setup_ffprobe(app: tauri::AppHandle) -> Result<String, String> {
-    let app_data_dir = app
-        .path()
-        .app_data_dir()
-        .map_err(|e| e.to_string())?;
+    let exe_path = std::env::current_exe().map_err(|e| e.to_string())?;
+    let app_data_dir = exe_path.parent().ok_or("No parent directory")?.to_path_buf();
     std::fs::create_dir_all(&app_data_dir).map_err(|e| e.to_string())?;
 
     #[cfg(target_os = "windows")]
@@ -494,7 +492,8 @@ fn log_event(
     message: String,
     is_diagnostic: bool,
 ) -> Result<(), String> {
-    let app_data_dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
+    let exe_path = std::env::current_exe().map_err(|e| e.to_string())?;
+    let app_data_dir = exe_path.parent().ok_or("No parent directory")?.to_path_buf();
     let logs_dir = app_data_dir.join("logs");
     
     if !logs_dir.exists() {
