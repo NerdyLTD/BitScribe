@@ -1133,7 +1133,7 @@ export default memo(function Dashboard({
   }, [evaluatedFiles]);
 
   const foldersSet = useMemo(() => {
-    return sortCategories(Array.from(new Set(evaluatedFiles.map(({ item }) => item.topLevelFolder || "Unknown"))) as string[]);
+    return Array.from(new Set(evaluatedFiles.map(({ item }) => item.topLevelFolder || "Unknown"))).sort((a, b) => (a as string).localeCompare(b as string, undefined, { sensitivity: 'base' }));
   }, [evaluatedFiles]);
 
   const totalVideoFiles = useMemo(() => metricsFilteredFiles.filter(({ item }) => !isMusicCategory(item.category) && item.category !== 'Corrupted').length, [metricsFilteredFiles]);
