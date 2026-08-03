@@ -125,13 +125,20 @@ export function useLocalScanEngine({
 
     // Intercept if starting a standard scan and we already have database content
     const isResuming = localStorage.getItem("bitscribe_scan_in_progress") === "true";
+    const activePaths = scanPaths.filter((p) => p.enabled).map(p => p.path);
+    const currentPathsHash = activePaths.join('|');
+    const lastScanPathsHash = localStorage.getItem("plex_last_scan_paths_hash");
+    const pathsChanged = lastScanPathsHash !== currentPathsHash;
+
     if (!isQ && hasData && !isResuming) {
       const lastScanTsStr = localStorage.getItem("plex_last_scan_timestamp");
       const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
       let shouldRunRefresh = false;
       let shouldUseCacheDirectly = false;
 
-      if (lastScanTsStr) {
+      if (pathsChanged) {
+        shouldRunRefresh = true;
+      } else if (lastScanTsStr) {
         const lastScanTs = Number(lastScanTsStr);
         if (!isNaN(lastScanTs)) {
           const age = Date.now() - lastScanTs;
@@ -323,6 +330,7 @@ export function useLocalScanEngine({
       ]);
       setNotification({ type: 'success', message: isQ ? `Scan complete: ${scannedCount} new or changed files were updated in the database.` : `Successfully completed media library scan from ${activePaths.length} active paths!` });
       localStorage.setItem("plex_last_scan_timestamp", Date.now().toString());
+      localStorage.setItem("plex_last_scan_paths_hash", activePaths.join('|'));
       localStorage.removeItem("bitscribe_scan_in_progress");
       setHasCompletedScan(true);
       setIsResumeState(false);

@@ -213,12 +213,15 @@ export default function App() {
         multiple: true,
       });
       if (Array.isArray(selected) && selected.length > 0) {
-        setScanPaths(prev => [
-            ...prev,
-            ...selected.map(p => ({ path: p, enabled: true }))
-        ]);              
+        setScanPaths(prev => {
+            const newPaths = selected.filter(p => !prev.some(existing => existing.path === p)).map(p => ({ path: p, enabled: true }));
+            return [...prev, ...newPaths];
+        });              
       } else if (selected && typeof selected === "string") {
-        setScanPaths(prev => [...prev, { path: selected, enabled: true }]);
+        setScanPaths(prev => {
+            if (prev.some(existing => existing.path === selected)) return prev;
+            return [...prev, { path: selected, enabled: true }];
+        });
       }
     } catch (err) {
       console.error("Failed to open dialog:", err);

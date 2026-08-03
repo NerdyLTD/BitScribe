@@ -1,4 +1,6 @@
 ## [Unreleased]
+- **Scan Path Deduplication**: Prevented the UI from adding identical folders to the scan list if they have already been added.
+- **Dynamic Re-scan on Path Changes**: Modified the background scan engine to automatically detect when new folders have been added or removed from the scan list and intelligently force a refresh instead of improperly relying on the cache from previous scans.
 - **Ingest Streaming Compatibility Evaluation**: Modified the background scan engine to consistently run and store streaming compatibility rules for all video media natively at the time of initial ingest, regardless of whether the scan was triggered as a basic Media Discovery or a dedicated Stream Audit.
 - **Stream Audit UI Synchronization**: Fixed a bug where toggling the 'Stream Audit Scan' preset in the dashboard would not instantly refresh the library's compatibility scores and would display 'Pending Scan' instead of dynamically evaluating the changes.
 - **Folder Filtering Alphabetical Sorting**: Fixed a bug where the 'Top Level Folder' list in the dashboard filters was sorting according to hardcoded media category rules (e.g. Movies, TV Shows) rather than strictly alphabetical A-Z.
