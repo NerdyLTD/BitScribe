@@ -125,7 +125,7 @@ function getCachedMetadata(item: MediaItem) {
 
 function getCachedEvaluation(item: MediaItem, rules: any, isDup: boolean, scanPaths: any[]) {
     // Basic hash of rules that affect streaming compatibility
-    const ruleHash = `${rules.useDiscoveryPreset}|${rules.useModernPreset}|${rules.useLegacyPreset}|${rules.useLosslessAudio}|${rules.useMaxBitrate}`;
+    const ruleHash = `${rules.useDiscoveryPreset}|${rules.useModernPreset}|${rules.useLegacyPreset}|${rules.useBleedingEdgePreset}|${rules.useLosslessAudio}|${rules.useMaxBitrate}`;
     const cacheKey = `${item.id}|${ruleHash}|${isDup}`;
     
     if (!_globalEvalCache.has(cacheKey)) {
@@ -140,7 +140,7 @@ function getCachedEvaluation(item: MediaItem, rules: any, isDup: boolean, scanPa
           useVideoMetadataScan: false,
           useMusicMetadataScan: false,
         };
-        const evaluation = evaluatePlexCompatibility(item, streamingRules, isDup);
+        const evaluation = evaluatePlexCompatibility(item, streamingRules, isDup, true);
         const finalLevel = item.category === 'Corrupted' ? 'corrupted' : evaluation.level;
         
         let uiTopLevelFolder = item.topLevelFolder;
