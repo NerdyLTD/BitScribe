@@ -90,7 +90,7 @@ export function useLocalScanEngine({
           f.streamFriendlyLevel = evalResult.level as any;
           f.streamFriendlyReason = evalResult.reason;
           f.streamFriendlySuggestion = evalResult.suggestion;
-          f.streamFriendlyEvaluated = evaluationRules.useDiscoveryPreset ? 0 : 1;
+          f.streamFriendlyEvaluated = 1;
         }
         updatedFiles.push(f);
         if (i % Math.max(1, Math.ceil(files.length / 20)) === 0 || i === files.length - 1) {

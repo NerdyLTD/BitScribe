@@ -453,13 +453,6 @@ function _evaluatePlexCompatibility(item: MediaItem, customRules: RuleCriteria =
     }
   }
 
-  if (customRules.useDiscoveryPreset) {
-    return {
-      level: 'pending',
-      reason: 'This file has not been evaluated by the Streaming compatibility scanner yet.',
-      suggestion: 'Please run a scan with Streaming preset or click Evaluate Streaming Compatibility.'
-    };
-  }
   // Music files are processed separately (audio only)
   if (isMusicCategory(item.category)) {
     const modernMusic = customRules.modernMusicCodecs || DEFAULT_RULES.modernMusicCodecs;

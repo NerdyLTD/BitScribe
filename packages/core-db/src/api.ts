@@ -679,7 +679,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 // Re-evaluate Plex compatibility based on latest rules without calling ffprobe
                 let hasChanged = false;
 
-                if (cachedItem.streamFriendlyEvaluated !== 1 && !rules.useDiscoveryPreset) {
+                if (cachedItem.streamFriendlyEvaluated !== 1) {
                     const evalResult = evaluatePlexCompatibility(cachedItem, rules, false, true);
                     cachedItem.streamFriendlyLevel = evalResult.level as any;
                     cachedItem.streamFriendlyReason = evalResult.reason;
@@ -766,7 +766,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                         streamFriendlyLevel: "unknown",
                         streamFriendlyReason: "",
                         streamFriendlySuggestion: "",
-                        streamFriendlyEvaluated: rules.useDiscoveryPreset ? 0 : 1,
+                        streamFriendlyEvaluated: 1,
                         rawAudioCodec: "",
                         physicalAudioChannels: 0,
                         matchedOnlineId: "",
@@ -786,7 +786,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                     hydratedItem.streamFriendlyLevel = evalResult.level as any;
                     hydratedItem.streamFriendlyReason = evalResult.reason;
                     hydratedItem.streamFriendlySuggestion = evalResult.suggestion;
-                    hydratedItem.streamFriendlyEvaluated = rules.useDiscoveryPreset ? 0 : 1;
+                    hydratedItem.streamFriendlyEvaluated = 1;
                     
                     onProgress({ current: i + 1, total: allFiles.length, item: hydratedItem });
                     batch.push(hydratedItem);
@@ -1023,7 +1023,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 hydratedItem.streamFriendlyLevel = evalResult.level as any;
                 hydratedItem.streamFriendlyReason = evalResult.reason;
                 hydratedItem.streamFriendlySuggestion = evalResult.suggestion;
-                hydratedItem.streamFriendlyEvaluated = rules.useDiscoveryPreset ? 0 : 1;
+                hydratedItem.streamFriendlyEvaluated = 1;
                 
                 onProgress({ current: i + 1, total: allFiles.length, item: hydratedItem });
                 batch.push(hydratedItem);
