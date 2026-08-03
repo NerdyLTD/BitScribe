@@ -750,22 +750,22 @@ export default function App() {
                 excelColumns={excelColumns}
                 onExcelColumnsChange={setExcelColumns}
                 onCorruptionScanSelect={() => {
-                  // 
+                  handleTabChange("scan");
                 }}
                 onVideoOnlySelect={() => {
-                  // 
+                  handleTabChange("scan");
                 }}
                 onMusicOnlySelect={() => {
-                  // 
+                  handleTabChange("scan");
                 }}
                 onStreamingCompatibilitySelect={() => {
-                  // 
+                  handleTabChange("scan");
                 }}
                 onDiscoveryModeSelect={() => {
-                  // 
+                  handleTabChange("scan");
                 }}
                 onMetadataScanSelect={() => {
-                  // 
+                  handleTabChange("scan");
                 }}
                 onHelpRequest={(id) => {
                   handleTabChange("help");
