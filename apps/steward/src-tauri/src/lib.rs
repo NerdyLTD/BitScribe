@@ -457,6 +457,10 @@ async fn run_ffprobe(bin_path: String, args: Vec<String>) -> Result<String, Stri
     // Add a 15-second timeout in Rust so processes don't become orphaned zombies
     let mut command = tokio::process::Command::new(bin_path);
     command.args(&args);
+    
+    #[cfg(target_os = "windows")]
+    command.creation_flags(0x08000000); // CREATE_NO_WINDOW
+    
     // tokio::process::Command natively handles killing the child if the command is dropped,
     // but since we await output(), we need to wrap it in a tokio::time::timeout
     
