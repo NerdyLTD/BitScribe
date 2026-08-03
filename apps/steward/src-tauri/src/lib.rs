@@ -379,7 +379,7 @@ fn save_file(path: String, contents_b64: String) -> Result<(), String> {
 
 
 #[tauri::command]
-fn setup_ffprobe(app: tauri::AppHandle) -> Result<String, String> {
+fn setup_ffprobe(_app: tauri::AppHandle) -> Result<String, String> {
     let exe_path = std::env::current_exe().map_err(|e| e.to_string())?;
     let app_data_dir = exe_path.parent().ok_or("No parent directory")?.to_path_buf();
     std::fs::create_dir_all(&app_data_dir).map_err(|e| e.to_string())?;
@@ -486,7 +486,7 @@ use chrono::Local;
 
 #[tauri::command]
 fn log_event(
-    app: tauri::AppHandle,
+    _app: tauri::AppHandle,
     level: String,
     system: String,
     message: String,
