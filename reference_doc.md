@@ -56,3 +56,14 @@ We recently addressed memory allocation bottlenecks and slow file-tree traversal
 4. **Concurrency & Threading**: SQLite queries are mapped by explicit column names (removing wildcard overhead) and memory-mapped I/O is utilized to bypass user-space system call overheads during bulk data transfer.
 
 *No external raw profiling logs or timing breakdown charts are available yet. Analysis should focus on structural code efficiency (Big-O, memory overhead, DB serialization boundaries) surrounding the `scanDirectories` orchestrator and how objects are mapped into SQLite batches.*
+
+5. **Dashboard Global Evaluation Cache (Phase 3)**: Extracted Plex rule evaluation and metadata regex parsing out of React `useMemo` and into persistent global Maps (`_globalEvalCache`, `_globalMetadataCache`). By caching results keyed strictly by file ID and rule hashes, we bypass the need to re-evaluate 25,000+ files during active scanning updates or tab switching.
+6. **Search Responsiveness (Phase 3)**: Implemented React 18's `useDeferredValue` hook for the Dashboard search bar and filter states.
+7. **Duplicate Map Memoization (Phase 3)**: Moved the O(N log N) `computeDuplicatesMap` string sorting routine to a global cache.
+8. **Asynchronous IPC**: Converted core Tauri Rust backend file system commands (`walk_dir`, `get_db_files`, `save_db_files`) to asynchronous operations to prevent Mac UI lockups.
+
+## Platform-Specific Implementations
+### macOS
+- **Gatekeeper Bypass for macOS**: Implemented dynamic extraction of `ffprobe` from a zipped resource at runtime for macOS users. This bypasses Apple Gatekeeper's quarantine block on bundled sidecar binaries by using the OS's native `tar` to extract the executable to the application's AppData directory and running it from there. It purges existing cached binaries before extraction.
+- **Apple Silicon FFprobe Enforcement**: Replaced the Intel (x86_64) `ffprobe` sidecar binary for macOS with the Apple Silicon (`arm64`) binary to completely eliminate the Intel Mac version and prevent "Bad CPU type" errors when running under Rosetta.
+- **Mac Directory & Hidden Files Skipping**: Added `__MACOSX` to the directory exclusion list in the native `walk_dir` function. The scanner also strictly ignores all dot-prefixed hidden files like `._filename.mp4` to ensure index totals match between platforms.
