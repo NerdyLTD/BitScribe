@@ -21,7 +21,7 @@ async fn get_db_files(state: State<'_, DbState>, limit: Option<u32>, offset: Opt
         streamFriendlyLevel, streamFriendlyReason, streamFriendlySuggestion, streamFriendlyEvaluated, \
         videoBitDepth, audioSampleRate, chapterCount, rawAudioCodec, physicalAudioChannels, matchedOnlineId, fileUuid, hasExternalSubtitles, embeddedSubtitleLanguages, \
         author, narrator, publisher, bookSeries, seriesIndex, isbn, pageCount, videoFrameRate \
-        FROM scanned_files".to_string();
+        FROM scanned_files ORDER BY id".to_string();
         
     if let (Some(l), Some(o)) = (limit, offset) {
         query.push_str(&format!(" LIMIT {} OFFSET {}", l, o));
