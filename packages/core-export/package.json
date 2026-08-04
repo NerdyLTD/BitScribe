@@ -8,6 +8,6 @@
     "@bitscribe/core-eval": "*",
     "exceljs": "^4.4.0",
     "@bitscribe/desktop-api": "*",
-    "@tauri-apps/api": "^2.0.0-rc.3"
+    "@tauri-apps/api": "^2.11.1"
   }
 }

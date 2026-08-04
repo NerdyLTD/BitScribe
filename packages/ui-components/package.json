@@ -4,19 +4,19 @@
   "main": "index.ts",
   "types": "index.ts",
   "dependencies": {
-    "react": "^19.0.1",
-    "react-dom": "^19.0.1",
-    "motion": "^12.23.24",
-    "lucide-react": "^0.546.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "motion": "^12.43.0",
+    "lucide-react": "^1.28.0",
     "@bitscribe/desktop-api": "*",
-    "@tauri-apps/plugin-dialog": "^2.7.1",
+    "@tauri-apps/plugin-dialog": "^2.7.2",
     "@bitscribe/core-types": "*",
     "@bitscribe/core-eval": "*",
     "@bitscribe/core-export": "*",
     "@bitscribe/core-db": "*"
   },
   "devDependencies": {
-    "@types/react": "^19.0.8",
-    "@types/react-dom": "^19.0.3"
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4"
   }
 }
