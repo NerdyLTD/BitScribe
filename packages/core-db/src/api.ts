@@ -1084,7 +1084,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                     videoBitrateMbps: 0, audioTracks: [], subtitleTracks: [], tags: {}, audioBitrate: 0,
                     isCorrupted: isCorrupt, errorMessage: errMsg, hasEmbeddedPoster: false, bitrateAnomaly: false,
                     bitrateAnomalyReason: '', topLevelFolder, streamFriendlyLevel: isCorrupt ? 'corrupted' : 'unfriendly',
-                    streamFriendlyReason: isCorrupt ? '' : 'Could not probe file natively (ffprobe failed/killed).', streamFriendlySuggestion: '', streamFriendlyEvaluated: 0,
+                    streamFriendlyReason: isCorrupt ? 'File is corrupted or unreadable.' : 'Could not probe file natively (ffprobe failed/killed).', streamFriendlySuggestion: isCorrupt ? 'Remove or replace this file.' : '', streamFriendlyEvaluated: 1,
                     rawAudioCodec: "", physicalAudioChannels: 0, matchedOnlineId: "",  hasExternalSubtitles: false, embeddedSubtitleLanguages: "",
                     author: "", narrator: "", publisher: "", bookSeries: "", seriesIndex: 0, isbn: "", pageCount: 0
                 };
