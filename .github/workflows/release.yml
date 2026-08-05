@@ -1,11 +1,13 @@
 name: 'Release'
-
 on:
   push:
     tags:
       - 'v*'
   workflow_dispatch:
-
+    inputs:
+      tag:
+        description: 'Tag to release (only needed for manual runs)'
+        required: false
 jobs:
   publish-tauri:
     permissions:
@@ -21,33 +23,30 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v7
-
+        with:
+          fetch-depth: 0
       - name: setup node
         uses: actions/setup-node@v7
         with:
           node-version: lts/*
           cache: 'npm'
-
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@v1
         with:
           toolchain: stable
           targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin' || '' }}
-
       - name: install frontend dependencies
         run: npm ci
-
       - uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: 'BitScribe Steward ${{ github.ref_name }}'
+          tagName: ${{ github.ref_name != '' && github.ref_name || github.event.inputs.tag }}
+          releaseName: 'BitScribe Steward ${{ github.ref_name != '' && github.ref_name || github.event.inputs.tag }}'
           releaseBody: '⚠️ **IMPORTANT**: Please download the **Portable** versions below (`.exe` for Windows, `.app.tar.gz` for macOS). Do not use the MSI installer, as the app is designed to run portably and save data next to the executable.'
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
-
       - name: Upload Windows Portable Executable
         if: matrix.platform == 'windows-latest'
         env:
@@ -56,4 +55,4 @@ jobs:
           cd apps/steward/src-tauri/target/release
           if (Test-Path "BitScribe Steward.exe") { Rename-Item "BitScribe Steward.exe" "BitScribe-Steward-Portable-Windows.exe" }
           if (Test-Path "BitScribeSteward.exe") { Rename-Item "BitScribeSteward.exe" "BitScribe-Steward-Portable-Windows.exe" }
-          gh release upload ${{ github.ref_name }} BitScribe-Steward-Portable-Windows.exe
+          gh release upload ${{ github.ref_name != '' && github.ref_name || github.event.inputs.tag }} BitScribe-Steward-Portable-Windows.exe
