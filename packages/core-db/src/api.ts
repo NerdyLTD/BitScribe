@@ -512,6 +512,22 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 return isUnderActive;
             });
             
+            // Sort allFiles alphabetically by path to ensure deterministic deduplication across scans
+            allFiles.sort((a, b) => a.normPath.localeCompare(b.normPath));
+
+            // Deduplicate allFiles by hash to prevent identical copies from overwriting each other in the DB and causing infinite scan loops
+            const uniqueAllFiles: typeof allFiles = [];
+            const seenHashesInScan = new Set<string>();
+            for (const f of allFiles) {
+                if (!seenHashesInScan.has(f.hash)) {
+                    seenHashesInScan.add(f.hash);
+                    uniqueAllFiles.push(f);
+                } else {
+                    onLog(`Ignoring duplicate file: ${f.path}`);
+                }
+            }
+            allFiles = uniqueAllFiles;
+
             const diskFilesMap = new Map<string, string>();
             for (const f of allFiles) {
                 diskFilesMap.set(f.normPath, f.hash);
