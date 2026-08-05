@@ -195,8 +195,6 @@ async fn save_db_files(state: State<'_, DbState>, files: Vec<ScannedFile>) -> Re
     Ok(())
 }
 
-use std::hash::{Hash, Hasher};
-use std::collections::hash_map::DefaultHasher;
 
 fn generate_file_hash(path: &std::path::Path, metadata: &std::fs::Metadata) -> String {
     // Use a deterministic FNV-1a hash.
