@@ -12,6 +12,58 @@ struct DbState {
     conn: Mutex<rusqlite::Connection>,
 }
 
+fn resolve_data_dir() -> std::path::PathBuf {
+    let exe_path = std::env::current_exe().unwrap_or_default();
+    let exe_dir = exe_path.parent().unwrap_or(std::path::Path::new("")).to_path_buf();
+
+    if exe_dir.join(".portable").exists() {
+        return exe_dir;
+    }
+    
+    let exe_str = exe_dir.to_string_lossy().to_lowercase();
+    let is_program_files = exe_str.contains("program files");
+    let is_applications = exe_str.contains("/applications") || exe_str.contains("/appdir");
+    let is_usr_bin = exe_str.contains("/usr/bin") || exe_str.contains("/opt/");
+    
+    if !is_program_files && !is_applications && !is_usr_bin {
+        let test_file = exe_dir.join(".write_test");
+        if std::fs::File::create(&test_file).is_ok() {
+            let _ = std::fs::remove_file(test_file);
+            return exe_dir;
+        }
+    }
+    
+    #[cfg(target_os = "windows")]
+    {
+        if let Ok(appdata) = std::env::var("LOCALAPPDATA") {
+            let path = std::path::PathBuf::from(appdata).join("BitScribeSteward");
+            std::fs::create_dir_all(&path).ok();
+            return path;
+        }
+    }
+    
+    #[cfg(target_os = "macos")]
+    {
+        if let Ok(home) = std::env::var("HOME") {
+            let path = std::path::PathBuf::from(home).join("Library/Application Support/com.bitscribe.steward");
+            std::fs::create_dir_all(&path).ok();
+            return path;
+        }
+    }
+    
+    #[cfg(target_os = "linux")]
+    {
+        if let Ok(home) = std::env::var("HOME") {
+            let path = std::path::PathBuf::from(home).join(".config/BitScribeSteward");
+            std::fs::create_dir_all(&path).ok();
+            return path;
+        }
+    }
+    
+    exe_dir
+}
+
+
 #[tauri::command]
 async fn get_db_files(state: State<'_, DbState>, limit: Option<u32>, offset: Option<u32>) -> Result<Vec<ScannedFile>, String> {
     let conn = state.conn.lock().unwrap();
@@ -147,8 +199,6 @@ use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
 
 fn generate_file_hash(path: &std::path::Path, metadata: &std::fs::Metadata) -> String {
-    use std::io::Read;
-
     // Use a deterministic FNV-1a hash.
     let mut hash: u64 = 0xcbf29ce484222325;
     
@@ -159,17 +209,25 @@ fn generate_file_hash(path: &std::path::Path, metadata: &std::fs::Metadata) -> S
         }
     };
     
-    // Factor 1: File Size (very fast, helps distinguish files immediately)
+    // Factor 1: File Size
     mix(&metadata.len().to_le_bytes());
     
-    // Factor 2: First 1MB of the file
-    // Reading 1MB provides a strong uniqueness guarantee without relying on file paths or metadata,
-    // allowing files to be moved or renamed without losing their identity in the database.
-    if let Ok(mut file) = std::fs::File::open(path) {
-        let mut buffer = [0u8; 1024 * 1024]; // 1MB
-        if let Ok(bytes_read) = file.read(&mut buffer) {
-            mix(&buffer[..bytes_read]);
-        }
+    // Factor 2 & 3: Creation Time & Modified Time
+    if let Ok(created) = metadata.created().unwrap_or_else(|_| std::time::UNIX_EPOCH).duration_since(std::time::UNIX_EPOCH) {
+        mix(&created.as_secs().to_le_bytes());
+        mix(&created.subsec_nanos().to_le_bytes());
+    }
+    
+    if let Ok(modified) = metadata.modified().unwrap_or_else(|_| std::time::UNIX_EPOCH).duration_since(std::time::UNIX_EPOCH) {
+        mix(&modified.as_secs().to_le_bytes());
+        mix(&modified.subsec_nanos().to_le_bytes());
+    }
+    
+    // Factor 4: File Name only (NOT full path)
+    // Allows the file to be moved across directories while keeping the same hash,
+    // avoiding the heavy performance penalty of reading file contents over a network drive.
+    if let Some(file_name) = path.file_name() {
+        mix(file_name.to_string_lossy().as_bytes());
     }
     
     format!("{:016x}", hash)
@@ -360,16 +418,14 @@ fn get_diagnostic() -> serde_json::Value {
 
 #[tauri::command]
 fn save_settings(settings: String) -> Result<(), String> {
-    let exe_path = std::env::current_exe().unwrap_or_default();
-    let data_dir = exe_path.parent().unwrap_or(std::path::Path::new("")).to_path_buf();
+    let data_dir = resolve_data_dir();
     let settings_path = data_dir.join("bitscribe_settings.json");
     std::fs::write(settings_path, settings).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
 fn load_settings() -> Result<String, String> {
-    let exe_path = std::env::current_exe().unwrap_or_default();
-    let data_dir = exe_path.parent().unwrap_or(std::path::Path::new("")).to_path_buf();
+    let data_dir = resolve_data_dir();
     let settings_path = data_dir.join("bitscribe_settings.json");
     if !settings_path.exists() {
         return Ok("{}".to_string());
@@ -379,8 +435,7 @@ fn load_settings() -> Result<String, String> {
 
 #[tauri::command]
 fn get_data_dir() -> String {
-    let exe_path = std::env::current_exe().unwrap_or_default();
-    let data_dir = exe_path.parent().unwrap_or(std::path::Path::new("")).to_path_buf();
+    let data_dir = resolve_data_dir();
     data_dir.to_string_lossy().to_string()
 }
 
@@ -395,8 +450,7 @@ fn save_file(path: String, contents_b64: String) -> Result<(), String> {
 
 #[tauri::command]
 fn setup_ffprobe(_app: tauri::AppHandle) -> Result<String, String> {
-    let exe_path = std::env::current_exe().map_err(|e| e.to_string())?;
-    let app_data_dir = exe_path.parent().ok_or("No parent directory")?.to_path_buf();
+    let app_data_dir = resolve_data_dir();
     std::fs::create_dir_all(&app_data_dir).map_err(|e| e.to_string())?;
 
     #[cfg(target_os = "windows")]
@@ -511,8 +565,7 @@ fn log_event(
     message: String,
     is_diagnostic: bool,
 ) -> Result<(), String> {
-    let exe_path = std::env::current_exe().map_err(|e| e.to_string())?;
-    let app_data_dir = exe_path.parent().ok_or("No parent directory")?.to_path_buf();
+    let app_data_dir = resolve_data_dir();
     let logs_dir = app_data_dir.join("logs");
     
     if !logs_dir.exists() {
@@ -579,8 +632,7 @@ fn cleanup_old_logs(logs_dir: &Path, prefix: &str, max_files: usize) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let exe_path = std::env::current_exe().unwrap_or_default();
-    let data_dir = exe_path.parent().unwrap_or(std::path::Path::new("")).to_path_buf();
+    let data_dir = resolve_data_dir();
     
     // Make WebView2 strictly portable on Windows by placing its cache/localstorage next to the exe
     #[cfg(target_os = "windows")]
