@@ -847,42 +847,62 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 }
                 ffprobeArgs.push('-analyzeduration', '500000', '-probesize', '500000', file);
 
-                let probePromise: Promise<{code: number, stdout: string, stderr: string}>;
-                if (isTauri()) {
-                    probePromise = invoke("run_ffprobe", { binPath: ffprobePath, args: ffprobeArgs }).then((stdout: any) => {
-                        return { code: 0, stdout: String(stdout), stderr: "" };
-                    }).catch(err => {
-                        throw new Error(`ffprobe returned non-zero code: ${err}`);
+                let output: {code: number, stdout: string, stderr: string} | null = null;
+                let retryCount = 0;
+                const MAX_RETRIES = 2;
+                
+                while (retryCount <= MAX_RETRIES) {
+                    let probePromise: Promise<{code: number, stdout: string, stderr: string}>;
+                    if (isTauri()) {
+                        probePromise = invoke("run_ffprobe", { binPath: ffprobePath, args: ffprobeArgs }).then((stdout: any) => {
+                            return { code: 0, stdout: String(stdout), stderr: "" };
+                        }).catch(err => {
+                            throw new Error(`ffprobe returned non-zero code: ${err}`);
+                        });
+                    } else {
+                        probePromise = Command.sidecar('bin/ffprobe', ffprobeArgs).execute() as Promise<{code: number, stdout: string, stderr: string}>;
+                    }
+
+                    let timeoutId: any;
+                    const timeoutPromise = new Promise<never>((_, reject) => {
+                        timeoutId = setTimeout(() => reject(new Error("ffprobe probe execution timed out after 15 seconds")), 15000);
                     });
-                } else {
-                    probePromise = Command.sidecar('bin/ffprobe', ffprobeArgs).execute() as Promise<{code: number, stdout: string, stderr: string}>;
+
+                    let abortListener: (() => void) | null = null;
+                    const abortPromise = new Promise<never>((_, reject) => {
+                        if (signal?.aborted) {
+                            reject(new Error("Scan aborted by user"));
+                        } else if (signal) {
+                            abortListener = () => reject(new Error("Scan aborted by user"));
+                            signal.addEventListener('abort', abortListener);
+                        }
+                    });
+
+                    try {
+                        output = await Promise.race([probePromise, timeoutPromise, abortPromise]).catch(err => {
+                            // Intentionally NOT calling child.kill() to prevent Tauri Windows panic 0xcfffffff.
+                            // The JS promise chain will cleanly reject and ffprobe will exit natively.
+                            throw err;
+                        }).finally(() => {
+                            clearTimeout(timeoutId);
+                            if (signal && abortListener) {
+                                signal.removeEventListener('abort', abortListener);
+                            }
+                        });
+                        break; // Success
+                    } catch (e: any) {
+                        if (e.message && e.message.includes("timed out") && retryCount < MAX_RETRIES) {
+                            retryCount++;
+                            onLog(`Warning: Probe timed out for ${file.substring(Math.max(0, file.length - 40))}. Retrying (${retryCount}/${MAX_RETRIES})...`);
+                            continue;
+                        }
+                        throw e;
+                    }
                 }
-
-                let timeoutId: any;
-                const timeoutPromise = new Promise<never>((_, reject) => {
-                    timeoutId = setTimeout(() => reject(new Error("ffprobe probe execution timed out after 15 seconds")), 15000);
-                });
-
-                let abortListener: (() => void) | null = null;
-                const abortPromise = new Promise<never>((_, reject) => {
-                    if (signal?.aborted) {
-                        reject(new Error("Scan aborted by user"));
-                    } else if (signal) {
-                        abortListener = () => reject(new Error("Scan aborted by user"));
-                        signal.addEventListener('abort', abortListener);
-                    }
-                });
-
-                const output = await Promise.race([probePromise, timeoutPromise, abortPromise]).catch(err => {
-                    // Intentionally NOT calling child.kill() to prevent Tauri Windows panic 0xcfffffff.
-                    // The JS promise chain will cleanly reject and ffprobe will exit natively.
-                    throw err;
-                }).finally(() => {
-                    clearTimeout(timeoutId);
-                    if (signal && abortListener) {
-                        signal.removeEventListener('abort', abortListener);
-                    }
-                });
+                
+                if (!output) {
+                    throw new Error("ffprobe probe execution timed out after multiple retries");
+                }
                 
                 if (output.code !== 0) {
                     throw new Error(`ffprobe returned non-zero code: ${output.stderr || "Unknown error"}`);

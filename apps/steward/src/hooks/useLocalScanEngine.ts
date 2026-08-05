@@ -269,9 +269,10 @@ export function useLocalScanEngine({
           },
           (prog) => {
               const roundedPct = Math.round((prog.current / Math.max(prog.total, 1)) * 100);
-              if (roundedPct !== lastProgress) {
-                  setScanProgress(roundedPct);
-                  lastProgress = roundedPct;
+              const displayPct = Math.min(roundedPct, 99); // Clamp to 99% during processing
+              if (displayPct !== lastProgress) {
+                  setScanProgress(displayPct);
+                  lastProgress = displayPct;
               }
               if (prog.item && !prog.error) {
                   scannedCount++;
