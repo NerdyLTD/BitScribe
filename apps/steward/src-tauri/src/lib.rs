@@ -162,11 +162,11 @@ fn generate_file_hash(path: &std::path::Path, metadata: &std::fs::Metadata) -> S
     // Factor 1: File Size (very fast, helps distinguish files immediately)
     mix(&metadata.len().to_le_bytes());
     
-    // Factor 2: First 512KB of the file
-    // Reading 512KB provides a strong uniqueness guarantee without relying on file paths or metadata,
+    // Factor 2: First 1MB of the file
+    // Reading 1MB provides a strong uniqueness guarantee without relying on file paths or metadata,
     // allowing files to be moved or renamed without losing their identity in the database.
     if let Ok(mut file) = std::fs::File::open(path) {
-        let mut buffer = [0u8; 512 * 1024]; // 512KB
+        let mut buffer = [0u8; 1024 * 1024]; // 1MB
         if let Ok(bytes_read) = file.read(&mut buffer) {
             mix(&buffer[..bytes_read]);
         }
