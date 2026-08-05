@@ -512,17 +512,29 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 return isUnderActive;
             });
             
-            // Ghost files: in DB under active path, but not found on disk or using old legacy ID hash
+            const diskFilesMap = new Map<string, string>();
+            for (const f of allFiles) {
+                diskFilesMap.set(f.normPath, f.hash);
+            }
+
+            // Ghost files: in DB under active path, but not found on disk or hash changed
             const ghostFiles = dbFilesUnderActivePaths.filter(item => {
                 const normPath = (item as any)._normPath;
-                return !allFilesSet.has(normPath) || item.id !== normPath;
+                const diskHash = diskFilesMap.get(normPath);
+                if (!diskHash) return true; // not on disk
+                if (item.id !== diskHash) return true; // hash mismatch (file changed or legacy ID)
+                return false;
             });
             
             // Append orphaned files so they are pruned from the DB
             ghostFiles.push(...orphanedFiles);
             
             // New files: on disk, but not in existing DB
-            const validExistingDbFiles = existingDbFiles.filter(item => item.id === (item as any)._normPath);
+            const validExistingDbFiles = existingDbFiles.filter(item => {
+                const normPath = (item as any)._normPath;
+                const diskHash = diskFilesMap.get(normPath);
+                return diskHash && item.id === diskHash;
+            });
             const existingDbFilesSet = new Set(validExistingDbFiles.map(f => (f as any)._normPath));
             const newFilesOnDisk = allFiles.filter(fileObjItem => {
                 return !existingDbFilesSet.has(fileObjItem.normPath);
@@ -673,7 +685,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
             const normPath = fileObjItem.normPath;
             const cachedItem = existingFilesMap.get(normPath);
             
-            if (cachedItem && cachedItem.fileUuid === fileHash && cachedItem.id === normPath) {
+            if (cachedItem && cachedItem.id === fileHash) {
                 skipProbe = true;
             }
 
@@ -769,7 +781,6 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                         streamFriendlyReason: "",
                         streamFriendlySuggestion: "",
                         streamFriendlyEvaluated: 1,
-                        fileUuid: fileHash,
                         rawAudioCodec: "",
                         physicalAudioChannels: 0,
                         matchedOnlineId: "",
@@ -978,8 +989,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 }
 
                 const hydratedItem: MediaItem = {
-                    id: normPath,
-                    fileUuid: fileHash,
+                    id: fileHash,
                     filename: filename,
                     filePath: file,
                     category: category as any,
@@ -1053,7 +1063,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 const sizeGB = (physicalSize as number) / (1024 * 1024 * 1024);
 
                 const fallbackItem: MediaItem = {
-                    id: normPath, fileUuid: fileHash, filename, filePath: file, category: cat as any,
+                    id: fileHash, filename, filePath: file, category: cat as any,
                     container: ext, sizeGB, durationMins: 0, year: 0, videoCodec: 'unknown', videoResolution: 'unknown',
                     videoBitrateMbps: 0, audioTracks: [], subtitleTracks: [], tags: {}, audioBitrate: 0,
                     isCorrupted: isCorrupt, errorMessage: errMsg, hasEmbeddedPoster: false, bitrateAnomaly: false,

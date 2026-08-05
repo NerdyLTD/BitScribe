@@ -150,11 +150,14 @@ fn generate_file_hash(_path: &std::path::Path, metadata: &std::fs::Metadata) -> 
     let mut hasher = DefaultHasher::new();
     metadata.len().hash(&mut hasher);
     
-    if let Ok(modified) = metadata.modified() {
-        if let Ok(duration) = modified.duration_since(std::time::UNIX_EPOCH) {
-            duration.as_secs().hash(&mut hasher);
-            duration.subsec_nanos().hash(&mut hasher);
-        }
+    // Prefer creation time for the hash. Copies of files typically generate a new creation time,
+    // which prevents hash collisions for identical copies in the library.
+    // Fallback to modified time if creation time is unavailable (e.g. some Linux filesystems).
+    let time_to_hash = metadata.created().unwrap_or_else(|_| metadata.modified().unwrap_or(std::time::UNIX_EPOCH));
+    
+    if let Ok(duration) = time_to_hash.duration_since(std::time::UNIX_EPOCH) {
+        duration.as_secs().hash(&mut hasher);
+        duration.subsec_nanos().hash(&mut hasher);
     }
     
     format!("{:016x}", hasher.finish())
