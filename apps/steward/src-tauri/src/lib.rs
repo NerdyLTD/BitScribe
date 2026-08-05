@@ -147,8 +147,9 @@ use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
 
 fn generate_file_hash(path: &std::path::Path, metadata: &std::fs::Metadata) -> String {
-    // Use a deterministic FNV-1a hash. Rust's DefaultHasher is randomized per-process,
-    // which causes hashes to change every time the app is restarted.
+    use std::io::Read;
+
+    // Use a deterministic FNV-1a hash.
     let mut hash: u64 = 0xcbf29ce484222325;
     
     let mut mix = |bytes: &[u8]| {
@@ -158,23 +159,18 @@ fn generate_file_hash(path: &std::path::Path, metadata: &std::fs::Metadata) -> S
         }
     };
     
-    // Factor 1: File Size
+    // Factor 1: File Size (very fast, helps distinguish files immediately)
     mix(&metadata.len().to_le_bytes());
     
-    // Factor 2 & 3: Creation Time & Modified Time
-    if let Ok(created) = metadata.created().unwrap_or_else(|_| std::time::UNIX_EPOCH).duration_since(std::time::UNIX_EPOCH) {
-        mix(&created.as_secs().to_le_bytes());
-        mix(&created.subsec_nanos().to_le_bytes());
+    // Factor 2: First 512KB of the file
+    // Reading 512KB provides a strong uniqueness guarantee without relying on file paths or metadata,
+    // allowing files to be moved or renamed without losing their identity in the database.
+    if let Ok(mut file) = std::fs::File::open(path) {
+        let mut buffer = [0u8; 512 * 1024]; // 512KB
+        if let Ok(bytes_read) = file.read(&mut buffer) {
+            mix(&buffer[..bytes_read]);
+        }
     }
-    
-    if let Ok(modified) = metadata.modified().unwrap_or_else(|_| std::time::UNIX_EPOCH).duration_since(std::time::UNIX_EPOCH) {
-        mix(&modified.as_secs().to_le_bytes());
-        mix(&modified.subsec_nanos().to_le_bytes());
-    }
-    
-    // Factor 4: File Path & Name (Guarantees 100% uniqueness per file)
-    // Tradeoff: If a file is renamed or moved, its hash will change and it will lose its DB metadata.
-    mix(path.to_string_lossy().as_bytes());
     
     format!("{:016x}", hash)
 }
