@@ -428,7 +428,19 @@ fn load_settings() -> Result<String, String> {
     let data_dir = resolve_data_dir();
     let settings_path = data_dir.join("bitscribe_settings.json");
     if !settings_path.exists() {
-        return Ok("{}".to_string());
+        return Ok("{}
+
+#[tauri::command]
+fn clear_settings() -> Result<(), String> {
+    let data_dir = resolve_data_dir();
+    let settings_path = data_dir.join("bitscribe_settings.json");
+    if settings_path.exists() {
+        std::fs::remove_file(settings_path).map_err(|e| e.to_string())
+    } else {
+        Ok(())
+    }
+}
+".to_string());
     }
     std::fs::read_to_string(settings_path).map_err(|e| e.to_string())
 }
@@ -675,6 +687,7 @@ pub fn run() {
             walk_dir,
             save_settings,
             load_settings,
+            clear_settings,
             delete_db_files,
             log_event
         ])

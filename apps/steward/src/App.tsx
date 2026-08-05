@@ -9,7 +9,7 @@ import confetti from "canvas-confetti";
  */
 
 import React, { useState, useEffect, useMemo, useRef, useTransition } from "react";
-import { scanDirectories, getDbFiles, clearDb, saveDbFiles, getDiagnostic, injectDemoData, clearDemoData, saveSettings, loadSettings, logEvent } from '@bitscribe/core-db';
+import { scanDirectories, getDbFiles, clearDb, saveDbFiles, getDiagnostic, injectDemoData, clearDemoData, saveSettings, loadSettings, clearSettings, logEvent } from '@bitscribe/core-db';
 import { MediaItem, RuleCriteria, APP_VERSION, APP_NAME, APP_VERSION_DATE } from '@bitscribe/core-types';
 import { filterItemsForReport } from '@bitscribe/core-eval';
 import {
@@ -793,7 +793,7 @@ export default function App() {
             {isAppResetting && (
               <AppResetModal onComplete={() => {
                 localStorage.clear();
-                clearDb().then(() => {
+                Promise.all([clearDb(), clearSettings()]).then(() => {
                   window.location.reload();
                 }).catch(() => {
                   window.location.reload();

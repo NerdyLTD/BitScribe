@@ -1243,3 +1243,16 @@ export async function logEvent(level: "INFO" | "WARN" | "ERROR", system: string,
         console.log(`[${level}] [${system}] ${message}`);
     }
 }
+
+
+export async function clearSettings(): Promise<void> {
+    if (!isTauri()) {
+        localStorage.removeItem("bitscribe_web_settings");
+        return;
+    }
+    try {
+        await invoke("clear_settings");
+    } catch (e) {
+        console.error("Failed to clear settings via Tauri", e);
+    }
+}
