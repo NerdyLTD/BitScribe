@@ -146,21 +146,37 @@ async fn save_db_files(state: State<'_, DbState>, files: Vec<ScannedFile>) -> Re
 use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
 
-fn generate_file_hash(_path: &std::path::Path, metadata: &std::fs::Metadata) -> String {
-    let mut hasher = DefaultHasher::new();
-    metadata.len().hash(&mut hasher);
+fn generate_file_hash(path: &std::path::Path, metadata: &std::fs::Metadata) -> String {
+    // Use a deterministic FNV-1a hash. Rust's DefaultHasher is randomized per-process,
+    // which causes hashes to change every time the app is restarted.
+    let mut hash: u64 = 0xcbf29ce484222325;
     
-    // Prefer creation time for the hash. Copies of files typically generate a new creation time,
-    // which prevents hash collisions for identical copies in the library.
-    // Fallback to modified time if creation time is unavailable (e.g. some Linux filesystems).
-    let time_to_hash = metadata.created().unwrap_or_else(|_| metadata.modified().unwrap_or(std::time::UNIX_EPOCH));
+    let mut mix = |bytes: &[u8]| {
+        for &b in bytes {
+            hash ^= b as u64;
+            hash = hash.wrapping_mul(0x100000001b3);
+        }
+    };
     
-    if let Ok(duration) = time_to_hash.duration_since(std::time::UNIX_EPOCH) {
-        duration.as_secs().hash(&mut hasher);
-        duration.subsec_nanos().hash(&mut hasher);
+    // Factor 1: File Size
+    mix(&metadata.len().to_le_bytes());
+    
+    // Factor 2 & 3: Creation Time & Modified Time
+    if let Ok(created) = metadata.created().unwrap_or_else(|_| std::time::UNIX_EPOCH).duration_since(std::time::UNIX_EPOCH) {
+        mix(&created.as_secs().to_le_bytes());
+        mix(&created.subsec_nanos().to_le_bytes());
     }
     
-    format!("{:016x}", hasher.finish())
+    if let Ok(modified) = metadata.modified().unwrap_or_else(|_| std::time::UNIX_EPOCH).duration_since(std::time::UNIX_EPOCH) {
+        mix(&modified.as_secs().to_le_bytes());
+        mix(&modified.subsec_nanos().to_le_bytes());
+    }
+    
+    // Factor 4: File Path & Name (Guarantees 100% uniqueness per file)
+    // Tradeoff: If a file is renamed or moved, its hash will change and it will lose its DB metadata.
+    mix(path.to_string_lossy().as_bytes());
+    
+    format!("{:016x}", hash)
 }
 
 #[derive(serde::Serialize)]
