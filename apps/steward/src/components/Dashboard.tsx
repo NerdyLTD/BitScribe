@@ -534,6 +534,14 @@ export default memo(function Dashboard({
             val = getFormattedAudioTracks(item); break;
           case 'container':
             val = getContainerFormat(item) || ''; break;
+          case 'videoFrameRate':
+            val = Number(item.videoFrameRate) || 0; break;
+          case 'videoBitDepth':
+            val = parseInt(item.videoBitDepth || '0', 10) || 0; break;
+          case 'chapterCount':
+            val = item.chapterCount || 0; break;
+          case 'audioSampleRate':
+            val = item.audioSampleRate || 0; break;
           case 'path':
             val = item.filePath || ''; break;
         }
