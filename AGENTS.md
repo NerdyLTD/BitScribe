@@ -65,3 +65,9 @@ Make focused, minimal, and safe changes in this repository. Preserve existing fi
 ## Asset Handling Protocol
 - **NEVER** generate a fake or substitute asset programmatically (e.g., using `qrcode` or placeholder scripts) when a user explicitly uploads or references a specific visual asset (like a QR code, logo, etc.).
 - If a user uploads an image via the chat, you do not have direct filesystem access to that chat attachment. You MUST instruct the user to upload it directly to the workspace via the Code Editor's file explorer so it can be used authentically. Do NOT attempt to reconstruct it from scratch.
+
+## Implementation Verification Protocol
+- **NEVER** claim a feature, fix, or implementation is complete or fully functional unless you have rigorously verified it.
+- **Test Before Affirming**: For data manipulation, sorting, or filtering logic, create isolated test scripts (e.g., using Node.js) to simulate edge cases (such as `undefined`, `null`, `0`, or missing properties) and verify the expected output before committing the change.
+- **Do Not Hallucinate Success**: If you assume a change works based solely on code inspection, explicitly state that it *should* work theoretically but needs real-world testing. Do not state "it works" or "I have verified it" unless you actually ran a successful verification test.
+- **Double-Check Scope**: Ensure that all requested aspects of a fix (e.g., all specified columns or components) are accounted for before marking a task as complete.
