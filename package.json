@@ -16,5 +16,12 @@
     "adm-zip": "^0.6.0",
     "express": "^5.2.1",
     "puppeteer": "^25.5.0"
+  },
+  "overrides": {
+    "exceljs": {
+      "archiver": "^8.0.0",
+      "fast-csv": "^5.0.7",
+      "unzipper": "^0.12.5"
+    }
   }
 }

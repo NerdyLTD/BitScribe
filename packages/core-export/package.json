@@ -4,10 +4,10 @@
   "main": "index.ts",
   "types": "index.ts",
   "dependencies": {
-    "@bitscribe/core-types": "*",
     "@bitscribe/core-eval": "*",
-    "exceljs": "^4.4.0",
+    "@bitscribe/core-types": "*",
     "@bitscribe/desktop-api": "*",
-    "@tauri-apps/api": "^2.11.1"
+    "@tauri-apps/api": "^2.11.1",
+    "exceljs": "^4.4.0"
   }
 }
