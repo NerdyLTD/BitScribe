@@ -22,11 +22,11 @@ jobs:
             args: ''
     runs-on: ${{ matrix.platform }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: setup node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@v4
         with:
           node-version: lts/*
           cache: 'npm'
@@ -41,8 +41,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_name != '' && github.ref_name || github.event.inputs.tag }}
-          releaseName: 'BitScribe Steward ${{ github.ref_name != '' && github.ref_name || github.event.inputs.tag }}'
+          tagName: ${{ github.ref_type == 'tag' && github.ref_name || github.event.inputs.tag }}
+          releaseName: 'BitScribe Steward ${{ github.ref_type == 'tag' && github.ref_name || github.event.inputs.tag }}'
           releaseBody: '⚠️ **IMPORTANT**: Please download the **Portable** versions below (`.exe` for Windows, `.app.tar.gz` for macOS). Do not use the MSI installer, as the app is designed to run portably and save data next to the executable.'
           releaseDraft: true
           prerelease: false
@@ -55,4 +55,4 @@ jobs:
           cd apps/steward/src-tauri/target/release
           if (Test-Path "BitScribe Steward.exe") { Rename-Item "BitScribe Steward.exe" "BitScribe-Steward-Portable-Windows.exe" }
           if (Test-Path "BitScribeSteward.exe") { Rename-Item "BitScribeSteward.exe" "BitScribe-Steward-Portable-Windows.exe" }
-          gh release upload ${{ github.ref_name != '' && github.ref_name || github.event.inputs.tag }} BitScribe-Steward-Portable-Windows.exe
+          gh release upload ${{ github.ref_type == 'tag' && github.ref_name || github.event.inputs.tag }} BitScribe-Steward-Portable-Windows.exe
