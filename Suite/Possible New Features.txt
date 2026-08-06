@@ -1,0 +1,113 @@
+================================================================================
+BITScribe & BITScribeRX: Future Audiobook and E-Book Integration Specification
+================================================================================
+
+This document outlines the conceptual architecture, capabilities, and future 
+directions for integrating Audiobook and E-Book media formats into the 
+BitScribe Scanner/Auditor (and its upcoming remediation sibling, BitScribeRX).
+
+---
+
+1. ffprobe capabilities and limitations
+--------------------------------------------------------------------------------
+ffprobe (the multimedia stream analyzer from the FFmpeg suite) has varying 
+degrees of native support for these print and audio formats:
+
+A. Audiobooks (.m4b, .m4a, .mp3, .ogg) [Extremely Strong Support]
+   - Container Parsing: Native detection of audio bitstream codecs (AAC, MP3, 
+     Opus), channel counts, sample rates, and bitrates.
+   - Metadata Tagging: ffprobe excels at extracting embedded audio tags, such 
+     as Title (Book Title), Artist/Author, Album Artist, Narrator, Release Date, 
+     Publisher, Genre, and Descriptions.
+   - Chapter Tables: ffprobe reads embedded chapter tables. For single-file 
+     audiobooks (.m4b), it extracts precise start/end timestamps and title 
+     tags for every chapter, which is vital for navigation audits.
+   - Embedded Cover Art: ffprobe detects cover art embedded inside the audio 
+     file, which is typically exposed as an attached video stream (e.g., an 
+     MJPEG or PNG picture stream).
+
+B. E-Books (.epub, .pdf, .mobi, .cbz, .cbr) [Limited to No Direct ffmpeg Support]
+   - E-Books are not traditional time-based multimedia bitstream containers. 
+     Thus, ffprobe cannot parse text-based ePUBs or MOBI files.
+   - PDFs: ffprobe has a rudimentary PDF demuxer (if compiled with libavformat 
+     support) which can extract document-level metadata (Author, Title, 
+     Creation Date, Producer), but it is generally slow and limited.
+   - CBZ/CBR (Comic Book Archives): These are ZIP or RAR archives containing 
+     images. ffprobe does not read inside archive files.
+   - Architectural Recommendation: For e-book audits, BitScribe should utilize 
+     dedicated, lightweight libraries (e.g., node-epub, pdfinfo, or custom 
+     archive parsers) rather than forcing ffprobe.
+
+---
+
+2. Audiobook integration in BitScribe (Scanner & Auditor)
+--------------------------------------------------------------------------------
+If integrated, Audiobooks would exist as a first-class media category in 
+BitScribe, leveraging the existing audit pipelines:
+
+A. Classification & Folder Extraction
+   - Dedicated folder detection (e.g., matches in paths containing "/Audiobooks/" 
+     or "/Books/").
+   - Category assignment: Classified under "Audiobooks" instead of "Music" 
+     to prevent cluttering music albums and metadata rules.
+
+B. Metadata Audit Columns
+   - Book Title (from Title/Album tag)
+   - Author (from Artist/Author tag)
+   - Narrator (from Composer or custom metadata tags)
+   - Release Year (from Date/Year tag)
+   - Chapter Count & Duration
+   - Technical Properties: Container, Codec, Bitrate, Subtitles (if any, e.g., 
+     timed lyrics or text-to-speech alignment), and File Path.
+
+C. Compliance & Compatibility Audits
+   - Chapter Integrity: Validates if single-file audiobooks have embedded 
+     chapters (essential for players like Bookcamp, Prologue, or Audiobookshelf).
+   - Tag Completeness: Audits whether Author, Title, Year, Narrator, and 
+     Cover Art are embedded.
+   - Directory Compliance: Verifies if the file path matches the standard 
+     organization format: `Z:\Audiobooks\Author\Book Title (Year)\Book Title (Year).m4b`.
+
+---
+
+3. Audiobook remediation in BitScribeRX (Upcoming Correction Tool)
+--------------------------------------------------------------------------------
+BitScribeRX is designed to correct compliance, naming, and tag gaps found 
+during BitScribe scans. For Audiobooks, this introduces powerful automation:
+
+A. Non-Destructive Chapter Operations
+   - Chapter Splitting: Converts a single giant audiobook file into individual, 
+     chapter-based files (e.g., `Chapter 01.m4b`, `Chapter 02.m4b`) using 
+     FFmpeg's stream-copy feature (`-acodec copy`). This is completely lossless 
+     (no re-encoding) and finishes in seconds.
+   - Chapter Merging: Combines folder-based chapters into a single unified `.m4b` 
+     or `.m4a` file, dynamically generating and embedding a chapter table based 
+     on the input file lengths and filenames.
+
+B. Tag & Artwork Injection
+   - Embeds missing Metadata (Author, Title, Narrator, Year) directly into the 
+     audiobook container without modifying the audio stream.
+   - Injects custom cover art images (.jpg/.png) into the file header as an 
+     attached stream, resolving "Missing Poster/Cover Art" warnings.
+
+C. Automated File Re-structuring
+   - Moves and renames audiobook files into strict library folder hierarches:
+     `Author/Book Title (Year)/Book Title.m4b`
+   - Strips messy online tracking tags, release group names, or advertisement 
+     suffixes from files.
+
+---
+
+4. E-Book integration in BitScribe & BitScribeRX
+--------------------------------------------------------------------------------
+For written literature (.epub, .pdf), the focus shifts to non-ffmpeg libraries:
+
+A. Metadata Auditor (BitScribe)
+   - Extracts title, authors, publishers, ISBN numbers, publication year, and 
+     embedded cover image from ePUB/PDF file structures.
+   - Detects file corruption (e.g., unreadable ePUB ZIP directories or broken PDF 
+     structures).
+
+B. Active Remediation (BitScribeRX)
+   - Standardizes e-book naming: `Z:\Books\Author - Title (Year).epub`.
+   - Normalizes metadata by writing standard OPF tags back into the ePUB zip.

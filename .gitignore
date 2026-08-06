@@ -19,6 +19,6 @@ src-tauri/bin/*
 # Explicitly protect directories and assets from automatic deletion / git clean sweep
 !backups/
 !BitScribe Website/
-Suite/
+!Suite/
 !github_pages_website.html
 
