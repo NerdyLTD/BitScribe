@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BitScribeRX - File Renamer Scoped Mockup</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 h-screen w-screen p-4 flex flex-col gap-4 text-slate-200 font-sans overflow-hidden">
+    
+    <!-- Header Area -->
+    <header class="h-16 flex-none bg-[#14171F] rounded-xl flex items-center px-6 border border-slate-800 justify-between relative">
+        <div class="h-10 w-64 bg-slate-900 rounded-lg flex items-center px-4 border border-slate-700 justify-between cursor-pointer hover:bg-slate-800 transition-colors z-10">
+            <span class="text-slate-200 font-medium text-sm">Mode: File Renamer</span>
+            <span class="text-slate-500 text-xs">▼</span>
+        </div>
+        
+        <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center">
+            <div class="h-8 w-40 bg-blue-900/30 rounded flex items-center justify-center border border-blue-700/50 text-blue-400 font-bold tracking-widest text-sm">BitScribeRX</div>
+        </div>
+        
+        <div class="flex items-center gap-3 z-10 w-64 justify-end">
+            <button class="h-8 px-4 bg-slate-800 hover:bg-slate-700 text-xs font-semibold rounded border border-slate-700 transition-colors">
+                Global Settings
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 flex gap-4 min-h-0">
+        
+        <!-- Left Column: Scope & Task Configuration -->
+        <div class="flex-none w-[400px] flex flex-col gap-4 min-h-0">
+            
+            <!-- Scope / Pre-Filter (New Addition!) -->
+            <div class="flex-none bg-[#14171F] rounded-xl border border-slate-800 p-5 flex flex-col gap-4">
+                <div class="text-slate-500 font-semibold text-xs tracking-widest uppercase border-b border-slate-800 pb-3">
+                    Data Scope (Pre-load)
+                </div>
+                <div class="flex flex-col gap-3">
+                    <div class="flex gap-2">
+                        <select class="flex-1 h-9 bg-slate-900 border border-slate-700 rounded-lg px-2 text-xs text-slate-200 outline-none">
+                            <option>TV Shows</option>
+                            <option>Movies</option>
+                            <option>Music</option>
+                        </select>
+                        <select class="flex-1 h-9 bg-slate-900 border border-slate-700 rounded-lg px-2 text-xs text-slate-200 outline-none">
+                            <option>Starts with 'D'</option>
+                            <option>Starts with 'E'</option>
+                            <option>All Items</option>
+                        </select>
+                    </div>
+                    <button class="h-8 bg-slate-800 hover:bg-slate-700 text-xs font-semibold rounded border border-slate-700 transition-colors text-slate-300">
+                        Load 14 Series into Workspace
+                    </button>
+                </div>
+            </div>
+
+            <!-- Configuration -->
+            <div class="flex-1 bg-[#14171F] rounded-xl border border-slate-800 p-5 flex flex-col gap-4 min-h-0">
+                <div class="text-slate-500 font-semibold text-xs tracking-widest uppercase border-b border-slate-800 pb-3">
+                    Renaming Pattern
+                </div>
+                
+                <div class="flex-1 flex flex-col gap-5 overflow-y-auto pr-2">
+                    <div class="flex flex-col gap-2">
+                        <label class="text-xs text-slate-400 font-semibold">Preset</label>
+                        <select class="h-10 bg-slate-900 border border-slate-700 rounded-lg px-3 text-sm text-slate-200 outline-none">
+                            <option>Standard (Plex/Jellyfin)</option>
+                        </select>
+                    </div>
+
+                    <div class="flex flex-col gap-2 p-3 bg-slate-900/50 border border-slate-800 rounded-lg">
+                        <label class="text-xs text-slate-400 font-semibold flex justify-between">
+                            <span>Format Pattern</span>
+                        </label>
+                        <div class="bg-slate-950 border border-slate-700 rounded p-2 flex flex-wrap gap-1 font-mono text-xs">
+                            <span class="bg-blue-900/40 text-blue-300 px-1 py-0.5 rounded border border-blue-800/50">{Series}</span>
+                            <span class="text-slate-500 mt-1">-</span>
+                            <span class="text-slate-500 mt-1">S</span><span class="bg-blue-900/40 text-blue-300 px-1 py-0.5 rounded border border-blue-800/50">{Season}</span>
+                            <span class="text-slate-500 mt-1">E</span><span class="bg-blue-900/40 text-blue-300 px-1 py-0.5 rounded border border-blue-800/50">{Episode}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="h-12 mt-2 bg-blue-600 hover:bg-blue-500 transition-colors text-white rounded-lg flex items-center justify-center font-bold tracking-wide cursor-pointer shadow-lg shadow-blue-900/20 gap-2">
+                    <span>EXECUTE RENAME</span>
+                    <span class="bg-blue-800 text-[10px] px-2 py-0.5 rounded-full border border-blue-400/30">14 Selected</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Hierarchical Library View -->
+        <div class="flex-1 flex flex-col gap-4 min-w-0">
+            <!-- Search & Actions -->
+            <div class="h-14 bg-[#14171F] rounded-xl border border-slate-800 flex items-center px-4 gap-4 flex-none justify-between">
+                <div class="flex items-center gap-4 flex-1">
+                    <div class="h-8 w-64 bg-slate-950 rounded border border-slate-800 flex items-center px-3 text-slate-600 text-sm">🔍 Filter loaded items...</div>
+                    <div class="flex gap-2">
+                        <div class="h-8 px-3 bg-slate-800 rounded flex items-center justify-center text-slate-300 text-xs cursor-pointer">Expand All</div>
+                        <div class="h-8 px-3 bg-slate-800 rounded flex items-center justify-center text-slate-300 text-xs cursor-pointer">Collapse All</div>
+                    </div>
+                </div>
+                <div class="text-xs text-slate-400 font-medium">14 of 39 Items Selected</div>
+            </div>
+
+            <!-- Tree View -->
+            <div class="flex-1 bg-[#14171F] rounded-xl border border-slate-800 flex flex-col overflow-hidden">
+                <div class="h-10 bg-slate-900/80 border-b border-slate-800 flex gap-4 px-4 items-center text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    <div class="w-6 flex justify-center"><input type="checkbox" checked class="accent-blue-500 opacity-50" title="Select/Deselect All"></div>
+                    <div class="flex-1">Original Path & Filename</div>
+                    <div class="flex-1">Proposed Filename</div>
+                </div>
+                
+                <div class="flex-1 overflow-y-auto flex flex-col p-2 gap-1 text-sm font-mono">
+                    
+                    <!-- Series Group: Daredevil -->
+                    <div class="flex flex-col gap-1">
+                        <!-- Group Header -->
+                        <div class="h-10 bg-slate-800/40 rounded flex items-center px-2 gap-3 hover:bg-slate-800/60 cursor-pointer">
+                            <span class="text-slate-500 text-xs w-4">▼</span>
+                            <input type="checkbox" checked class="accent-blue-500">
+                            <span class="font-sans font-bold text-slate-200">Daredevil <span class="text-slate-500 font-normal text-xs ml-2">(39 items)</span></span>
+                        </div>
+                        
+                        <!-- Season Group -->
+                        <div class="flex flex-col pl-6 gap-1">
+                            <div class="h-9 bg-slate-800/20 rounded flex items-center px-2 gap-3 hover:bg-slate-800/40 cursor-pointer">
+                                <span class="text-slate-500 text-xs w-4">▼</span>
+                                <input type="checkbox" checked class="accent-blue-500">
+                                <span class="font-sans font-semibold text-slate-300">Season 1 <span class="text-slate-500 font-normal text-xs ml-2">(13 items)</span></span>
+                            </div>
+                            
+                            <!-- Items -->
+                            <div class="flex flex-col pl-8 gap-1">
+                                <div class="h-12 bg-emerald-900/10 border border-emerald-900/30 rounded flex items-center px-2 gap-3 hover:bg-slate-800/50">
+                                    <input type="checkbox" checked class="accent-blue-500">
+                                    <div class="w-10"><span class="text-[9px] bg-emerald-900/40 text-emerald-400 px-1 py-0.5 rounded uppercase">High</span></div>
+                                    <div class="flex-1 truncate text-slate-300 text-xs">S01E01.mkv</div>
+                                    <div class="w-4 text-slate-600">→</div>
+                                    <div class="flex-1 truncate text-emerald-400 text-xs">Daredevil - S01E01.mkv</div>
+                                </div>
+                                <div class="h-12 bg-emerald-900/10 border border-emerald-900/30 rounded flex items-center px-2 gap-3 hover:bg-slate-800/50">
+                                    <input type="checkbox" checked class="accent-blue-500">
+                                    <div class="w-10"><span class="text-[9px] bg-emerald-900/40 text-emerald-400 px-1 py-0.5 rounded uppercase">High</span></div>
+                                    <div class="flex-1 truncate text-slate-300 text-xs">S01E02.mkv</div>
+                                    <div class="w-4 text-slate-600">→</div>
+                                    <div class="flex-1 truncate text-emerald-400 text-xs">Daredevil - S01E02.mkv</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Collapsed Season -->
+                            <div class="h-9 bg-slate-800/20 rounded flex items-center px-2 gap-3 hover:bg-slate-800/40 cursor-pointer mt-1">
+                                <span class="text-slate-500 text-xs w-4">▶</span>
+                                <input type="checkbox" class="accent-blue-500">
+                                <span class="font-sans font-semibold text-slate-400">Season 2 <span class="text-slate-600 font-normal text-xs ml-2">(13 items)</span></span>
+                            </div>
+                            <div class="h-9 bg-slate-800/20 rounded flex items-center px-2 gap-3 hover:bg-slate-800/40 cursor-pointer mt-1">
+                                <span class="text-slate-500 text-xs w-4">▶</span>
+                                <input type="checkbox" class="accent-blue-500">
+                                <span class="font-sans font-semibold text-slate-400">Season 3 <span class="text-slate-600 font-normal text-xs ml-2">(13 items)</span></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Series Group: Dark (Collapsed, Indeterminate state representation) -->
+                    <div class="flex flex-col gap-1 mt-2">
+                        <div class="h-10 bg-slate-800/40 rounded flex items-center px-2 gap-3 hover:bg-slate-800/60 cursor-pointer">
+                            <span class="text-slate-500 text-xs w-4">▶</span>
+                            <!-- Indeterminate checkbox look via CSS -->
+                            <div class="w-3.5 h-3.5 bg-blue-500 rounded flex items-center justify-center"><div class="w-2 h-0.5 bg-white"></div></div>
+                            <span class="font-sans font-bold text-slate-300">Dark <span class="text-slate-500 font-normal text-xs ml-2">(26 items - 1 selected)</span></span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </main>
+</body>
+</html>
