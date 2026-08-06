@@ -553,12 +553,19 @@ export default memo(function Dashboard({
       filtered.sort((a, b) => {
         const cachedA = sortCache.get(a);
         const cachedB = sortCache.get(b);
-        const valA = cachedA?.val || '';
-        const valB = cachedB?.val || '';
+        const valA = cachedA?.val ?? '';
+        const valB = cachedB?.val ?? '';
         
         if (typeof valA === 'string' && typeof valB === 'string') {
           const normA = cachedA?.normVal ?? normalizeGroupTitle(valA);
           const normB = cachedB?.normVal ?? normalizeGroupTitle(valB);
+          
+          const isAEmpty = !normA;
+          const isBEmpty = !normB;
+          
+          if (isAEmpty && !isBEmpty) return 1;
+          if (!isAEmpty && isBEmpty) return -1;
+          
           const comparison = normA.localeCompare(normB, undefined, { numeric: true, sensitivity: 'base' });
           if (comparison !== 0) {
             return sortDirection === 'asc' ? comparison : -comparison;
@@ -630,6 +637,13 @@ export default memo(function Dashboard({
         } else {
           const numA = Number(valA) || 0;
           const numB = Number(valB) || 0;
+          
+          const isAEmpty = numA === 0 || isNaN(numA);
+          const isBEmpty = numB === 0 || isNaN(numB);
+          
+          if (isAEmpty && !isBEmpty) return 1;
+          if (!isAEmpty && isBEmpty) return -1;
+          
           if (numA < numB) return sortDirection === 'asc' ? -1 : 1;
           if (numA > numB) return sortDirection === 'asc' ? 1 : -1;
           return 0;
