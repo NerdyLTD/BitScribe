@@ -180,6 +180,7 @@ export interface RuleCriteria {
   useModernPreset: boolean;
   useLegacyPreset: boolean;
   useDiscoveryPreset: boolean;
+  useCorruptedScan?: boolean;
   useSubtitleScan?: boolean;
   useDeepSubtitleScan?: boolean;
   useDeepAudioScan?: boolean;

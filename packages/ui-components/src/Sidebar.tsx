@@ -271,7 +271,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {isAddingPathApp ? (
               <div className="mt-3 flex flex-col gap-2">
                 <div className="flex gap-2">
-                  <button onClick={handleBrowseFolder} className="bg-blue-600 hover:bg-blue-500 text-white px-2 rounded flex items-center justify-center transition-colors shadow shadow-blue-900/20 text-[10px] font-semibold" title="Browse for folder">
+                  <button onClick={async () => { await handleBrowseFolder(); setIsPathsExpanded(false); setIsAddingPathApp(false); setNewPathInputApp(""); }} className="bg-blue-600 hover:bg-blue-500 text-white px-2 rounded flex items-center justify-center transition-colors shadow shadow-blue-900/20 text-[10px] font-semibold" title="Browse for folder">
                     <FolderOpen className="w-3.5 h-3.5" />
                   </button>
                   <input
@@ -355,10 +355,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="flex gap-1.5">
             <button
               onClick={() => {
-                handleStartScan();
-                if (activeTab === "logs") {
-                  handleTabChange("scan");
-                }
+                handleTabChange("scan");
+                setTimeout(() => handleStartScan(), 10);
               }}
               disabled={isScanning || (scanPaths.filter((p) => p.enabled).length === 0 && scannedFilesList.length === 0)}
               className="flex-1 py-1 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-600/30 text-white rounded text-[11px] font-bold shadow transition-all flex items-center justify-center gap-1 cursor-pointer disabled:cursor-not-allowed"
@@ -410,10 +408,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="flex gap-1 mt-1">
             <button
               onClick={() => {
-                handleStartScan(true);
-                if (activeTab === "logs") {
-                  handleTabChange("scan");
-                }
+                handleTabChange("scan");
+                setTimeout(() => handleStartScan(true), 10);
               }}
               disabled={isScanning || (scanPaths.filter((p) => p.enabled).length === 0 && scannedFilesList.length === 0)}
               className="flex-[1.2] flex justify-center items-center gap-1 py-1 px-1 bg-indigo-900/30 hover:bg-indigo-800/40 disabled:bg-indigo-900/10 text-indigo-300 disabled:text-indigo-800 rounded text-[10px] font-medium border border-indigo-700/50 hover:border-indigo-500 transition-all cursor-pointer shadow-md disabled:cursor-not-allowed whitespace-nowrap"
@@ -427,10 +423,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </button>
             <button
               onClick={() => {
-                handleEvaluateDb();
-                if (activeTab === "logs") {
-                  handleTabChange("scan");
-                }
+                handleTabChange("scan");
+                setTimeout(() => handleEvaluateDb(), 10);
               }}
               disabled={isScanning || scannedFilesList.length === 0}
               className="flex-[1.2] flex justify-center items-center gap-1 py-1 px-1 bg-amber-900/30 hover:bg-amber-800/40 disabled:bg-amber-900/10 text-amber-300 disabled:text-amber-800 rounded text-[10px] font-medium border border-amber-700/50 hover:border-amber-500 transition-all cursor-pointer shadow-md disabled:cursor-not-allowed whitespace-nowrap"
@@ -518,7 +512,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
               className="w-full bg-[#1A1D24] border border-[#2A303C] rounded px-2 py-1.5 focus:outline-none focus:border-blue-500 text-slate-300 relative z-10"
             >
               <option value="Media Discovery">Media Discovery (Full)</option>
-              <option value="Modern Direct Play">Stream Audit</option>
+              <option value="Modern Direct Play">Modern Direct Play</option>
+              <option value="Legacy Direct Play">Legacy Direct Play</option>
               <option value="Metadata Audit">Metadata Audit</option>
               <option value="Duplication Scan">Duplication Audit</option>
               <option value="Quality Audit">Quality Audit</option>
@@ -532,7 +527,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <div className="flex flex-col py-1">
                   {[
                     { val: "Media Discovery", label: "Media Discovery (Full)" },
-                    { val: "Modern Direct Play", label: "Stream Audit" },
+                    { val: "Modern Direct Play", label: "Modern Direct Play" },
+                    { val: "Legacy Direct Play", label: "Legacy Direct Play" },
                     { val: "Metadata Audit", label: "Metadata Audit" },
                     { val: "Duplication Scan", label: "Duplication Audit" },
                     { val: "Quality Audit", label: "Quality Audit" },
@@ -642,6 +638,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     profileRules.useDiscoveryPreset = true;
                   } else if (targetProfile === "Modern Direct Play") {
                     profileRules.useModernPreset = true;
+                  } else if (targetProfile === "Legacy Direct Play") {
+                    profileRules.useLegacyPreset = true;
                   } else if (targetProfile === "Metadata Audit") {
                     profileRules.useMetadataScan = true;
                   } else if (targetProfile === "Duplication Scan") {
@@ -669,6 +667,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
                   if (targetProfile === "Corrupted") {
                     filteredItems = corruptFiles;
+                    profileRules.useCorruptedScan = true;
                   } else {
                     filteredItems = filterItemsForReport(filteredItems, profileRules);
                   }
@@ -727,6 +726,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   }
 
                   setIsExporting(true);
+                  handleTabChange("scan");
                   setExportProgress(0);
                   setCurrentExportFile("Starting exports...");
                   setExportCompleteMsg("");
@@ -742,7 +742,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
                       const profilesToRun =
                         exportProfile === "Export All"
-                          ? ["Media Discovery", "Modern Direct Play", "Metadata Audit", "Duplication Scan", "Quality Audit", "Subtitle Audit", "Corrupted"]
+                          ? ["Media Discovery", "Modern Direct Play", "Legacy Direct Play", "Metadata Audit", "Duplication Scan", "Quality Audit", "Subtitle Audit", "Corrupted"]
                           : [exportProfile];
 
                       totalReports = profilesToRun.length * activeFormatCount;
@@ -760,7 +760,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       const msg = `${totalS} ${totalS === 1 ? "file" : "files"} succeeded, ${totalF} ${totalF === 1 ? "file" : "files"} failed. Reports generated to ${displayDir}.`;
 
                       setNotification({ type: "export", message: msg });
-                      handleTabChange("scan");
                       setScanLogs((prev) => [`Export summary: ${totalS} succeeded, ${totalF} failed. Location: ${displayDir}`, ...prev]);
                       setExportCompleteMsg("Export complete!");
                       setTimeout(() => setExportCompleteMsg(""), 5000);

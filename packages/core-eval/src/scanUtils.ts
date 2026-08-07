@@ -33,10 +33,12 @@ export function getScanType(
   } else if (rules.useModernPreset && rules.useLegacyPreset) {
     scanType = "Stream Audit Scan";
   } else if (rules.useModernPreset) {
-    scanType = "Stream Audit Scan";
+    scanType = "Modern Audit Scan";
+  } else if (rules.useLegacyPreset) {
+    scanType = "Legacy Audit Scan";
   } else if (
-    items.length > 0 &&
-    items.every((i) => i.category === "Corrupted")
+    rules.useCorruptedScan || 
+    (items.length > 0 && items.every((i) => i.category === "Corrupted"))
   ) {
     scanType = "Corrupted Audit";
   } else {
