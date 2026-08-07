@@ -18,6 +18,12 @@ export function getScanType(
     } else {
       scanType = "Metadata Scan";
     }
+  } else if (rules.useModernPreset && rules.useLegacyPreset) {
+    scanType = "Stream Audit Scan";
+  } else if (rules.useModernPreset) {
+    scanType = "Modern Audit Scan";
+  } else if (rules.useLegacyPreset) {
+    scanType = "Legacy Audit Scan";
   } else if (rules.useSubtitleScan) {
     scanType = "Subtitle Scan";
   } else if (rules.useAnomalyScan) {
@@ -30,12 +36,6 @@ export function getScanType(
     scanType = "Duplication Scan";
   } else if (rules.useDiscoveryPreset) {
     scanType = "Discovery Scan";
-  } else if (rules.useModernPreset && rules.useLegacyPreset) {
-    scanType = "Stream Audit Scan";
-  } else if (rules.useModernPreset) {
-    scanType = "Modern Audit Scan";
-  } else if (rules.useLegacyPreset) {
-    scanType = "Legacy Audit Scan";
   } else if (
     rules.useCorruptedScan || 
     (items.length > 0 && items.every((i) => i.category === "Corrupted"))

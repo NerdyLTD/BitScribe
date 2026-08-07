@@ -384,28 +384,21 @@ export default function App() {
     updatedRules.useMetadataScan = false;
     updatedRules.useVideoMetadataScan = false;
     updatedRules.useMusicMetadataScan = false;
+    updatedRules.useCorruptedScan = false;
     Object.keys(updatedExcel).forEach(k => {
       if (k !== "File Name" && k !== "Library Path" && k !== "Library Section" && k !== "Size (GB)") {
         updatedExcel[k] = false;
       }
     });
 
-    if (val === "Modern Direct Play") {
+    if (val === "Stream Audit") {
       updatedRules.useModernPreset = true;
-      updatedExcel["Container"] = true;
-      updatedExcel["Video Codec"] = true;
-      updatedExcel["Audio Tracks"] = true;
-      updatedExcel["Stream Audit"] = true;
-    } else if (val === "Legacy Direct Play") {
       updatedRules.useLegacyPreset = true;
-      updatedExcel["Container"] = true;
-      updatedExcel["Video Codec"] = true;
-      updatedExcel["Audio Tracks"] = true;
-      updatedExcel["Stream Audit"] = true;
-    } else if (val === "Subtitle Audit") {
       updatedRules.useSubtitleScan = true;
       updatedExcel["Container"] = true;
-      updatedExcel["Subtitles"] = true;
+      updatedExcel["Video Codec"] = true;
+      updatedExcel["Audio Tracks"] = true;
+      updatedExcel["Stream Audit"] = true;
     } else if (val === "Media Discovery") {
       updatedRules.useDiscoveryPreset = true;
       updatedExcel["Duration (Mins)"] = true;
@@ -417,6 +410,10 @@ export default function App() {
       updatedExcel["Bitrate Anomaly"] = true;
       updatedExcel["Anomaly Reason"] = true;
       updatedExcel["Corruption Status"] = true;
+    } else if (val === "Subtitle Audit") {
+      updatedRules.useSubtitleScan = true;
+      updatedExcel["Container"] = true;
+      updatedExcel["Subtitles"] = true;
     } else if (val === "Duplication Scan") {
       updatedRules.useDuplicationScan = true;
       updatedRules.useDuplicationVideoScan = true;
@@ -436,6 +433,10 @@ export default function App() {
       updatedExcel["Bit Depth"] = true;
       updatedExcel["Audio Hz"] = true;
       updatedExcel["Chapters"] = true;
+    } else if (val === "Corrupted Audit") {
+      updatedRules.useCorruptedScan = true;
+      updatedExcel["Corruption Status"] = true;
+      updatedExcel["Anomaly Reason"] = true;
     }
 
     setCustomRules(updatedRules);
@@ -462,22 +463,32 @@ export default function App() {
   }, [showCustomColumnsMenu]);
 
 
-  const activeModeName = 
-    customRules.useMetadataScan ? "Metadata Audit" : 
-    customRules.useDuplicationScan ? "Duplication Scan" : 
-    customRules.useAnomalyScan ? "Quality Audit" : 
-    customRules.useSubtitleScan ? "Subtitle Audit" : customRules.useLegacyPreset ? "Legacy Direct Play" : customRules.useModernPreset ? "Modern Direct Play" : "Media Discovery";
+  const activeModeName = useMemo(() => {
+    if (customRules.useMetadataScan || customRules.useVideoMetadataScan || customRules.useMusicMetadataScan) return "Metadata Audit";
+    if (customRules.useSubtitleScan) return "Subtitle Audit";
+    if (customRules.useDuplicationScan) return "Duplication Scan";
+    if (customRules.useAnomalyScan) return "Quality Audit";
+    if (customRules.useCorruptedScan) return "Corrupted Audit";
+    if (customRules.useModernPreset && customRules.useLegacyPreset) return "Stream Audit";
+    if (customRules.useModernPreset) return "Modern Direct Play";
+    if (customRules.useLegacyPreset) return "Legacy Direct Play";
+    if (customRules.useDiscoveryPreset) return "Media Discovery";
+    return "Select a mode";
+  }, [customRules]);
 
   const total = scannedFilesList.length + corruptFiles.length;
 
-  const MODE_DESCRIPTIONS = {
-    "Modern Direct Play": "Audits compatibility for modern players.",
-    "Legacy Direct Play": "Audits compatibility for legacy players.",
-    "Media Discovery": "Basic discovery cataloging.",
-    "Quality Audit": "Checks video bitrates, anomalies.",
-    "Duplication Scan": "Identifies duplicate media files.",
-    "Metadata Audit": "Deep FFprobe metadata extraction.",
-    "Subtitle Audit": "Detects missing subtitles, unsupported image-based subtitles, and text formatting."
+  const MODE_DESCRIPTIONS: Record<string, string> = {
+    "Stream Audit": "Audits video, audio streams, and subtitles for direct play compatibility on both modern and legacy devices.",
+    "Modern Direct Play": "Checks for modern high-efficiency codecs (like HEVC & AC3 Stereo) that direct play on modern hardware.",
+    "Legacy Direct Play": "Checks for standard backward-compatible formats (like H.264, AAC & AC3 Stereo) that direct play on legacy clients with zero server-side transcoding.",
+    "Media Discovery": "Discovers and catalogs all media files, conforming to standard configurations.",
+    "Quality Audit": "Scans for media stream corruption, quality anomalies, and bitrate issues.",
+    "Subtitle Audit": "Detects missing subtitles, unsupported image-based subtitles, and text formatting.",
+    "Duplication Scan": "Analyzes video and music libraries to identify duplicate media items.",
+    "Metadata Audit": "Audits embedded tags (titles, artists, years, cover art) for clean cataloging.",
+    "Corrupted Audit": "Displays files that failed scanning, are corrupted, or have unreadable metadata.",
+    "Select a mode": "Choose a preset mode to scan and audit your media collection."
   };
 
   return (

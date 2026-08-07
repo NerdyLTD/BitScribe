@@ -512,8 +512,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               className="w-full bg-[#1A1D24] border border-[#2A303C] rounded px-2 py-1.5 focus:outline-none focus:border-blue-500 text-slate-300 relative z-10"
             >
               <option value="Media Discovery">Media Discovery (Full)</option>
-              <option value="Modern Direct Play">Modern Direct Play</option>
-              <option value="Legacy Direct Play">Legacy Direct Play</option>
+              <option value="Modern Direct Play">Stream Audit</option>
               <option value="Metadata Audit">Metadata Audit</option>
               <option value="Duplication Scan">Duplication Audit</option>
               <option value="Quality Audit">Quality Audit</option>
@@ -527,8 +526,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <div className="flex flex-col py-1">
                   {[
                     { val: "Media Discovery", label: "Media Discovery (Full)" },
-                    { val: "Modern Direct Play", label: "Modern Direct Play" },
-                    { val: "Legacy Direct Play", label: "Legacy Direct Play" },
+                    { val: "Modern Direct Play", label: "Stream Audit" },
                     { val: "Metadata Audit", label: "Metadata Audit" },
                     { val: "Duplication Scan", label: "Duplication Audit" },
                     { val: "Quality Audit", label: "Quality Audit" },
@@ -638,8 +636,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     profileRules.useDiscoveryPreset = true;
                   } else if (targetProfile === "Modern Direct Play") {
                     profileRules.useModernPreset = true;
-                  } else if (targetProfile === "Legacy Direct Play") {
                     profileRules.useLegacyPreset = true;
+                    profileRules.useSubtitleScan = true;
                   } else if (targetProfile === "Metadata Audit") {
                     profileRules.useMetadataScan = true;
                   } else if (targetProfile === "Duplication Scan") {
@@ -742,7 +740,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
                       const profilesToRun =
                         exportProfile === "Export All"
-                          ? ["Media Discovery", "Modern Direct Play", "Legacy Direct Play", "Metadata Audit", "Duplication Scan", "Quality Audit", "Subtitle Audit", "Corrupted"]
+                          ? ["Media Discovery", "Modern Direct Play", "Metadata Audit", "Duplication Scan", "Quality Audit", "Subtitle Audit", "Corrupted"]
                           : [exportProfile];
 
                       totalReports = profilesToRun.length * activeFormatCount;

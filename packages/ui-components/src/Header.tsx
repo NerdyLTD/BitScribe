@@ -36,13 +36,18 @@ export const Header: React.FC<HeaderProps> = ({
               className="bg-[#0F1117] border border-slate-700/60 text-[10px] font-bold font-mono text-cyan-400 rounded px-1.5 py-0.5 outline-none cursor-pointer hover:border-cyan-500/50 transition-colors focus:border-cyan-500"
             >
               <option value="" disabled className="text-slate-500 bg-[#0F1117]" title="Choose a preset mode to scan and audit your media collection.">Select a mode</option>
-              <option value="Modern Direct Play" className="text-slate-300 bg-[#0F1117]" title="Audits for modern 4K/HEVC direct play.">Modern Direct Play</option>
-              <option value="Legacy Direct Play" className="text-slate-300 bg-[#0F1117]" title="Audits for legacy 1080p/H.264 direct play.">Legacy Direct Play</option>
+              <option value="Stream Audit" className="text-slate-300 bg-[#0F1117]" title="Audits video, audio streams, and subtitles for direct play compatibility on both modern and legacy devices.">Stream Audit</option>
               <option value="Media Discovery" className="text-slate-300 bg-[#0F1117]" title="Discovers and catalogs all media files, conforming to standard configurations.">Media Discovery</option>
               <option value="Quality Audit" className="text-slate-300 bg-[#0F1117]" title="Scans for media stream corruption, quality anomalies, and bitrate issues.">Quality Audit</option>
               <option value="Subtitle Audit" className="text-slate-300 bg-[#0F1117]" title="Detects missing subtitles, unsupported image-based subtitles, and text formatting.">Subtitle Audit</option>
+              <option value="Corrupted Audit" className="text-slate-300 bg-[#0F1117]" title="Displays files that failed scanning, are corrupted, or have unreadable metadata.">Corrupted Audit</option>
               <option value="Duplication Scan" className="text-slate-300 bg-[#0F1117]" title="Analyzes video and music libraries to identify duplicate media items.">Duplication Scan</option>
               <option value="Metadata Audit" className="text-slate-300 bg-[#0F1117]" title="Audits embedded tags (titles, artists, years, cover art) for clean cataloging.">Metadata Audit</option>
+              {(activeModeName === "Modern Direct Play" || activeModeName === "Legacy Direct Play") && (
+                <option value={activeModeName} disabled className="text-amber-400/80 bg-[#0F1117]">
+                  Stream Audit (Custom)
+                </option>
+              )}
             </select>
           </div>
           <p className="text-[10px] text-slate-400 font-sans tracking-wide">
