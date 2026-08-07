@@ -441,8 +441,11 @@ export default memo(function Dashboard({
   }, [searchQuery, selectedCategories, selectedCompatibility, scannedFiles, corruptFiles, sortColumn, sortDirection]);
 
   const allCurrentFiles = useMemo(() => {
+    if (customRules.useCorruptedScan) {
+      return corruptFiles;
+    }
     return [...scannedFiles, ...corruptFiles];
-  }, [scannedFiles, corruptFiles]);
+  }, [scannedFiles, corruptFiles, customRules.useCorruptedScan]);
 
   const parsedMetadataMap = useMemo(() => {
     const map = new Map<string, any>();
