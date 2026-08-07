@@ -458,7 +458,7 @@ fn save_file(path: String, contents_b64: String) -> Result<(), String> {
 
 
 #[tauri::command]
-fn setup_ffprobe(_app: tauri::AppHandle) -> Result<String, String> {
+fn setup_ffprobe(app: tauri::AppHandle) -> Result<String, String> {
     let app_data_dir = resolve_data_dir();
     std::fs::create_dir_all(&app_data_dir).map_err(|e| e.to_string())?;
 
@@ -490,21 +490,29 @@ fn setup_ffprobe(_app: tauri::AppHandle) -> Result<String, String> {
 
     #[cfg(target_os = "macos")]
     {
-        #[cfg(target_arch = "aarch64")]
-        let target_bin = app_data_dir.join("ffprobe-aarch64-apple-darwin");
-        #[cfg(target_arch = "x86_64")]
-        let target_bin = app_data_dir.join("ffprobe-x86_64-apple-darwin");
+        let dest_bin_name = if std::env::consts::ARCH == "aarch64" {
+            "ffprobe-aarch64-apple-darwin"
+        } else {
+            "ffprobe-x86_64-apple-darwin"
+        };
+        let target_bin = app_data_dir.join(dest_bin_name);
 
         if !target_bin.exists() {
-            #[cfg(target_arch = "aarch64")]
-            {
-                let bytes = include_bytes!("../bin/ffprobe-aarch64-apple-darwin");
-                std::fs::write(&target_bin, bytes).map_err(|e| e.to_string())?;
-            }
-            #[cfg(target_arch = "x86_64")]
-            {
-                let bytes = include_bytes!("../bin/ffprobe-x86_64-apple-darwin");
-                std::fs::write(&target_bin, bytes).map_err(|e| e.to_string())?;
+            let resource_path = app
+                .path()
+                .resolve("resources/mac_ffprobe.tar.gz", tauri::path::BaseDirectory::Resource)
+                .map_err(|e| e.to_string())?;
+
+            let output = std::process::Command::new("tar")
+                .arg("-xzf")
+                .arg(&resource_path)
+                .arg("-C")
+                .arg(&app_data_dir)
+                .output()
+                .map_err(|e| format!("Failed to execute tar: {}", e))?;
+
+            if !output.status.success() {
+                return Err(format!("Tar extraction failed: {}", String::from_utf8_lossy(&output.stderr)));
             }
             
             use std::os::unix::fs::PermissionsExt;
