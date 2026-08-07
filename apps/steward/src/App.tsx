@@ -433,10 +433,6 @@ export default function App() {
       updatedExcel["Bit Depth"] = true;
       updatedExcel["Audio Hz"] = true;
       updatedExcel["Chapters"] = true;
-    } else if (val === "Corrupted Audit") {
-      updatedRules.useCorruptedScan = true;
-      updatedExcel["Corruption Status"] = true;
-      updatedExcel["Anomaly Reason"] = true;
     }
 
     setCustomRules(updatedRules);
@@ -468,7 +464,6 @@ export default function App() {
     if (customRules.useSubtitleScan) return "Subtitle Audit";
     if (customRules.useDuplicationScan) return "Duplication Scan";
     if (customRules.useAnomalyScan) return "Quality Audit";
-    if (customRules.useCorruptedScan) return "Corrupted Audit";
     if (customRules.useModernPreset && customRules.useLegacyPreset) return "Stream Audit";
     if (customRules.useModernPreset) return "Modern Direct Play";
     if (customRules.useLegacyPreset) return "Legacy Direct Play";
@@ -487,7 +482,6 @@ export default function App() {
     "Subtitle Audit": "Detects missing subtitles, unsupported image-based subtitles, and text formatting.",
     "Duplication Scan": "Analyzes video and music libraries to identify duplicate media items.",
     "Metadata Audit": "Audits embedded tags (titles, artists, years, cover art) for clean cataloging.",
-    "Corrupted Audit": "Displays files that failed scanning, are corrupted, or have unreadable metadata.",
     "Select a mode": "Choose a preset mode to scan and audit your media collection."
   };
 

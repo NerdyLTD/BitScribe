@@ -40,7 +40,6 @@ export const Header: React.FC<HeaderProps> = ({
               <option value="Media Discovery" className="text-slate-300 bg-[#0F1117]" title="Discovers and catalogs all media files, conforming to standard configurations.">Media Discovery</option>
               <option value="Quality Audit" className="text-slate-300 bg-[#0F1117]" title="Scans for media stream corruption, quality anomalies, and bitrate issues.">Quality Audit</option>
               <option value="Subtitle Audit" className="text-slate-300 bg-[#0F1117]" title="Detects missing subtitles, unsupported image-based subtitles, and text formatting.">Subtitle Audit</option>
-              <option value="Corrupted Audit" className="text-slate-300 bg-[#0F1117]" title="Displays files that failed scanning, are corrupted, or have unreadable metadata.">Corrupted Audit</option>
               <option value="Duplication Scan" className="text-slate-300 bg-[#0F1117]" title="Analyzes video and music libraries to identify duplicate media items.">Duplication Scan</option>
               <option value="Metadata Audit" className="text-slate-300 bg-[#0F1117]" title="Audits embedded tags (titles, artists, years, cover art) for clean cataloging.">Metadata Audit</option>
               {(activeModeName === "Modern Direct Play" || activeModeName === "Legacy Direct Play") && (
