@@ -1090,7 +1090,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 const baseCategory = inferCategory(topLevelFolder, filename, '.' + ext, file, {});
                 
                 const errMsg = e.message || String(e);
-                const isRealError = true; // Any ffprobe failure on a media file means we couldn't parse it natively, hence Corrupt/Unreadable.
+                const isRealError = errMsg.includes('Invalid data') || errMsg.includes('moov atom') || errMsg.includes('End of file');
                 
                 let cat = 'Corrupted';
                 let isCorrupt = true;
