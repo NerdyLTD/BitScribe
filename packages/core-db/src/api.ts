@@ -827,6 +827,11 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
             }
             
             try {
+                const physicalSize = existingFilesMap.get(normPath + "_physical_size") || 0;
+                if (physicalSize === 0) {
+                    throw new Error("Invalid data: File is 0 bytes (Empty/Unreadable)");
+                }
+
                 // Securely execute ffprobe sidecar with a strict 15-second timeout safeguard to prevent hangs
                 // Optimize ffprobe arguments by skipping chapters lookup on audio-only files
                 // Streamline output with -show_entries to fetch only the exact format, stream and tag fields needed
@@ -1085,7 +1090,7 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 const baseCategory = inferCategory(topLevelFolder, filename, '.' + ext, file, {});
                 
                 const errMsg = e.message || String(e);
-                const isRealError = errMsg.includes('Invalid data') || errMsg.includes('moov atom') || errMsg.includes('End of file');
+                const isRealError = true; // Any ffprobe failure on a media file means we couldn't parse it natively, hence Corrupt/Unreadable.
                 
                 let cat = 'Corrupted';
                 let isCorrupt = true;

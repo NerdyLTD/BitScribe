@@ -670,7 +670,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     filteredItems = filterItemsForReport(filteredItems, profileRules);
                   }
 
-                  // Removed early return so empty reports can be exported to show 0 anomalies
+                  if (filteredItems.length === 0) {
+                    const formatsCount = (exportFormats.xlsx ? 1 : 0) + (exportFormats.csv ? 1 : 0) + (exportFormats.html ? 1 : 0) + (exportFormats.json ? 1 : 0);
+                    currentReportIndex.val += formatsCount;
+                    setScanLogs((prev) => [`[INFO] Skipped ${targetProfile}: no data to export.`, ...prev]);
+                    return { success: 0, fail: 0 };
+                  }
 
                   let jsonCsvItems = filteredItems.filter((item) => item.category !== "Unrecognized" && item.topLevelFolder !== "Unrecognized");
 
