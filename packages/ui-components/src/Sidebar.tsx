@@ -511,13 +511,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
               onChange={(e) => setExportProfile(e.target.value)}
               className="w-full bg-[#1A1D24] border border-[#2A303C] rounded px-2 py-1.5 focus:outline-none focus:border-blue-500 text-slate-300 relative z-10"
             >
-              <option value="Media Discovery">Media Discovery (Full)</option>
+              <option value="Media Discovery">Discovery Audit</option>
               <option value="Modern Direct Play">Stream Audit</option>
               <option value="Metadata Audit">Metadata Audit</option>
-              <option value="Duplication Scan">Duplication Audit</option>
+              <option value="Duplication Scan">Duplicate Files Audit</option>
               <option value="Quality Audit">Quality Audit</option>
               <option value="Subtitle Audit">Subtitle Audit</option>
-              <option value="Corrupted">Failed/Corrupted Only</option>
+              <option value="Corrupted">Bad Files Audit</option>
               <option value="Export All">Export All Report Types</option>
               <option value="Custom Fields">Custom Fields (Custom Columns)</option>
             </select>
@@ -525,13 +525,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <div className="absolute top-full left-0 mt-1 w-full bg-[#0C101B] border border-[#2A303C] rounded shadow-2xl z-[100000] overflow-hidden text-[10px] animate-in fade-in zoom-in-95 duration-200">
                 <div className="flex flex-col py-1">
                   {[
-                    { val: "Media Discovery", label: "Media Discovery (Full)" },
+                    { val: "Media Discovery", label: "Discovery Audit" },
                     { val: "Modern Direct Play", label: "Stream Audit" },
                     { val: "Metadata Audit", label: "Metadata Audit" },
-                    { val: "Duplication Scan", label: "Duplication Audit" },
+                    { val: "Duplication Scan", label: "Duplicate Files Audit" },
                     { val: "Quality Audit", label: "Quality Audit" },
                     { val: "Subtitle Audit", label: "Subtitle Audit" },
-                    { val: "Corrupted", label: "Failed/Corrupted Only" },
+                    { val: "Corrupted", label: "Bad Files Audit" },
                     { val: "Export All", label: "Export All Report Types" },
                     { val: "Custom Fields", label: "Custom Fields (Custom Columns)" },
                   ].map((opt) => (
@@ -617,7 +617,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   return;
                 }
 
+                const getTargetProfileDisplayName = (profile: string) => {
+                  switch (profile) {
+                    case "Media Discovery": return "Discovery Audit";
+                    case "Modern Direct Play": return "Stream Audit";
+                    case "Metadata Audit": return "Metadata Audit";
+                    case "Duplication Scan": return "Duplicate Files Audit";
+                    case "Quality Audit": return "Quality Audit";
+                    case "Subtitle Audit": return "Subtitle Audit";
+                    case "Corrupted": return "Bad Files Audit";
+                    case "Custom Fields": return "Custom Fields";
+                    default: return profile;
+                  }
+                };
+
                 const runExportForProfile = async (targetProfile: string, targetDir?: string, totalReports: number = 1, currentReportIndex: { val: number } = { val: 0 }) => {
+                  const profileDisplayName = getTargetProfileDisplayName(targetProfile);
                   const profileRules = JSON.parse(JSON.stringify(customRules));
 
                   profileRules.useDiscoveryPreset = false;
@@ -673,8 +688,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   if (filteredItems.length === 0) {
                     const formatsCount = (exportFormats.xlsx ? 1 : 0) + (exportFormats.csv ? 1 : 0) + (exportFormats.html ? 1 : 0) + (exportFormats.json ? 1 : 0);
                     currentReportIndex.val += formatsCount;
-                    setScanLogs((prev) => [`[INFO] Skipped ${targetProfile}: no data to export.`, ...prev]);
-                    return { success: 0, fail: 0 };
+                    setScanLogs((prev) => [`[INFO] Skipped ${profileDisplayName}: no data to export.`, ...prev]);
+                    return { success: 0, fail: 0, skipped: true, skippedName: profileDisplayName };
                   }
 
                   let jsonCsvItems = filteredItems.filter((item) => item.category !== "Unrecognized" && item.topLevelFolder !== "Unrecognized");
@@ -688,18 +703,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   };
 
                   const handleExport = async (format: string, exporter: Function) => {
-                    updateUI(`${targetProfile} (${format})`);
+                    updateUI(`Exporting ${profileDisplayName} (${format})`);
                     try {
                       const fname = await exporter();
                       s++;
                       setScanLogs((prev) => [`[SUCCESS] Exported ${fname}`, ...prev]);
                     } catch (e: any) {
                       f++;
-                      console.error("Export Error in " + targetProfile + " " + format, e);
-                      setScanLogs((prev) => [`[ERROR] Failed to export ${targetProfile} (${format}): ${e.message}`, ...prev]);
+                      console.error("Export Error in " + profileDisplayName + " " + format, e);
+                      setScanLogs((prev) => [`[ERROR] Failed to export ${profileDisplayName} (${format}): ${e.message}`, ...prev]);
                     }
                     currentReportIndex.val++;
-                    updateUI(`${targetProfile} (${format}) done`);
+                    updateUI(`Finished ${profileDisplayName} (${format})`);
                   };
 
                   const allItems = [...scannedFilesList, ...corruptFiles];
@@ -740,6 +755,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     try {
                       let totalS = 0,
                         totalF = 0;
+                      const skippedReports: string[] = [];
                       let totalReports = 0;
                       const idx = { val: 0 };
 
@@ -754,16 +770,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         const res = await runExportForProfile(p, targetDir, totalReports, idx);
                         totalS += res.success;
                         totalF += res.fail;
+                        if (res.skipped && res.skippedName) {
+                          skippedReports.push(res.skippedName);
+                        }
                       }
 
                       setExportProgress(100);
                       setCurrentExportFile("Done!");
 
                       const displayDir = targetDir || "your selected folder";
-                      const msg = `${totalS} ${totalS === 1 ? "file" : "files"} succeeded, ${totalF} ${totalF === 1 ? "file" : "files"} failed. Reports generated to ${displayDir}.`;
+                      const skippedText = skippedReports.length > 0 ? ` Skipped: ${skippedReports.join(", ")}.` : "";
+                      const msg = `${totalS} ${totalS === 1 ? "file" : "files"} succeeded, ${totalF} ${totalF === 1 ? "file" : "files"} failed.${skippedText} Reports generated to ${displayDir}.`;
 
                       setNotification({ type: "export", message: msg });
-                      setScanLogs((prev) => [`Export summary: ${totalS} succeeded, ${totalF} failed. Location: ${displayDir}`, ...prev]);
+                      setScanLogs((prev) => [`Export summary: ${totalS} succeeded, ${totalF} failed.${skippedText} Location: ${displayDir}`, ...prev]);
                       setExportCompleteMsg("Export complete!");
                       setTimeout(() => setExportCompleteMsg(""), 5000);
                     } catch (e: any) {

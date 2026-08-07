@@ -105,7 +105,7 @@ export function getMissingMetadataTags(item: MediaItem): string[] {
 
 export function getReportTitle(scanType: string): string {
   if (scanType === "Discovery Scan") return "Discovery Audit";
-  if (scanType === "Stream Audit Scan") return "Streaming Audit";
+  if (scanType === "Stream Audit Scan") return "Stream Audit";
   if (scanType === "Subtitle Scan") return "Subtitle Audit";
   if (scanType === "Metadata Scan" || scanType === "Video Metadata Scan" || scanType === "Music Metadata Scan") return "Metadata Audit";
   if (scanType === "Duplication Scan") return "Duplicate Files Audit";
