@@ -1,6 +1,6 @@
 import React from 'react';
 import { Download } from 'lucide-react';
-import { BitsyCharacter } from '../BitsyCharacter';
+import BitsyCharacter from '../BitsyCharacter';
 
 interface DashboardProgressProps {
   isScanning: boolean;

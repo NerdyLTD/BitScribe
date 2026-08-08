@@ -5,3 +5,7 @@ export { default as Sidebar } from './src/Sidebar';
 export { default as NavigationTabs } from './src/NavigationTabs';
 export * from './src/formatters';
 export * from './src/dashboard/DashboardProgress';
+export * from './src/rules/CodecSelector';
+export * from './src/rules/PresetsSelector';
+export * from './src/rules/PresetsSelector';
+export * from './src/rules/ExportSettingsPanel';
