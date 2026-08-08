@@ -1,3 +1,4 @@
+import { getColsForScanAndCat, ALL_POSSIBLE_HEADERS } from "./reportConfig";
 import { formatCodecString, getPrimaryAudioCodec, getPrimaryVideoCodec, getContainerFormat, formatSubtitleSummary, formatSubtitleTechnical } from '@bitscribe/core-eval';
 import { isMusicCategory, sortCategories, getCategoryGroup } from '@bitscribe/core-types';
 import { MediaItem, RuleCriteria } from '@bitscribe/core-types';
@@ -76,7 +77,7 @@ export async function exportMediaLibraryToCSV(
   const scanType = getScanType(rules, items);
   const isMetadata = scanType === "Metadata Scan" || scanType === "Video Metadata Scan" || scanType === "Music Metadata Scan";
 
-  let allPossibleHeaders = isDuplication 
+    let allPossibleHeaders = isDuplication 
     ? ["Path", "Duplicate Path", "Flag Reason"]
     : [
     "Alert Level",
@@ -133,7 +134,6 @@ export async function exportMediaLibraryToCSV(
       "File Path"
     ];
   }
-
   const headers = isDuplication ? allPossibleHeaders : allPossibleHeaders.filter((col) => columns[col] !== false);
 
   if (isDuplication) {
@@ -512,7 +512,9 @@ export async function exportMediaLibraryToHTML(
 
   const isSubtitle = scanType === "Subtitle Scan";
 
-  let allPossibleHeaders = [
+    let allPossibleHeaders = isDuplication 
+    ? ["File", "Path", "Duplicate File", "Duplicate Path", "Flag Reason"]
+    : [
     "Alert Level",
     "Stream Audit",
     "Container",
@@ -559,12 +561,14 @@ export async function exportMediaLibraryToHTML(
       "Writer",
       "Cast",
       "Studio",
+      "Video Bit Depth",
+      "Audio Sample Rate",
+      "Chapters",
       "Poster",
       "Cover Art",
       "File Path"
     ];
   }
-
   let allOptimizedItems: any[] = [];
   let optimizedItems: any[] = [];
   let finalColumns = { ...columns };
@@ -1056,89 +1060,7 @@ export async function exportMediaLibraryToHTML(
     return 'Other';
   };
 
-  const getColsForCat = (cat) => {
-    const isVideo = ["Movies", "Movie", "Documentaries", "TV Shows", "TV", "Docuseries", "Documentary Series", "Extras", "Shorts", "Plays", "Specials", "Music Videos"].includes(cat);
-    const isMusic = ["Music Albums", "Soundtracks", "Music Compilations", "Music"].includes(cat);
-    
-    if (isDiscovery) {
-      if (getCategoryGroupInBrowser(cat) === "TV") return ["Series Title", "Episode Title", "Season", "Episode", "Video Codec", "Resolution", "Audio Codecs", "Audio Tracks", "Release Year", "File Path"];
-      if (isVideo) return ["Title", "Video Codec", "Resolution", "Audio Codecs", "Audio Tracks", "Release Year", "File Path"];
-      if (isMusic) return ["Artist", "Album Title", "Song Title", "File Format/Codec", "File Path"];
-      if (cat === "Corrupted") return ["Container", "Corruption Type", "Recommendation", "File Path"];
-      if (cat === "Static") return ["Container", "File Path"];
-      if (cat === "Other") return ["Title", "Video Codec", "Audio Codecs", "File Path"];
-      return ["Title", "File Path"];
-    }
-    
-    if (isStreaming) {
-      if (getCategoryGroupInBrowser(cat) === "TV") return ["Stream Audit", "Series Title", "Episode Title", "Season", "Episode", "Video Codec", "Audio Codecs", "Audio Tracks", "Analysis Notes", "Remediation Action", "File Path"];
-      if (isVideo) return ["Stream Audit", "Title", "Video Codec", "Audio Codecs", "Audio Tracks", "Analysis Notes", "Remediation Action", "File Path"];
-      return ["File Path"];
-    }
-    
-    if (isMetadata) {
-      if (isMusic) {
-        return [
-          "Cleaned Title",
-      "Metadata Title",
-          "Album Title",
-          "Artist",
-          "Year",
-          "Track",
-          "Cover Art",
-          "File Path"
-        ];
-      }
-      const isTvTab = getCategoryGroupInBrowser(cat) === "TV";
-      if (isTvTab) {
-        return [
-          "Cleaned Title",
-      "Metadata Title",
-          "Series Title",
-          "Episode Title",
-          "Season",
-          "Episode Number",
-          "Director",
-          "Writer",
-          "Year",
-          "Cast",
-          "Online ID",
-          "Studio",
-          "Poster",
-          "File Path"
-        ];
-      }
-      return [
-        "Cleaned Title",
-      "Metadata Title",
-        "Director",
-        "Writer",
-        "Year",
-        "Cast",
-        "Online ID",
-        "Studio",
-        "Poster",
-        "File Path"
-      ];
-    }
-    
-    if (isQuality) {
-      if (getCategoryGroupInBrowser(cat) === "TV") return ["Series Title", "Episode Title", "Season", "Episode", "Resolution", "Video Bitrate", "Audio Bitrate", "Analysis Notes", "Remediation Action", "File Path"];
-      if (isVideo) return ["Title", "Resolution", "Video Bitrate", "Audio Bitrate", "Analysis Notes", "Remediation Action", "File Path"];
-      return ["Audio Bitrate", "Analysis Notes", "Remediation Action", "File Path"];
-    }
-    
-    if (isSubtitle) {
-      if (getCategoryGroupInBrowser(cat) === "TV") return ["Alert Level", "Series Title", "Episode Title", "Season", "Episode", "Audio Codecs", "Subtitles", "Subtitle Type", "Analysis Notes", "Remediation Action", "File Path"];
-      if (isVideo) return ["Alert Level", "Title", "Audio Codecs", "Subtitles", "Subtitle Type", "Analysis Notes", "Remediation Action", "File Path"];
-      return ["Alert Level", "Audio Codecs", "Subtitles", "Subtitle Type", "Analysis Notes", "Remediation Action", "File Path"];
-    }
-
-    if (cat === "Corrupted") return ["Container", "Corruption Type", "Recommendation", "File Path"];
-    if (cat === "Static") return ["Container", "File Path"];
-    
-    return ["File Path"];
-  };
+  const getColsForCat = (cat) => getColsForScanAndCat(SCAN_TYPE, cat, false);
 
   function initCategories() {
     if (SCAN_TYPE === "Duplication Scan") {
