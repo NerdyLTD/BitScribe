@@ -3,3 +3,5 @@ export { BitsyReel } from './src/BitsyReel';
 export { default as Header } from './src/Header';
 export { default as Sidebar } from './src/Sidebar';
 export { default as NavigationTabs } from './src/NavigationTabs';
+export * from './src/formatters';
+export * from './src/dashboard/DashboardProgress';

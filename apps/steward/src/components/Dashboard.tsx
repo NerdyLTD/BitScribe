@@ -1,8 +1,9 @@
 import { LibraryView } from './LibraryView';
 import { formatCodecString, getPrimaryAudioCodec, getPrimaryVideoCodec, getContainerFormat, getFormattedAudioTracks } from '@bitscribe/core-eval';
-import { BitsyCharacter } from "@bitscribe/ui-components";
+import { BitsyCharacter, missingFmt, formatResolution, formatSubtitleSummary, formatSubtitleTechnical, DashboardProgress } from '@bitscribe/ui-components';
 import { createPortal } from "react-dom";
-import React, { useState, useEffect, useMemo, memo, useTransition, useDeferredValue } from "react";
+import React, { useState, useEffect, useMemo, memo, useTransition, useDeferredValue } from 'react';
+import { useDashboardMetrics } from '../hooks/useDashboardMetrics';
 import { MediaItem, RuleCriteria, sortCategories, getCategoryGroup, isMusicCategory } from '@bitscribe/core-types';
 import { MOCK_MEDIA_LIBRARY } from '@bitscribe/core-db';
 import { evaluatePlexCompatibility, computeDuplicatesMap, getDuplicatePairRows, isMissingSubtitles } from '@bitscribe/core-eval';
@@ -67,48 +68,13 @@ interface DashboardProps {
 }
 
 
-const missingFmt = (val: any) => {
-  if (val === "[MISSING]" || !val) {
-    return <span className="px-2 py-0.5 rounded bg-rose-950/40 text-rose-300 font-semibold border border-rose-900/50 text-[10px] tracking-wider uppercase shadow-sm whitespace-nowrap">[MISSING]</span>;
-  }
-  return val;
-};
 
-const formatResolution = (w?: number, h?: number, parsed?: any) => {
-  if (w && h) {
-    let resLabel = `${w}x${h}`;
-    if (parsed?.resolution) {
-      resLabel += ` (${parsed.resolution})`;
-    }
-    return <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 text-xs">{resLabel}</span>;
-  }
-  if (parsed?.resolution) {
-    return <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 text-xs">{parsed.resolution}</span>;
-  }
-  return missingFmt("[MISSING]");
-};
 
-const formatSubtitleSummary = (parsed?: any) => {
-  if (parsed?.subtitles && Array.isArray(parsed.subtitles) && parsed.subtitles.length > 0) {
-    return <span className="text-slate-300 text-xs">{parsed.subtitles.length} track(s)</span>;
-  }
-  return missingFmt("[MISSING]");
-};
 
-const formatSubtitleTechnical = (parsed?: any) => {
-  if (parsed?.subtitles && Array.isArray(parsed.subtitles) && parsed.subtitles.length > 0) {
-    return (
-      <div className="flex flex-col gap-1">
-        {parsed.subtitles.map((sub: any, i: number) => (
-          <span key={i} className="text-[10px] text-slate-400">
-            {sub.language || 'Unknown'} ({sub.codec || 'Unknown'})
-          </span>
-        ))}
-      </div>
-    );
-  }
-  return missingFmt("[MISSING]");
-};
+
+
+
+
 
 
 
