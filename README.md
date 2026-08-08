@@ -79,7 +79,20 @@ When you open BitScribe, you get five beautiful, easy-to-use Dashboards:
 
 ---
 
-## 📤 Beautiful, Shareable Reports
+## 🛠️ Troubleshooting
+
+### macOS: "App is damaged and can't be opened"
+If you download the Mac version and macOS tells you the app is "damaged and can't be opened. You should move it to the Trash.", **this is normal for unsigned apps downloaded from the internet** due to Apple's Gatekeeper security.
+
+To fix this, you just need to remove the quarantine flag macOS placed on the file. Open your **Terminal** app and run the following command (assuming you placed the app in your Applications folder):
+
+```bash
+xattr -cr "/Applications/BitScribe Steward.app"
+```
+
+After running this, the app will open normally!
+
+---
 
 Once your scan is done, you aren't trapped in the app! You can export your results in ways that make sense for you:
 

@@ -181,6 +181,7 @@ export default function HelpSection({ highlightId, isTourActive, tourStepIndex, 
     if ((activeDemo === 33 || tourStepIndex === 35) && openPanels['faqs-main'] === true) {
       const faqIds = [
         'faq-what-is',
+        'faq-mac-damaged',
         'faq-video-music',
         'faq-streaming-unfriendly',
         'faq-folder-depth',
@@ -735,6 +736,25 @@ export default function HelpSection({ highlightId, isTourActive, tourStepIndex, 
               </p>
               <p className="mt-1.5">
                 Once scanned, it provides actionable insights—helping you locate missing subtitles, pinpoint bloated files, and uncover duplicate media assets.
+              </p>
+            </FaqItem>
+
+            <FaqItem 
+              id="faq-mac-damaged"
+              question="macOS says the app is 'damaged and can't be opened'"
+              isHighlighted={highlightedFaqId === 'faq-mac-damaged'}
+            >
+              <p>
+                This is a normal security prompt from Apple's Gatekeeper for apps downloaded from the internet that aren't distributed via the Mac App Store.
+              </p>
+              <p className="mt-1.5">
+                To fix it, you need to remove the quarantine flag using Terminal. Open your <strong>Terminal</strong> app and run this command (assuming the app is in your Applications folder):
+              </p>
+              <div className="bg-[#10121A] border border-slate-700/60 p-3 rounded-lg mt-2 mb-1 overflow-x-auto text-[10px] text-emerald-400 font-mono">
+                xattr -cr "/Applications/BitScribe Steward.app"
+              </div>
+              <p className="mt-1.5 text-slate-400">
+                After running this, you can open the app normally.
               </p>
             </FaqItem>
 

@@ -17,7 +17,7 @@ jobs:
       matrix:
         include:
           - platform: 'macos-latest'
-            args: '--target aarch64-apple-darwin'
+            args: '--target universal-apple-darwin'
           - platform: 'windows-latest'
             args: ''
     runs-on: ${{ matrix.platform }}
@@ -34,7 +34,7 @@ jobs:
         uses: dtolnay/rust-toolchain@v1
         with:
           toolchain: stable
-          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin' || '' }}
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
       - name: install frontend dependencies
         run: npm ci
       - uses: tauri-apps/tauri-action@v1
