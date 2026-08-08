@@ -1088,6 +1088,7 @@ export async function exportMediaLibraryToHTML(
       if (isQuality) return ["Alert Level", "File Name", "Container", "Video Bitrate", "Resolution", "Audio Codecs", "Anomaly Details"];
       return ["File Name", "Container", "File Format/Codec", "Video Codec", "Audio Codecs", "File Path"];
     }
+
     const isVideo = ["Movies", "Movie", "Documentaries", "TV Shows", "TV", "Docuseries", "Documentary Series", "Extras", "Shorts", "Plays", "Specials", "Music Videos"].includes(cat);
     const isMusic = ["Music Albums", "Soundtracks", "Music Compilations", "Music"].includes(cat);
     
@@ -1102,7 +1103,8 @@ export async function exportMediaLibraryToHTML(
     }
     
     if (isStreaming) {
-      if (isVideo) return ["Stream Audit", "File Name", "Video Codec", "Audio Codecs", "Audio Tracks", "Analysis Notes", "Remediation Action", "File Path"];
+      if (getCategoryGroupInBrowser(cat) === "TV") return ["Stream Audit", "Series Title", "Season", "Episode", "Episode Title", "Video Codec", "Audio Codecs", "Audio Tracks", "Analysis Notes", "Remediation Action", "File Path"];
+      if (isVideo) return ["Stream Audit", "Title", "Video Codec", "Audio Codecs", "Audio Tracks", "Analysis Notes", "Remediation Action", "File Path"];
       return ["File Name", "File Path"];
     }
     
@@ -1156,11 +1158,14 @@ export async function exportMediaLibraryToHTML(
     }
     
     if (isQuality) {
-      if (isVideo) return ["File Name", "Resolution", "Video Bitrate", "Audio Bitrate", "Analysis Notes", "Remediation Action", "File Path"];
+      if (getCategoryGroupInBrowser(cat) === "TV") return ["Series Title", "Season", "Episode", "Episode Title", "Resolution", "Video Bitrate", "Audio Bitrate", "Analysis Notes", "Remediation Action", "File Path"];
+      if (isVideo) return ["Title", "Resolution", "Video Bitrate", "Audio Bitrate", "Analysis Notes", "Remediation Action", "File Path"];
       return ["File Name", "Audio Bitrate", "Analysis Notes", "Remediation Action", "File Path"];
     }
     
     if (isSubtitle) {
+      if (getCategoryGroupInBrowser(cat) === "TV") return ["Alert Level", "Series Title", "Season", "Episode", "Episode Title", "Audio Codecs", "Subtitles", "Subtitle Type", "Analysis Notes", "Remediation Action", "File Path"];
+      if (isVideo) return ["Alert Level", "Title", "Audio Codecs", "Subtitles", "Subtitle Type", "Analysis Notes", "Remediation Action", "File Path"];
       return ["Alert Level", "File Name", "Audio Codecs", "Subtitles", "Subtitle Type", "Analysis Notes", "Remediation Action", "File Path"];
     }
 
@@ -1196,7 +1201,7 @@ export async function exportMediaLibraryToHTML(
       return a.localeCompare(b);
     });
     
-    if (!isMetadata && !isDiscovery) orderedCats.unshift("All Media");
+    if (isDiscovery) orderedCats.unshift("All Media");
     if (orderedCats.length > 0) {
       activeCategory = orderedCats[0];
       applyCategoryColumns(activeCategory);

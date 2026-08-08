@@ -108,7 +108,7 @@ export function getReportTitle(scanType: string): string {
   if (scanType === "Stream Audit Scan") return "Stream Audit";
   if (scanType === "Subtitle Scan") return "Subtitle Audit";
   if (scanType === "Metadata Scan" || scanType === "Video Metadata Scan" || scanType === "Music Metadata Scan") return "Metadata Audit";
-  if (scanType === "Duplication Scan") return "Duplicate Files Audit";
+  if (scanType === "Duplication Scan") return "Duplicates Audit";
   if (scanType === "Corrupted Audit") return "Bad Files Audit";
   if (scanType === "Anomaly Scan") return "Quality Audit";
   return "Media Library Audit";

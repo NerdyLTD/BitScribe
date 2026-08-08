@@ -514,7 +514,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <option value="Media Discovery">Discovery Audit</option>
               <option value="Modern Direct Play">Stream Audit</option>
               <option value="Metadata Audit">Metadata Audit</option>
-              <option value="Duplication Scan">Duplicate Files Audit</option>
+              <option value="Duplication Scan">Duplicates Audit</option>
               <option value="Quality Audit">Quality Audit</option>
               <option value="Subtitle Audit">Subtitle Audit</option>
               <option value="Corrupted">Bad Files Audit</option>
@@ -528,7 +528,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     { val: "Media Discovery", label: "Discovery Audit" },
                     { val: "Modern Direct Play", label: "Stream Audit" },
                     { val: "Metadata Audit", label: "Metadata Audit" },
-                    { val: "Duplication Scan", label: "Duplicate Files Audit" },
+                    { val: "Duplication Scan", label: "Duplicates Audit" },
                     { val: "Quality Audit", label: "Quality Audit" },
                     { val: "Subtitle Audit", label: "Subtitle Audit" },
                     { val: "Corrupted", label: "Bad Files Audit" },
@@ -622,7 +622,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     case "Media Discovery": return "Discovery Audit";
                     case "Modern Direct Play": return "Stream Audit";
                     case "Metadata Audit": return "Metadata Audit";
-                    case "Duplication Scan": return "Duplicate Files Audit";
+                    case "Duplication Scan": return "Duplicates Audit";
                     case "Quality Audit": return "Quality Audit";
                     case "Subtitle Audit": return "Subtitle Audit";
                     case "Corrupted": return "Bad Files Audit";
