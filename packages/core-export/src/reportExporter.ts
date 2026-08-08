@@ -199,9 +199,7 @@ export async function exportMediaLibraryToCSV(
 
         if (isMusic) {
           const songTitle = item.tags?.title || item.tags?.TITLE || "";
-          const hasSongTitle = songTitle && songTitle.toLowerCase() !== (item.filename || "").toLowerCase();
-
-          data["Metadata Title"] = hasSongTitle ? missingFmt(songTitle) : "[MISSING]";
+          data["Metadata Title"] = songTitle ? missingFmt(songTitle) : "[MISSING]";
           data["Artist"] = missingFmt(item.tags?.artist || item.tags?.ARTIST);
           data["Album Title"] = missingFmt(item.tags?.album || item.tags?.ALBUM);
           data["Year"] = missingFmt(yearVal);
@@ -211,9 +209,7 @@ export async function exportMediaLibraryToCSV(
           data["File Path"] = item.filePath;
         } else if (isTv) {
           const tvTitle = item.tags?.title || item.tags?.TITLE || "";
-          const hasTvTitle = tvTitle && tvTitle.toLowerCase() !== (item.filename || "").toLowerCase();
-
-          data["Metadata Title"] = hasTvTitle ? missingFmt(tvTitle) : "[MISSING]";
+          data["Metadata Title"] = tvTitle ? missingFmt(tvTitle) : "[MISSING]";
           data["Series Title"] = missingFmt(parsedMeta.title || item.tags?.show || item.tags?.SHOW || item.tags?.series || item.tags?.SERIES);
           data["Season"] = missingFmt(parsedMeta.season);
           data["Episode Number"] = missingFmt(parsedMeta.episode);
@@ -231,9 +227,7 @@ export async function exportMediaLibraryToCSV(
           data["File Path"] = item.filePath;
         } else {
           const videoTitle = item.tags?.title || item.tags?.TITLE || "";
-          const hasVideoTitle = videoTitle && videoTitle.toLowerCase() !== (item.filename || "").toLowerCase();
-
-          data["Metadata Title"] = hasVideoTitle ? missingFmt(videoTitle) : "[MISSING]";
+          data["Metadata Title"] = videoTitle ? missingFmt(videoTitle) : "[MISSING]";
           data["Director"] = missingFmt(item.tags?.director || item.tags?.DIRECTOR);
           data["Writer"] = missingFmt(item.tags?.writer || item.tags?.WRITER);
           data["Year"] = missingFmt(yearVal);
@@ -647,10 +641,8 @@ export async function exportMediaLibraryToHTML(
 
         if (isMusic) {
           const songTitle = item.tags?.title || item.tags?.TITLE || "";
-          const hasSongTitle = songTitle && songTitle.toLowerCase() !== (item.filename || "").toLowerCase();
-
           rowData["Cleaned Title"] = missingFmt(parsedMeta.title);
-          rowData["Metadata Title"] = hasSongTitle ? missingFmt(songTitle) : "[MISSING]";
+          rowData["Metadata Title"] = songTitle ? missingFmt(songTitle) : "[MISSING]";
           rowData["Artist"] = missingFmt(item.tags?.artist || item.tags?.ARTIST);
           rowData["Album Title"] = missingFmt(item.tags?.album || item.tags?.ALBUM);
           rowData["Year"] = missingFmt(yearVal);
@@ -659,9 +651,8 @@ export async function exportMediaLibraryToHTML(
           rowData["File Path"] = item.filePath;
         } else if (isTv) {
           const tvTitle = item.tags?.title || item.tags?.TITLE || "";
-          const hasTvTitle = tvTitle && tvTitle.toLowerCase() !== (item.filename || "").toLowerCase();
           rowData["Cleaned Title"] = missingFmt(parsedMeta.title);
-          rowData["Metadata Title"] = hasTvTitle ? missingFmt(tvTitle) : "[MISSING]";
+          rowData["Metadata Title"] = tvTitle ? missingFmt(tvTitle) : "[MISSING]";
           rowData["Series Title"] = missingFmt(parsedMeta.title || item.tags?.show || item.tags?.SHOW || item.tags?.series || item.tags?.SERIES);
           rowData["Season"] = missingFmt(parsedMeta.season);
           rowData["Episode Number"] = missingFmt(parsedMeta.episode);
@@ -676,10 +667,8 @@ export async function exportMediaLibraryToHTML(
           rowData["File Path"] = item.filePath;
         } else {
           const videoTitle = item.tags?.title || item.tags?.TITLE || "";
-          const hasVideoTitle = videoTitle && videoTitle.toLowerCase() !== (item.filename || "").toLowerCase();
-
           rowData["Cleaned Title"] = missingFmt(parsedMeta.title);
-          rowData["Metadata Title"] = hasVideoTitle ? missingFmt(videoTitle) : "[MISSING]";
+          rowData["Metadata Title"] = videoTitle ? missingFmt(videoTitle) : "[MISSING]";
           rowData["Director"] = missingFmt(item.tags?.director || item.tags?.DIRECTOR);
           rowData["Writer"] = missingFmt(item.tags?.writer || item.tags?.WRITER);
           rowData["Year"] = missingFmt(yearVal);

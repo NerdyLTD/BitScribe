@@ -792,7 +792,7 @@ export async function exportMediaLibraryToExcel(
         width = 52; // wider for text columns to prevent bleeding
       } else if (h === "Missing Metadata" || h === "Missing Tags") {
         width = 45;
-      } else if (h === "File Name" || h === "Title" || h === "Series Title" || h === "File" || h === "Duplicate File" || h === "Cleaned Title") {
+      } else if (h === "File Name" || h === "Title" || h === "Series Title" || h === "Duplicate File" || h === "Cleaned Title") {
         width = 35;
       } else if (h.length + 5 > 15) {
         width = h.length + 5;
@@ -1033,10 +1033,8 @@ export async function exportMediaLibraryToExcel(
 
         if (isMusic) {
           const songTitle = item.tags?.title || item.tags?.TITLE || "";
-          const hasSongTitle = songTitle && songTitle.toLowerCase() !== (item.filename || "").toLowerCase();
-          
           rowValues["Cleaned Title"] = missingFmt(parsedMeta.title);
-          rowValues["Metadata Title"] = hasSongTitle ? missingFmt(songTitle) : "[MISSING]";
+          rowValues["Metadata Title"] = songTitle ? missingFmt(songTitle) : "[MISSING]";
           rowValues["Artist"] = missingFmt(item.tags?.artist || item.tags?.ARTIST);
           rowValues["Album Title"] = missingFmt(item.tags?.album || item.tags?.ALBUM);
           rowValues["Year"] = missingFmt(yearVal);
@@ -1046,10 +1044,8 @@ export async function exportMediaLibraryToExcel(
           rowValues["File Path"] = item.filePath;
         } else if (isTv) {
           const tvTitle = item.tags?.title || item.tags?.TITLE || "";
-          const hasTvTitle = tvTitle && tvTitle.toLowerCase() !== (item.filename || "").toLowerCase();
-
           rowValues["Cleaned Title"] = missingFmt(parsedMeta.title);
-          rowValues["Metadata Title"] = hasTvTitle ? missingFmt(tvTitle) : "[MISSING]";
+          rowValues["Metadata Title"] = tvTitle ? missingFmt(tvTitle) : "[MISSING]";
           rowValues["Series Title"] = missingFmt(parsedMeta.title || item.tags?.show || item.tags?.SHOW || item.tags?.series || item.tags?.SERIES);
           rowValues["Season"] = missingFmt(parsedMeta.season);
           rowValues["Episode Number"] = missingFmt(parsedMeta.episode);
@@ -1068,10 +1064,8 @@ export async function exportMediaLibraryToExcel(
         } else {
           // Movies / Video
           const videoTitle = item.tags?.title || item.tags?.TITLE || "";
-          const hasVideoTitle = videoTitle && videoTitle.toLowerCase() !== (item.filename || "").toLowerCase();
-
           rowValues["Cleaned Title"] = missingFmt(parsedMeta.title);
-          rowValues["Metadata Title"] = hasVideoTitle ? missingFmt(videoTitle) : "[MISSING]";
+          rowValues["Metadata Title"] = videoTitle ? missingFmt(videoTitle) : "[MISSING]";
           rowValues["Director"] = missingFmt(item.tags?.director || item.tags?.DIRECTOR);
           rowValues["Writer"] = missingFmt(item.tags?.writer || item.tags?.WRITER);
           rowValues["Year"] = missingFmt(yearVal);
@@ -1163,8 +1157,6 @@ export async function exportMediaLibraryToExcel(
             "Bitrate Anomaly": item.bitrateAnomaly
               ? item.bitrateAnomalyReason
               : "None",
-            Filename: item.filename,
-            "File Name": item.filename,
             "Video Codec": getPrimaryVideoCodec(item),
             Resolution: formatResolutionForExcel(item.videoResolution),
             "Frame Rate": isMusicCategory(item.category) || !item.videoFrameRate
@@ -1189,16 +1181,12 @@ export async function exportMediaLibraryToExcel(
 
           if (catType === "Corrupted") {
             Object.assign(rowValues, {
-              "File Name": item.filename,
-              Filename: item.filename,
               "Corruption Type": item.tags?.artist || "Read error / 0-byte file",
               Recommendation: "Replace file",
               "File Path": item.filePath,
             });
           } else if (catType === "Static") {
             Object.assign(rowValues, {
-              "File Name": item.filename,
-              Filename: item.filename,
               "File Path": item.filePath,
             });
           } else if (isTv) {
