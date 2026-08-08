@@ -99,6 +99,8 @@ export async function exportMediaLibraryToCSV(
     "Album Title",
     "Song Title",
     "File Format/Codec",
+    "Video Bitrate",
+    "Audio Bitrate",
     "Bitrate",
     "Corruption Type",
     "Recommendation",
