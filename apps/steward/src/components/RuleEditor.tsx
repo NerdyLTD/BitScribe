@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { RuleCriteria } from '@bitscribe/core-types';
 import { Sliders, RotateCcw, Info, Check } from "lucide-react";
 import { DEFAULT_RULES, ALL_DISCOVERY_VIDEO, ALL_DISCOVERY_SURROUND, ALL_DISCOVERY_STEREO, ALL_DISCOVERY_MUSIC, ALL_DISCOVERY_HDR, ALL_DISCOVERY_CONTAINERS } from '@bitscribe/core-eval';
+import { PresetsSelector, ExportSettingsPanel, CodecSelector, AdvancedRulesPanel } from '@bitscribe/ui-components';
 
 interface RuleEditorProps {
   rules: RuleCriteria;

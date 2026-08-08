@@ -1,4 +1,16 @@
 ## [Unreleased]
+- **Modular Component Isolation & Monolith Decomposition (Phases 5-8)**:
+  - Extracted UI components from `Dashboard.tsx` and `RuleEditor.tsx` into `@bitscribe/ui-components`:
+    - `CodecSelector.tsx`: Reusable multi-select component for video and audio codecs.
+    - `PresetsSelector.tsx`: Mode toggles for Stream Audit, Metadata Audit, Discovery, and Quality Audits.
+    - `ExportSettingsPanel.tsx`: Dedicated configuration block for CSV, Excel, and HTML exports.
+    - `AdvancedRulesPanel.tsx`: Granular toggles for streaming tier standards (Modern, Legacy, Bleeding Edge).
+    - `DashboardProgress.tsx`: Scan and export progress bar indicators.
+    - `DashboardMetricsPanel.tsx`: Recharts distribution charts and anomaly summary stats.
+    - `DashboardToolbar.tsx`: Search bar, category filters, top-level folder dropdown, and pagination controls.
+    - `MediaRegistryTable.tsx`: Virtualized/paginated data grid with column sorting and detail drawer triggers.
+  - Refactored `Dashboard.tsx` and `RuleEditor.tsx` into clean, orchestrators, eliminating technical debt and guaranteeing strict type safety.
+  - Harmonized `@bitscribe/core-types`, `@bitscribe/core-eval`, `@bitscribe/core-db`, `@bitscribe/core-export`, and `@bitscribe/ui-components` packages for BitScribe RX suite integration.
 - **Scan Path Deduplication**: Prevented the UI from adding identical folders to the scan list if they have already been added.
 - **Dynamic Re-scan on Path Changes**: Modified the background scan engine to automatically detect when new folders have been added or removed from the scan list and intelligently force a refresh instead of improperly relying on the cache from previous scans.
 - **Ingest Streaming Compatibility Evaluation**: Modified the background scan engine to consistently run and store streaming compatibility rules for all video media natively at the time of initial ingest, regardless of whether the scan was triggered as a basic Media Discovery or a dedicated Stream Audit.

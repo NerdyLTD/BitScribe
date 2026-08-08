@@ -1,6 +1,6 @@
 import { LibraryView } from './LibraryView';
 import { formatCodecString, getPrimaryAudioCodec, getPrimaryVideoCodec, getContainerFormat, getFormattedAudioTracks } from '@bitscribe/core-eval';
-import { BitsyCharacter, missingFmt, formatResolution, formatSubtitleSummary, formatSubtitleTechnical, DashboardProgress } from '@bitscribe/ui-components';
+import { BitsyCharacter, missingFmt, formatResolution, formatSubtitleSummary, formatSubtitleTechnical, DashboardProgress, DashboardMetricsPanel, DashboardToolbar, MediaRegistryTable } from '@bitscribe/ui-components';
 import { createPortal } from "react-dom";
 import React, { useState, useEffect, useMemo, memo, useTransition, useDeferredValue } from 'react';
 import { useDashboardMetrics } from '../hooks/useDashboardMetrics';

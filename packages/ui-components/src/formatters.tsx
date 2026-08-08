@@ -1,5 +1,13 @@
 import React from 'react';
 
+export const formatSize = (gb: number) => {
+  if (!gb || gb <= 0) return '0 GB';
+  if (gb < 1) {
+    return `${Math.round(gb * 1024)} MB`;
+  }
+  return `${gb.toFixed(2)} GB`;
+};
+
 export const missingFmt = (val: any) => {
   if (val === "[MISSING]" || !val) {
     return <span className="px-2 py-0.5 rounded bg-rose-950/40 text-rose-300 font-semibold border border-rose-900/50 text-[10px] tracking-wider uppercase shadow-sm whitespace-nowrap">[MISSING]</span>;
