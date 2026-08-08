@@ -71,3 +71,8 @@ Make focused, minimal, and safe changes in this repository. Preserve existing fi
 - **Test Before Affirming**: For data manipulation, sorting, or filtering logic, create isolated test scripts (e.g., using Node.js) to simulate edge cases (such as `undefined`, `null`, `0`, or missing properties) and verify the expected output before committing the change.
 - **Do Not Hallucinate Success**: If you assume a change works based solely on code inspection, explicitly state that it *should* work theoretically but needs real-world testing. Do not state "it works" or "I have verified it" unless you actually ran a successful verification test.
 - **Double-Check Scope**: Ensure that all requested aspects of a fix (e.g., all specified columns or components) are accounted for before marking a task as complete.
+
+## Report & Exporter Modification Protocol (STRICT)
+- **NO IN-PLACE HACKS**: Never use `sed` or blind regex replacements to add/remove columns in `reportExporter.ts` or `excelExporter.ts`. The codebase is transitioning to isolated configuration files.
+- **MANDATORY VALIDATION**: Any change to report structures MUST be accompanied by a validation check to ensure header counts perfectly match row column counts, and no data fields are inadvertently wiped.
+- **SINGLE SOURCE OF TRUTH**: When updating report logic, you must ensure CSV, HTML, and Excel exports remain fully synchronized. 
