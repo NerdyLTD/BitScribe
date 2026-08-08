@@ -582,7 +582,6 @@ export async function exportMediaLibraryToExcel(
           "Album/Folder Title",
           "Artist",
           "Song Title",
-          "File Name",
           "File Format/Codec",
           "Audio Bitrate",
           "Cover Art",
@@ -593,7 +592,6 @@ export async function exportMediaLibraryToExcel(
           "Artist",
           "Album Title",
           "Song Title",
-          "File Name",
           "File Format/Codec",
           "Audio Bitrate",
           "Cover Art",
@@ -606,7 +604,6 @@ export async function exportMediaLibraryToExcel(
           "Season",
           "Episode",
           "Episode Title",
-          "File Name",
           "Container",
           "Video Codec",
           "Resolution",
@@ -623,7 +620,6 @@ export async function exportMediaLibraryToExcel(
       } else if (catType === "Extras") {
         headers = [
           "Title",
-          "File Name",
           "Container",
           "Video Codec",
           "Resolution",
@@ -641,7 +637,6 @@ export async function exportMediaLibraryToExcel(
         headers = [
           "Title",
           "Release Year",
-          "File Name",
           "Container",
           "Video Codec",
           "Resolution",
@@ -657,15 +652,14 @@ export async function exportMediaLibraryToExcel(
         ];
       } else if (isCorrupt) {
         headers = [
-          "File Name",
           "Corruption Type",
           "Recommendation",
           "File Path",
         ];
       } else if (isStatic) {
-        headers = ["File Name", "File Path"];
+        headers = ["File Path"];
       } else {
-        headers = ["Title", "File Name", "File Path"];
+        headers = ["Title", "File Path"];
       }
     } else if (scanType === "Stream Audit Scan") {
       if (isMusic) {
@@ -680,11 +674,10 @@ export async function exportMediaLibraryToExcel(
           "File Path",
         ];
       } else if (isCorrupt || isStatic) {
-        headers = ["File Name", "File Path"];
+        headers = ["File Path"];
       } else {
         headers = [
           "Stream Friendly?",
-          "File Name",
           "Video Codec",
           "Resolution",
           "Frame Rate",
@@ -705,7 +698,6 @@ export async function exportMediaLibraryToExcel(
       if (isMusic) {
         headers = [
           "Cleaned Title",
-          "File Name",
           "Title",
           "Album Title",
           "Artist",
@@ -718,7 +710,6 @@ export async function exportMediaLibraryToExcel(
       } else if (isTv) {
         headers = [
           "Cleaned Title",
-          "File Name",
           "Title",
           "Series Title",
           "Episode Title",
@@ -738,7 +729,6 @@ export async function exportMediaLibraryToExcel(
       } else { // Video
         headers = [
           "Cleaned Title",
-          "File Name",
           "Title",
           "Director",
           "Writer",
@@ -753,21 +743,19 @@ export async function exportMediaLibraryToExcel(
         ];
       }
     } else if (scanType === "Duplication Scan") {
-      headers = ["File", "Path", "Duplicate File", "Path", "Flag Reason"];
+      headers = ["Path", "Duplicate Path", "Flag Reason"];
     } else if (scanType === "Anomaly Scan") {
       if (isMusic) {
         headers = [
-          "File Name",
           "Audio Bitrate",
           "Analysis Notes",
           "Remediation Action",
           "File Path",
         ];
       } else if (isCorrupt || isStatic) {
-        headers = ["File Name", "File Path"];
+        headers = ["File Path"];
       } else {
         headers = [
-          "File Name",
           "Resolution",
           "Video Bitrate",
           "Audio Bitrate",
@@ -779,7 +767,6 @@ export async function exportMediaLibraryToExcel(
     } else if (scanType === "Subtitle Scan") {
       headers = [
         "Alert Level",
-        "File Name",
         "Subtitles",
         "Subtitle Type",
         "Analysis Notes",
@@ -787,9 +774,9 @@ export async function exportMediaLibraryToExcel(
         "File Path",
       ];
     } else if (scanType === "Corrupted Audit") {
-      headers = ["File Name", "Corruption Type", "Recommendation", "File Path"];
+      headers = ["Corruption Type", "Recommendation", "File Path"];
     } else {
-      headers = ["File Name", "File Path"]; // Fallback
+      headers = ["File Path"]; // Fallback
     }
 
     let visibleHeaders = headers; // we ignore column visibility to respect the strict scan rules
@@ -817,7 +804,7 @@ export async function exportMediaLibraryToExcel(
     ws.getRow(1).values = visibleHeaders;
 
     // Style the actual table header (now at Row 1!)
-    const factualCols = new Set(["Cleaned Title", "File Name", "File Path", "Path", "File", "Duplicate File", "Duplicate Path", "Flag Reason"]);
+    const factualCols = new Set(["Cleaned Title", "File Path", "Path", "Duplicate Path", "Flag Reason"]);
     ws.getRow(1).eachCell((cell) => {
       const colName = String(cell.value || "");
       const isFactual = factualCols.has(colName);
@@ -862,9 +849,7 @@ export async function exportMediaLibraryToExcel(
           return val;
         };
         ws.addRow([
-          sanitize(row.fileName),
           sanitize(row.filePath),
-          sanitize(row.dupFileName),
           sanitize(row.dupFilePath),
           sanitize(row.flagReason)
         ]);
@@ -1051,8 +1036,7 @@ export async function exportMediaLibraryToExcel(
           const hasSongTitle = songTitle && songTitle.toLowerCase() !== (item.filename || "").toLowerCase();
           
           rowValues["Cleaned Title"] = missingFmt(parsedMeta.title);
-          rowValues["Title"] = hasSongTitle ? missingFmt(songTitle) : "[MISSING]";
-          rowValues["File Name"] = item.filename;
+          rowValues["Metadata Title"] = hasSongTitle ? missingFmt(songTitle) : "[MISSING]";
           rowValues["Artist"] = missingFmt(item.tags?.artist || item.tags?.ARTIST);
           rowValues["Album Title"] = missingFmt(item.tags?.album || item.tags?.ALBUM);
           rowValues["Year"] = missingFmt(yearVal);
@@ -1065,8 +1049,7 @@ export async function exportMediaLibraryToExcel(
           const hasTvTitle = tvTitle && tvTitle.toLowerCase() !== (item.filename || "").toLowerCase();
 
           rowValues["Cleaned Title"] = missingFmt(parsedMeta.title);
-          rowValues["Title"] = hasTvTitle ? missingFmt(tvTitle) : missingFmt(parsedMeta.title);
-          rowValues["File Name"] = item.filename;
+          rowValues["Metadata Title"] = hasTvTitle ? missingFmt(tvTitle) : "[MISSING]";
           rowValues["Series Title"] = missingFmt(parsedMeta.title || item.tags?.show || item.tags?.SHOW || item.tags?.series || item.tags?.SERIES);
           rowValues["Season"] = missingFmt(parsedMeta.season);
           rowValues["Episode Number"] = missingFmt(parsedMeta.episode);
@@ -1088,8 +1071,7 @@ export async function exportMediaLibraryToExcel(
           const hasVideoTitle = videoTitle && videoTitle.toLowerCase() !== (item.filename || "").toLowerCase();
 
           rowValues["Cleaned Title"] = missingFmt(parsedMeta.title);
-          rowValues["Title"] = hasVideoTitle ? missingFmt(videoTitle) : missingFmt(parsedMeta.title);
-          rowValues["File Name"] = item.filename;
+          rowValues["Metadata Title"] = hasVideoTitle ? missingFmt(videoTitle) : "[MISSING]";
           rowValues["Director"] = missingFmt(item.tags?.director || item.tags?.DIRECTOR);
           rowValues["Writer"] = missingFmt(item.tags?.writer || item.tags?.WRITER);
           rowValues["Year"] = missingFmt(yearVal);
@@ -1137,7 +1119,6 @@ export async function exportMediaLibraryToExcel(
           rowValues["Album/Folder Title"] = getDisplayAlbum(item, rules);
           rowValues["Stream Friendly?"] = getCompatibilityLabel(evalResult.level);
           rowValues["Song Title"] = getDisplaySongTitle(item, rules);
-          rowValues["File Name"] = item.filename;
           rowValues["Filename"] = item.filename;
           rowValues["File Format/Codec"] =
             getPrimaryAudioCodec(item) ||
@@ -1192,7 +1173,7 @@ export async function exportMediaLibraryToExcel(
             "Video Bitrate": item.videoBitrateMbps
               ? item.videoBitrateMbps.toFixed(2) + " Mbps"
               : "",
-            "Audio Bitrate": item.audioBitrate ? Math.round(item.audioBitrate / 1000) + " kbps" : "",
+            "Audio Bitrate": (item.audioBitrate !== undefined && item.audioBitrate !== null) ? Math.round(item.audioBitrate / 1000) + " kbps" : "",
             "HDR Format": item.hdrFormat || "SDR",
             "Audio Codec": audioStr,
             "Audio Codecs": audioStr,

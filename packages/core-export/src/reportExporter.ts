@@ -77,11 +77,10 @@ export async function exportMediaLibraryToCSV(
   const isMetadata = scanType === "Metadata Scan" || scanType === "Video Metadata Scan" || scanType === "Music Metadata Scan";
 
   let allPossibleHeaders = isDuplication 
-    ? ["File", "Path", "Duplicate File", "Duplicate Path", "Flag Reason"]
+    ? ["Path", "Duplicate Path", "Flag Reason"]
     : [
     "Alert Level",
     "Stream Audit",
-    "File Name",
     "Container",
     "Video Codec",
     "Resolution",
@@ -91,9 +90,9 @@ export async function exportMediaLibraryToCSV(
     "Subtitles",
     ...(rules.useSubtitleScan ? ["Subtitle Type"] : []),
     "Series Title",
+    "Episode Title",
     "Season",
     "Episode",
-    "Episode Title",
     "Title",
     "Release Year",
     "Artist",
@@ -111,12 +110,11 @@ export async function exportMediaLibraryToCSV(
   if (isMetadata) {
     allPossibleHeaders = [
       "Cleaned Title",
-      "Title",
-      "File Name",
+      "Metadata Title",
       "Series Title",
+      "Episode Title",
       "Season",
       "Episode Number",
-      "Episode Title",
       "Artist",
       "Album Title",
       "Year",
@@ -143,9 +141,7 @@ export async function exportMediaLibraryToCSV(
     
     const rows = visiblePairs.map(row => {
       let data: Record<string, any> = {
-        "File": row.fileName,
         "Path": row.filePath,
-        "Duplicate File": row.dupFileName,
         "Duplicate Path": row.dupFilePath,
         "Flag Reason": row.flagReason || "",
       };
@@ -205,8 +201,7 @@ export async function exportMediaLibraryToCSV(
           const songTitle = item.tags?.title || item.tags?.TITLE || "";
           const hasSongTitle = songTitle && songTitle.toLowerCase() !== (item.filename || "").toLowerCase();
 
-          data["Title"] = hasSongTitle ? missingFmt(songTitle) : "[MISSING]";
-          data["File Name"] = item.filename;
+          data["Metadata Title"] = hasSongTitle ? missingFmt(songTitle) : "[MISSING]";
           data["Artist"] = missingFmt(item.tags?.artist || item.tags?.ARTIST);
           data["Album Title"] = missingFmt(item.tags?.album || item.tags?.ALBUM);
           data["Year"] = missingFmt(yearVal);
@@ -218,8 +213,7 @@ export async function exportMediaLibraryToCSV(
           const tvTitle = item.tags?.title || item.tags?.TITLE || "";
           const hasTvTitle = tvTitle && tvTitle.toLowerCase() !== (item.filename || "").toLowerCase();
 
-          data["Title"] = hasTvTitle ? missingFmt(tvTitle) : missingFmt(parsedMeta.title);
-          data["File Name"] = item.filename;
+          data["Metadata Title"] = hasTvTitle ? missingFmt(tvTitle) : "[MISSING]";
           data["Series Title"] = missingFmt(parsedMeta.title || item.tags?.show || item.tags?.SHOW || item.tags?.series || item.tags?.SERIES);
           data["Season"] = missingFmt(parsedMeta.season);
           data["Episode Number"] = missingFmt(parsedMeta.episode);
@@ -239,8 +233,7 @@ export async function exportMediaLibraryToCSV(
           const videoTitle = item.tags?.title || item.tags?.TITLE || "";
           const hasVideoTitle = videoTitle && videoTitle.toLowerCase() !== (item.filename || "").toLowerCase();
 
-          data["Title"] = hasVideoTitle ? missingFmt(videoTitle) : missingFmt(parsedMeta.title);
-          data["File Name"] = item.filename;
+          data["Metadata Title"] = hasVideoTitle ? missingFmt(videoTitle) : "[MISSING]";
           data["Director"] = missingFmt(item.tags?.director || item.tags?.DIRECTOR);
           data["Writer"] = missingFmt(item.tags?.writer || item.tags?.WRITER);
           data["Year"] = missingFmt(yearVal);
@@ -279,7 +272,7 @@ export async function exportMediaLibraryToCSV(
           "Stream Audit": isMusicCategory(item.category)
             ? ""
             : getCompatibilityLabel(evalResult.level),
-          "File Name": item.filename,
+          
           Container: getContainerFormat(item),
           "Video Codec": isMusicCategory(item.category)
             ? ""
@@ -334,7 +327,7 @@ export async function exportMediaLibraryToCSV(
               getContainerFormat(item)
             : "",
           Bitrate: isMusicCategory(item.category)
-            ? `${Math.round((item.audioBitrate || 0) / 1000)} kbps`
+            ? (item.audioBitrate !== undefined && item.audioBitrate !== null ? `${Math.round(item.audioBitrate / 1000)} kbps` : "")
             : "",
           "Cover Art": item.hasEmbeddedPoster
             ? "Embedded"
@@ -526,7 +519,6 @@ export async function exportMediaLibraryToHTML(
   let allPossibleHeaders = [
     "Alert Level",
     "Stream Audit",
-    "File Name",
     "Container",
     "Video Codec",
     "Resolution",
@@ -536,9 +528,9 @@ export async function exportMediaLibraryToHTML(
     "Subtitles",
     ...(isSubtitle ? ["Subtitle Type"] : []),
     "Series Title",
+    "Episode Title",
     "Season",
     "Episode",
-    "Episode Title",
     "Title",
     "Release Year",
     "Artist",
@@ -558,12 +550,11 @@ export async function exportMediaLibraryToHTML(
   if (isMetadata) {
     allPossibleHeaders = [
       "Cleaned Title",
-      "Title",
-      "File Name",
+      "Metadata Title",
       "Series Title",
+      "Episode Title",
       "Season",
       "Episode Number",
-      "Episode Title",
       "Artist",
       "Album Title",
       "Year",
@@ -606,15 +597,13 @@ export async function exportMediaLibraryToHTML(
 
       category: row.category,
       topLevelFolder: row.topLevelFolder,
-      "File": row.fileName,
       "Path": row.filePath,
-      "Duplicate File": row.dupFileName,
       "Duplicate Path": row.dupFilePath,
       "Flag Reason": row.flagReason || "",
       dupSizeGB: row.dupSizeGB || 0
     }));
-    allPossibleHeaders = ["File", "Path", "Duplicate File", "Duplicate Path", "Flag Reason"];
-    finalColumns = { "File": true, "Path": true, "Duplicate File": true, "Duplicate Path": true, "Flag Reason": true };
+    allPossibleHeaders = ["Path", "Duplicate Path", "Flag Reason"];
+    finalColumns = { "Path": true, "Duplicate Path": true, "Flag Reason": true };
     allOptimizedItems = optimizedItems;
   } else {
     
@@ -661,8 +650,7 @@ export async function exportMediaLibraryToHTML(
           const hasSongTitle = songTitle && songTitle.toLowerCase() !== (item.filename || "").toLowerCase();
 
           rowData["Cleaned Title"] = missingFmt(parsedMeta.title);
-          rowData["Title"] = hasSongTitle ? missingFmt(songTitle) : "[MISSING]";
-          rowData["File Name"] = item.filename;
+          rowData["Metadata Title"] = hasSongTitle ? missingFmt(songTitle) : "[MISSING]";
           rowData["Artist"] = missingFmt(item.tags?.artist || item.tags?.ARTIST);
           rowData["Album Title"] = missingFmt(item.tags?.album || item.tags?.ALBUM);
           rowData["Year"] = missingFmt(yearVal);
@@ -671,11 +659,9 @@ export async function exportMediaLibraryToHTML(
           rowData["File Path"] = item.filePath;
         } else if (isTv) {
           const tvTitle = item.tags?.title || item.tags?.TITLE || "";
-          const tvNameVal = tvTitle && tvTitle.toLowerCase() !== (item.filename || "").toLowerCase() ? tvTitle : parsedMeta.title;
-
+          const hasTvTitle = tvTitle && tvTitle.toLowerCase() !== (item.filename || "").toLowerCase();
           rowData["Cleaned Title"] = missingFmt(parsedMeta.title);
-          rowData["Title"] = missingFmt(tvNameVal);
-          rowData["File Name"] = item.filename;
+          rowData["Metadata Title"] = hasTvTitle ? missingFmt(tvTitle) : "[MISSING]";
           rowData["Series Title"] = missingFmt(parsedMeta.title || item.tags?.show || item.tags?.SHOW || item.tags?.series || item.tags?.SERIES);
           rowData["Season"] = missingFmt(parsedMeta.season);
           rowData["Episode Number"] = missingFmt(parsedMeta.episode);
@@ -693,8 +679,7 @@ export async function exportMediaLibraryToHTML(
           const hasVideoTitle = videoTitle && videoTitle.toLowerCase() !== (item.filename || "").toLowerCase();
 
           rowData["Cleaned Title"] = missingFmt(parsedMeta.title);
-          rowData["Title"] = hasVideoTitle ? missingFmt(videoTitle) : missingFmt(parsedMeta.title);
-          rowData["File Name"] = item.filename;
+          rowData["Metadata Title"] = hasVideoTitle ? missingFmt(videoTitle) : "[MISSING]";
           rowData["Director"] = missingFmt(item.tags?.director || item.tags?.DIRECTOR);
           rowData["Writer"] = missingFmt(item.tags?.writer || item.tags?.WRITER);
           rowData["Year"] = missingFmt(yearVal);
@@ -722,8 +707,6 @@ export async function exportMediaLibraryToHTML(
         
         const streamAudit = isMusicCategory(item.category) ? "" : getCompatibilityLabel(evalResult.level);
         if (streamAudit) rowData["Stream Audit"] = streamAudit;
-        
-        if (item.filename) rowData["File Name"] = item.filename;
         
         const container = getContainerFormat(item);
         if (container) rowData["Container"] = container;
@@ -763,7 +746,7 @@ export async function exportMediaLibraryToHTML(
         if (year) rowData["Release Year"] = year;
         
         if (item.videoBitrateMbps) rowData["Video Bitrate"] = `${item.videoBitrateMbps.toFixed(2)} Mbps`;
-        if (item.audioBitrate) rowData["Audio Bitrate"] = `${Math.round(item.audioBitrate / 1000)} kbps`;
+        if (item.audioBitrate !== undefined && item.audioBitrate !== null) rowData["Audio Bitrate"] = `${Math.round(item.audioBitrate / 1000)} kbps`;
 
         if (isMusicCategory(item.category)) {
           const artist = getDisplayArtist(item, rules);
@@ -778,7 +761,7 @@ export async function exportMediaLibraryToHTML(
           const format = getPrimaryAudioCodec(item);
           if (format) rowData["File Format/Codec"] = format;
           
-          if (item.audioBitrate) rowData["Bitrate"] = `${Math.round(item.audioBitrate / 1000)} kbps`;
+          if (item.audioBitrate !== undefined && item.audioBitrate !== null) rowData["Bitrate"] = `${Math.round(item.audioBitrate / 1000)} kbps`;
         }
         
         if (item.category === "Corrupted") {
@@ -1032,7 +1015,7 @@ export async function exportMediaLibraryToHTML(
   }
 
   let items = RAW_DATA;
-  let sortCol = SCAN_TYPE === "Duplication Scan" ? "File" : "File Name";
+  let sortCol = SCAN_TYPE === "Duplication Scan" ? "Path" : "File Path";
   let sortDesc = false;
   let currentPage = 1;
   let pageSize = 50;
@@ -1083,37 +1066,30 @@ export async function exportMediaLibraryToHTML(
   };
 
   const getColsForCat = (cat) => {
-    if (cat === "All Media") {
-      if (isStreaming || isDiscovery) return ["Alert Level", "Stream Audit", "File Name", "Container", "Video Codec", "Resolution", "Audio Codecs", "Subtitles"];
-      if (isQuality) return ["Alert Level", "File Name", "Container", "Video Bitrate", "Resolution", "Audio Codecs", "Anomaly Details"];
-      return ["File Name", "Container", "File Format/Codec", "Video Codec", "Audio Codecs", "File Path"];
-    }
-
     const isVideo = ["Movies", "Movie", "Documentaries", "TV Shows", "TV", "Docuseries", "Documentary Series", "Extras", "Shorts", "Plays", "Specials", "Music Videos"].includes(cat);
     const isMusic = ["Music Albums", "Soundtracks", "Music Compilations", "Music"].includes(cat);
     
     if (isDiscovery) {
-      if (getCategoryGroupInBrowser(cat) === "TV") return ["Series Title", "Season", "Episode", "Episode Title", "Video Codec", "Resolution", "Audio Codecs", "Audio Tracks", "Release Year", "File Path"];
+      if (getCategoryGroupInBrowser(cat) === "TV") return ["Series Title", "Episode Title", "Season", "Episode", "Video Codec", "Resolution", "Audio Codecs", "Audio Tracks", "Release Year", "File Path"];
       if (isVideo) return ["Title", "Video Codec", "Resolution", "Audio Codecs", "Audio Tracks", "Release Year", "File Path"];
       if (isMusic) return ["Artist", "Album Title", "Song Title", "File Format/Codec", "File Path"];
-      if (cat === "Corrupted") return ["File Name", "Container", "Corruption Type", "Recommendation", "File Path"];
-      if (cat === "Static") return ["File Name", "Container", "File Path"];
+      if (cat === "Corrupted") return ["Container", "Corruption Type", "Recommendation", "File Path"];
+      if (cat === "Static") return ["Container", "File Path"];
       if (cat === "Other") return ["Title", "Video Codec", "Audio Codecs", "File Path"];
       return ["Title", "File Path"];
     }
     
     if (isStreaming) {
-      if (getCategoryGroupInBrowser(cat) === "TV") return ["Stream Audit", "Series Title", "Season", "Episode", "Episode Title", "Video Codec", "Audio Codecs", "Audio Tracks", "Analysis Notes", "Remediation Action", "File Path"];
+      if (getCategoryGroupInBrowser(cat) === "TV") return ["Stream Audit", "Series Title", "Episode Title", "Season", "Episode", "Video Codec", "Audio Codecs", "Audio Tracks", "Analysis Notes", "Remediation Action", "File Path"];
       if (isVideo) return ["Stream Audit", "Title", "Video Codec", "Audio Codecs", "Audio Tracks", "Analysis Notes", "Remediation Action", "File Path"];
-      return ["File Name", "File Path"];
+      return ["File Path"];
     }
     
     if (isMetadata) {
       if (isMusic) {
         return [
           "Cleaned Title",
-          "File Name",
-          "Title",
+      "Metadata Title",
           "Album Title",
           "Artist",
           "Year",
@@ -1126,8 +1102,7 @@ export async function exportMediaLibraryToHTML(
       if (isTvTab) {
         return [
           "Cleaned Title",
-          "File Name",
-          "Title",
+      "Metadata Title",
           "Series Title",
           "Episode Title",
           "Season",
@@ -1144,8 +1119,7 @@ export async function exportMediaLibraryToHTML(
       }
       return [
         "Cleaned Title",
-        "File Name",
-        "Title",
+      "Metadata Title",
         "Director",
         "Writer",
         "Year",
@@ -1158,21 +1132,21 @@ export async function exportMediaLibraryToHTML(
     }
     
     if (isQuality) {
-      if (getCategoryGroupInBrowser(cat) === "TV") return ["Series Title", "Season", "Episode", "Episode Title", "Resolution", "Video Bitrate", "Audio Bitrate", "Analysis Notes", "Remediation Action", "File Path"];
+      if (getCategoryGroupInBrowser(cat) === "TV") return ["Series Title", "Episode Title", "Season", "Episode", "Resolution", "Video Bitrate", "Audio Bitrate", "Analysis Notes", "Remediation Action", "File Path"];
       if (isVideo) return ["Title", "Resolution", "Video Bitrate", "Audio Bitrate", "Analysis Notes", "Remediation Action", "File Path"];
-      return ["File Name", "Audio Bitrate", "Analysis Notes", "Remediation Action", "File Path"];
+      return ["Audio Bitrate", "Analysis Notes", "Remediation Action", "File Path"];
     }
     
     if (isSubtitle) {
-      if (getCategoryGroupInBrowser(cat) === "TV") return ["Alert Level", "Series Title", "Season", "Episode", "Episode Title", "Audio Codecs", "Subtitles", "Subtitle Type", "Analysis Notes", "Remediation Action", "File Path"];
+      if (getCategoryGroupInBrowser(cat) === "TV") return ["Alert Level", "Series Title", "Episode Title", "Season", "Episode", "Audio Codecs", "Subtitles", "Subtitle Type", "Analysis Notes", "Remediation Action", "File Path"];
       if (isVideo) return ["Alert Level", "Title", "Audio Codecs", "Subtitles", "Subtitle Type", "Analysis Notes", "Remediation Action", "File Path"];
-      return ["Alert Level", "File Name", "Audio Codecs", "Subtitles", "Subtitle Type", "Analysis Notes", "Remediation Action", "File Path"];
+      return ["Alert Level", "Audio Codecs", "Subtitles", "Subtitle Type", "Analysis Notes", "Remediation Action", "File Path"];
     }
 
-    if (cat === "Corrupted") return ["File Name", "Container", "Corruption Type", "Recommendation", "File Path"];
-    if (cat === "Static") return ["File Name", "Container", "File Path"];
+    if (cat === "Corrupted") return ["Container", "Corruption Type", "Recommendation", "File Path"];
+    if (cat === "Static") return ["Container", "File Path"];
     
-    return ["File Name", "File Path"];
+    return ["File Path"];
   };
 
   function initCategories() {
@@ -1201,7 +1175,6 @@ export async function exportMediaLibraryToHTML(
       return a.localeCompare(b);
     });
     
-    if (isDiscovery) orderedCats.unshift("All Media");
     if (orderedCats.length > 0) {
       activeCategory = orderedCats[0];
       applyCategoryColumns(activeCategory);
@@ -1276,7 +1249,7 @@ export async function exportMediaLibraryToHTML(
 
     const targetItems = showAllMetricsMode 
       ? baseItems 
-      : baseItems.filter(i => SCAN_TYPE === "Duplication Scan" || activeCategory === "All Media" || (i.category || "Other") === activeCategory);
+      : baseItems.filter(i => SCAN_TYPE === "Duplication Scan" || (i.category || "Other") === activeCategory);
 
     const total = targetItems.length;
     let html = '';
@@ -1604,9 +1577,7 @@ export async function exportMediaLibraryToHTML(
     if (showAllMetricsMode) {
       window.toggleAllMetrics();
     }
-    if (orderedCats.includes("All Media")) {
-      activeCategory = "All Media";
-    }
+    
     activeCodecFilter = codecName;
     currentPage = 1;
     applyCategoryColumns(activeCategory);
@@ -1760,7 +1731,7 @@ export async function exportMediaLibraryToHTML(
           if (activeDupFilter === "Video") return !isMusic;
           return true;
         })
-      : items.filter(i => activeCategory === "All Media" || (i.category || "Other") === activeCategory);
+      : items.filter(i => (i.category || "Other") === activeCategory);
 
     if (activeCodecFilter) {
       filtered = filtered.filter(i => {
@@ -1816,7 +1787,7 @@ export async function exportMediaLibraryToHTML(
         const widthStyle = colWidths[h] ? 'style="width: ' + colWidths[h] + 'px; min-width: ' + colWidths[h] + 'px;"' : '';
         
         let thClass = 'px-4 py-3 text-xs font-semibold tracking-wider uppercase border-b text-center align-top select-none relative ' + sc;
-        const factualCols = ["Cleaned Title", "File Name", "File Path", "Path", "File", "Duplicate File", "Duplicate Path", "Flag Reason"];
+        const factualCols = ["Cleaned Title", "File Path", "Path", "File", "Duplicate File", "Duplicate Path", "Flag Reason"];
         
         if (isMetadata && !factualCols.includes(h)) {
           // Metadata column header: colored differently (Deep indigo background and indigo text)
