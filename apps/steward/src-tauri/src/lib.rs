@@ -458,7 +458,7 @@ fn save_file(path: String, contents_b64: String) -> Result<(), String> {
 
 
 #[tauri::command]
-fn setup_ffprobe(app: tauri::AppHandle) -> Result<String, String> {
+fn setup_ffprobe(_app: tauri::AppHandle) -> Result<String, String> {
     let app_data_dir = resolve_data_dir();
     std::fs::create_dir_all(&app_data_dir).map_err(|e| e.to_string())?;
 
