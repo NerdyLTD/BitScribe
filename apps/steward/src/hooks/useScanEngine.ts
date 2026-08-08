@@ -51,7 +51,7 @@ export function useScanEngine({
   const unlistenMetricsRef = useRef<UnlistenFn | null>(null);
 
   const setupScanListeners = async () => {
-    unlistenProgressRef.current = await listen("scan-progress", (event) => {
+    unlistenProgressRef.current = await listen("scan-progress", (event: any) => {
       setScanProgress(event.payload.progress);
       if (event.payload.currentFile) {
         setCurrentFile(event.payload.currentFile);

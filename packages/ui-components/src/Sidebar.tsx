@@ -32,7 +32,7 @@ export interface SidebarProps {
   setExportFormats: React.Dispatch<React.SetStateAction<{ xlsx: boolean; html: boolean; csv: boolean; json: boolean }>>;
   exportProfile: string;
   setExportProfile: (val: string) => void;
-  fakeExportMenu: { show: boolean; highlight: string };
+  fakeExportMenu: { show: boolean; highlight: string | null };
   customColumnsMenuRef: React.RefObject<HTMLDivElement | null>;
   showCustomColumnsMenu: boolean;
   setShowCustomColumnsMenu: (val: boolean) => void;

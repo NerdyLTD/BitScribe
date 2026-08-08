@@ -47,17 +47,18 @@ export function useDashboardMetrics(items: MediaItem[], customRules: RuleCriteri
       }
 
       const evalResult = evaluatePlexCompatibility(item, customRules, isDup);
-      checks += evalResult.checksPassed;
+      checks += evalResult.level === "unfriendly" ? 0 : 1;
 
       // Anomalies using unified evaluator
-      if (evalResult.reasons.some(r => r.includes("HDR"))) hdrCount++;
-      if (evalResult.reasons.some(r => r.includes("Bitrate exceeds"))) highBitrate++;
-      if (evalResult.reasons.some(r => r.includes("Container"))) badContainer++;
-      if (evalResult.reasons.some(r => r.includes("Video codec"))) invalidVideo++;
+      const r = evalResult.reason || "";
+      if (r.includes("HDR")) hdrCount++;
+      if (r.includes("Bitrate exceeds") || evalResult.isBloated) highBitrate++;
+      if (r.includes("Container")) badContainer++;
+      if (r.includes("Video codec")) invalidVideo++;
 
       // Missing Subtitles
       if (!isMusicCategory(item.category)) {
-        if (isMissingSubtitles(item, customRules)) {
+        if (isMissingSubtitles(item)) {
           subMissing++;
         }
       }
@@ -73,7 +74,7 @@ export function useDashboardMetrics(items: MediaItem[], customRules: RuleCriteri
       } else {
          if (evalResult.level === "unfriendly") {
            unfriendly++;
-         } else if (evalResult.level === "warning") {
+         } else if (evalResult.level === "legacy") {
            warnings++;
          } else {
            discoveryPassed++;

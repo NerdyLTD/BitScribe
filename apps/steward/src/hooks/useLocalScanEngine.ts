@@ -37,7 +37,7 @@ export function useLocalScanEngine({
     setHasCompletedScan(false);
     setIsResumeState(true);
     setNotification({ type: 'success', message: "Scan paused by user." });
-    setScanLogs((prev) => [
+    setScanLogs((prev: string[]) => [
       "User paused the scan.",
       ...prev.slice(0, 5000),
     ]);
@@ -56,7 +56,7 @@ export function useLocalScanEngine({
     setScanProgress(0);
     setCurrentScanFile("");
     setNotification({ type: 'success', message: "Scan stopped and reset by user." });
-    setScanLogs((prev) => [
+    setScanLogs((prev: string[]) => [
       "User stopped and reset the scan.",
       ...prev.slice(0, 5000),
     ]);
@@ -101,7 +101,7 @@ export function useLocalScanEngine({
       await saveDbFiles(updatedFiles);
       setScanProgress(100);
       setHasCompletedScan(true);
-      setScanLogs(prev => [...prev, "Evaluation complete. Updated local database."]);
+      setScanLogs((prev: string[]) => [...prev, "Evaluation complete. Updated local database."]);
       
       const cleanFiles = updatedFiles.filter((f: any) => !f.isCorrupted);
       setScannedFilesList(cleanFiles);
@@ -110,7 +110,7 @@ export function useLocalScanEngine({
       
       } catch (e: any) {
       console.error(e);
-      setScanLogs(prev => [...prev, "Evaluation failed: " + e.message]);
+      setScanLogs((prev: string[]) => [...prev, "Evaluation failed: " + e.message]);
     } finally {
       setIsScanning(false);
     }
@@ -125,7 +125,7 @@ export function useLocalScanEngine({
 
     // Intercept if starting a standard scan and we already have database content
     const isResuming = localStorage.getItem("bitscribe_scan_in_progress") === "true";
-    const activePaths = scanPaths.filter((p) => p.enabled).map(p => p.path);
+    const activePaths = scanPaths.filter((p: any) => p.enabled).map((p: any) => p.path);
     const currentPathsHash = activePaths.join('|');
     const lastScanPathsHash = localStorage.getItem("plex_last_scan_paths_hash");
     const pathsChanged = lastScanPathsHash !== currentPathsHash;
@@ -178,7 +178,7 @@ export function useLocalScanEngine({
         await new Promise((resolve) => setTimeout(resolve, 500));
 
         setScanProgress(50);
-        setScanLogs((prev) => [
+        setScanLogs((prev: string[]) => [
           "Parsing active player profile rule matrices...",
           "Updating statistics dashboard to reflect active stream parameters...",
           ...prev
@@ -190,7 +190,7 @@ export function useLocalScanEngine({
         setIsScanning(false);
         setHasCompletedScan(true);
         setScannedFiles(scannedFilesList);
-        setScanLogs((prev) => [
+        setScanLogs((prev: string[]) => [
           "High-performance scan completed instantly using local SQLite cache database!",
           `Successfully verified and mapped ${scannedFilesList.length} items to the current view.`,
           ...prev
@@ -229,7 +229,7 @@ export function useLocalScanEngine({
       console.warn("Wake lock could not be requested:", e);
     }
     try {
-      const activePaths = scanPaths.filter((p) => p.enabled).map(p => p.path);
+      const activePaths = scanPaths.filter((p: any) => p.enabled).map((p: any) => p.path);
       let scannedCount = 0;
 
       let lastLogUpdateTime = Date.now();
@@ -346,11 +346,11 @@ export function useLocalScanEngine({
         setLastScanDuration(Date.now() - startTimeRef.current);
       }
       setIsScanning(false);
-      setScanLogs((prev) => [
+      setScanLogs((prev: string[]) => [
         `ERROR: Scan failed: ${err.message || String(err)}`,
         ...prev,
       ]);
-      setNotification(`Failed to execute scan: ${err.message || String(err)}`);
+      setNotification({ type: 'error', message: `Failed to execute scan: ${err.message || String(err)}` });
     } finally {
       if (wakeLock) {
         try {

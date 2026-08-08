@@ -86,7 +86,7 @@ export function LibraryView({
   
   headers = headers.filter(h => visibleColumns[h.key]);
 
-  const getCompatibilityColor = (lvl) => {
+  const getCompatibilityColor = (lvl: string) => {
     if (lvl === 'pending') {
       return 'text-slate-400 bg-[#1A1D27] border-slate-700/50';
     }
@@ -98,7 +98,7 @@ export function LibraryView({
       default: return 'text-slate-400 bg-slate-400/10 border-slate-400/20';
     }
   };
-  const getCompatibilityLabel = (lvl) => {
+  const getCompatibilityLabel = (lvl: string) => {
     if (lvl === 'pending') {
       return 'Pending Scan';
     }
@@ -110,7 +110,7 @@ export function LibraryView({
       default: return 'Unknown';
     }
   };
-  const getCompatibilityTooltip = (lvl) => {
+  const getCompatibilityTooltip = (lvl: string) => {
     if (lvl === 'pending') {
       return "Pending Scan: Run the Streaming compatibility scanner to evaluate streaming compatibility.";
     }
@@ -146,7 +146,7 @@ export function LibraryView({
                 </span>
               </div>
               <div 
-                onMouseDown={(e) => handleColumnResize(e, h.key, parseInt(h.width || '150'))}
+                onMouseDown={(e) => handleColumnResize?.(e, h.key, parseInt(h.width || '150'))}
                 className={`absolute top-0 right-0 w-[8px] h-full cursor-col-resize select-none z-10 hover:bg-blue-500/30 transition-colors ${
                   resizingColKey === h.key ? 'bg-blue-500/40 border-r border-blue-400' : ''
                 }`}

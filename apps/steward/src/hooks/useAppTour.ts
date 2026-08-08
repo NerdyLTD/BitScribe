@@ -73,9 +73,10 @@ export function useAppTour({
     if (!demoMessage || !demoMessage.targetId) {
       return;
     }
+    const targetId = demoMessage.targetId;
     const updateCoords = () => {
       if (!demoMsgRef.current) return;
-      const el = document.getElementById(demoMessage.targetId.replace('#', '')) || document.querySelector(demoMessage.targetId);
+      const el = document.getElementById(targetId.replace('#', '')) || document.querySelector(targetId);
       if (el) {
         const rect = el.getBoundingClientRect();
         const msgWidth = demoMsgRef.current.offsetWidth || 200;
@@ -111,7 +112,7 @@ export function useAppTour({
     updateCoords();
     window.addEventListener('scroll', updateCoords, true);
     window.addEventListener('resize', updateCoords);
-    let frame;
+    let frame: number;
     const loop = () => {
       updateCoords();
       frame = requestAnimationFrame(loop);

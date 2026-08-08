@@ -115,7 +115,7 @@ function getCachedEvaluation(item: MediaItem, rules: any, isDup: boolean, scanPa
         const folderCacheKey = `${item.filePath}|${spHash}|${item.topLevelFolder}`;
         
         if (!_globalUiFolderCache.has(folderCacheKey)) {
-            _globalUiFolderCache.set(folderCacheKey, getTopLevelFolderUI(item.filePath, scanPaths, item.topLevelFolder));
+            _globalUiFolderCache.set(folderCacheKey, getTopLevelFolderUI(item.filePath, scanPaths, item.topLevelFolder || ""));
         }
         uiTopLevelFolder = _globalUiFolderCache.get(folderCacheKey);
 
@@ -152,7 +152,7 @@ function getCachedDuplicatesMap(files: MediaItem[], rules: any, isCustomActive: 
         // Limit cache size to prevent memory leaks
         if (_globalDupCache.size > 5) {
             const firstKey = _globalDupCache.keys().next().value;
-            _globalDupCache.delete(firstKey);
+            if (firstKey) _globalDupCache.delete(firstKey);
         }
         _globalDupCache.set(ruleHash, computeDuplicatesMap(files, activeRules));
     }
@@ -425,7 +425,7 @@ export default memo(function Dashboard({
   }, [allCurrentFiles]);
 
   const duplicatesMap = useMemo(() => {
-    return getCachedDuplicatesMap(allCurrentFiles, customRules, isCustomBlocksActive, visibleBlocks, isTourActive);
+    return getCachedDuplicatesMap(allCurrentFiles, customRules, isCustomBlocksActive, visibleBlocks, Boolean(isTourActive));
   }, [allCurrentFiles, customRules, isCustomBlocksActive, visibleBlocks, isTourActive]);
 
   const evaluatedFiles = useMemo(() => {
@@ -637,7 +637,7 @@ export default memo(function Dashboard({
     const metricsFilteredFiles = useMemo(() => {
     if (metricsSelected.includes("Everything")) return evaluatedFiles;
 
-    const getStaticGroup = (cat) => {
+    const getStaticGroup = (cat: string) => {
       if (!cat) return "Movies";
       if (isMusicCategory(cat)) return "Music";
       if (cat === 'Music Videos' || cat === 'Plays' || cat === 'Specials') return cat;
@@ -761,7 +761,7 @@ export default memo(function Dashboard({
         const hdr = item.hdrFormat || "SDR";
         hdrCounts[hdr] = (hdrCounts[hdr] || 0) + 1;
 
-        (item.audioTracks || []).forEach((tr) => {
+        (item.audioTracks || []).forEach((tr: any) => {
           const ac = (tr.codec || "").toLowerCase();
           if (ac) {
             audioCounts[ac] = (audioCounts[ac] || 0) + 1;
@@ -777,7 +777,7 @@ export default memo(function Dashboard({
         if (cat === 'Movies') cat = 'Movie';
         missingSubtitleCounts[cat] = (missingSubtitleCounts[cat] || 0) + 1;
       } else if (!isMusicCategory(item.category) && item.category !== 'Static' && item.category !== 'Corrupted') {
-        item.subtitleTracks?.forEach(track => {
+        item.subtitleTracks?.forEach((track: any) => {
           const codec = (track.codec || "unknown").toLowerCase();
           const friendlyName = codec === "subrip" ? "srt" : codec;
           const prefix = track.isExternal ? "External" : "Embedded";
@@ -1218,16 +1218,16 @@ export default memo(function Dashboard({
   } else {
     defaultBlockVisibility = {
       'library-overview-card': true,
-      'stream-audit-card': isAllCategories || isStreamMode,
-      'video-codecs-card': isAllCategories || isDiscoveryMode || isStreamMode,
-      'audio-codecs-card': isAllCategories || isDiscoveryMode || isStreamMode,
-      'containers-card': isAllCategories || isDiscoveryMode || isStreamMode,
-      'music-codecs-card': isAllCategories || isDiscoveryMode,
-      'metadata-completeness-card': isAllCategories || isMetadataScan,
-      'media-duplicates-card': isAllCategories || isDuplicateScan,
-      'subtitle-audit-card': isAllCategories || isSubtitleScan,
-      'quality-anomalies-card': isAllCategories || isAnomalyScan,
-      'missing-metadata-card': isAllCategories || isMetadataScan,
+      'stream-audit-card': Boolean(isAllCategories || isStreamMode),
+      'video-codecs-card': Boolean(isAllCategories || isDiscoveryMode || isStreamMode),
+      'audio-codecs-card': Boolean(isAllCategories || isDiscoveryMode || isStreamMode),
+      'containers-card': Boolean(isAllCategories || isDiscoveryMode || isStreamMode),
+      'music-codecs-card': Boolean(isAllCategories || isDiscoveryMode),
+      'metadata-completeness-card': Boolean(isAllCategories || isMetadataScan),
+      'media-duplicates-card': Boolean(isAllCategories || isDuplicateScan),
+      'subtitle-audit-card': Boolean(isAllCategories || isSubtitleScan),
+      'quality-anomalies-card': Boolean(isAllCategories || isAnomalyScan),
+      'missing-metadata-card': Boolean(isAllCategories || isMetadataScan),
     };
   }
 
@@ -1886,7 +1886,7 @@ export default memo(function Dashboard({
                         cursor={{fill: 'rgba(30, 35, 46, 0.5)'}} 
                         contentStyle={{backgroundColor: '#0F1117', border: '1px solid #1e232e', borderRadius: '8px', fontSize: '10px', color: '#e2e8f0'}}
                         itemStyle={{color: '#3B82F6'}}
-                        formatter={(value: number) => [`${value} items`, 'Count']}
+                        formatter={(value: any) => [`${value ?? 0} items`, 'Count']}
                       />
                       <Bar isAnimationActive={false} dataKey="count" fill="#3B82F6" radius={[0, 4, 4, 0]} barSize={5}>
                         <LabelList dataKey="count" position="right" fill="#94a3b8" fontSize={8} />
@@ -1922,7 +1922,7 @@ export default memo(function Dashboard({
                         cursor={{fill: 'rgba(30, 35, 46, 0.5)'}} 
                         contentStyle={{backgroundColor: '#0F1117', border: '1px solid #1e232e', borderRadius: '8px', fontSize: '10px', color: '#e2e8f0'}}
                         itemStyle={{color: '#D946EF'}}
-                        formatter={(value: number) => [`${value} tracks`, 'Count']}
+                        formatter={(value: any) => [`${value ?? 0} tracks`, 'Count']}
                       />
                       <Bar isAnimationActive={false} dataKey="count" fill="#D946EF" radius={[0, 4, 4, 0]} barSize={5}>
                         <LabelList dataKey="count" position="right" fill="#94a3b8" fontSize={8} />
@@ -1958,7 +1958,7 @@ export default memo(function Dashboard({
                         cursor={{fill: 'rgba(30, 35, 46, 0.5)'}} 
                         contentStyle={{backgroundColor: '#0F1117', border: '1px solid #1e232e', borderRadius: '8px', fontSize: '10px', color: '#e2e8f0'}}
                         itemStyle={{color: '#94A3B8'}}
-                        formatter={(value: number) => [`${value} files`, 'Count']}
+                        formatter={(value: any) => [`${value ?? 0} files`, 'Count']}
                       />
                       <Bar isAnimationActive={false} dataKey="count" fill="#94A3B8" radius={[0, 4, 4, 0]} barSize={5}>
                         <LabelList dataKey="count" position="right" fill="#94a3b8" fontSize={8} />
@@ -1994,7 +1994,7 @@ export default memo(function Dashboard({
                         cursor={{fill: 'rgba(30, 35, 46, 0.5)'}} 
                         contentStyle={{backgroundColor: '#0F1117', border: '1px solid #1e232e', borderRadius: '8px', fontSize: '10px', color: '#e2e8f0'}}
                         itemStyle={{color: '#D9A752'}}
-                        formatter={(value: number) => [`${value} tracks`, 'Count']}
+                        formatter={(value: any) => [`${value ?? 0} tracks`, 'Count']}
                       />
                       <Bar isAnimationActive={false} dataKey="count" fill="#D9A752" radius={[0, 4, 4, 0]} barSize={5}>
                         <LabelList dataKey="count" position="right" fill="#94a3b8" fontSize={8} />
@@ -2576,7 +2576,7 @@ export default memo(function Dashboard({
     selectedCategories={selectedCategories}
     visibleColumns={visibleColumns}
     columnWidths={columnWidths}
-    sortColumn={sortColumn}
+    sortColumn={sortColumn || ""}
     sortDirection={sortDirection}
     handleSort={handleSort}
     paginatedFiles={paginatedFiles}
@@ -2584,7 +2584,7 @@ export default memo(function Dashboard({
     formatResolution={formatResolution}
     formatSubtitleSummary={formatSubtitleSummary}
     formatSubtitleTechnical={formatSubtitleTechnical}
-    resizingColKey={resizingColKey}
+    resizingColKey={resizingColKey || undefined}
     handleColumnResize={handleColumnResize}
   />
             </div>

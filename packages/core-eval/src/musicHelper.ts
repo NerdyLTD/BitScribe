@@ -45,9 +45,9 @@ export const getMusicFallback = (item: any) => {
   if (item.filename && fp.endsWith(item.filename)) {
     dirStr = fp.substring(0, fp.lastIndexOf(item.filename));
   }
-  const folderParts = dirStr.split('/').filter(p => p);
+  const folderParts = dirStr.split('/').filter((p: string) => p);
   
-  const mIdx = folderParts.findIndex(p => p.toLowerCase() === 'music' || p.toLowerCase() === 'audio');
+  const mIdx = folderParts.findIndex((p: string) => p.toLowerCase() === 'music' || p.toLowerCase() === 'audio');
   if (mIdx !== -1 && mIdx < folderParts.length) {
     const subCategory = mIdx + 1 < folderParts.length ? folderParts[mIdx + 1].toLowerCase() : '';
     

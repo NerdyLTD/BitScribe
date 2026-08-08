@@ -269,8 +269,9 @@ export const parseVideoMetadata = (item: MediaItem) => {
   const specialMatch = rawName.match(/\b(Special)s?\s*[\.\-]?\s*(\d{1,3})\b/i);
 
   if (seMatch) {
-    titleStr = rawName.slice(0, seMatch.index);
-    const afterMatch = rawName.slice(seMatch.index + seMatch[0].length);
+    const seIndex = seMatch.index ?? 0;
+    titleStr = rawName.slice(0, seIndex);
+    const afterMatch = rawName.slice(seIndex + seMatch[0].length);
     epTitle = afterMatch.replace(/^[._\-\s]+/, "");
     if (seMatch[3]) {
       seasonNum = seMatch[2] ? parseInt(seMatch[2], 10).toString() : "-";
@@ -292,8 +293,9 @@ export const parseVideoMetadata = (item: MediaItem) => {
       episodeNum = parseInt(seMatch[9], 10).toString();
     }
   } else if (specialMatch) {
-    titleStr = rawName.slice(0, specialMatch.index);
-    const afterMatch = rawName.slice(specialMatch.index + specialMatch[0].length);
+    const spIndex = specialMatch.index ?? 0;
+    titleStr = rawName.slice(0, spIndex);
+    const afterMatch = rawName.slice(spIndex + specialMatch[0].length);
     epTitle = afterMatch.replace(/^[._\-\s]+/, "");
     seasonNum = "Special";
     episodeNum = parseInt(specialMatch[2], 10).toString();

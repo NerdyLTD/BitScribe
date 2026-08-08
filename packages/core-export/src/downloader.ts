@@ -8,7 +8,7 @@ export async function downloadOrSaveFile(fileName: string, blob: Blob, explicitP
     
     if (typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__) {
         try {
-            let filePath = explicitPath;
+            let filePath: string | null | undefined = explicitPath;
             if (!filePath) {
                 filePath = await save({ defaultPath: fileName });
             } else {
