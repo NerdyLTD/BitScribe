@@ -38,7 +38,8 @@ export async function exportMediaLibraryToExcel(
   targetDir?: string,
   allItems?: MediaItem[]
 ) {
-  const globalScanType = getScanType(rules, items);
+  const scanType = getScanType(rules, items);
+  const globalScanType = scanType;
   const itemsForDups = allItems && allItems.length > 0 ? allItems : items;
   
   // Get all pairs globally, then filter to only those visible in the current exported items list
@@ -565,7 +566,7 @@ export async function exportMediaLibraryToExcel(
     });
     if (dataItems.length === 0) return;
 
-    let headers: string[] = getColsForScanAndCat(scanType, currentGroup, rules.useSubtitleScan || false);
+    let headers: string[] = getColsForScanAndCat(scanType, catType, rules.useSubtitleScan || false);
     let visibleHeaders = headers; // we ignore column visibility to respect the strict scan rules
 
     // Define columns with keys and widths

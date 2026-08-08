@@ -533,27 +533,15 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 diskFilesMap.set(f.normPath, f.hash);
             }
 
-            // Ghost files: in DB under active path, but not found on disk or hash changed
+            // Ghost files: in DB under active path, but no longer found on disk
             const ghostFiles = dbFilesUnderActivePaths.filter(item => {
                 const normPath = (item as any)._normPath;
-                const diskHash = diskFilesMap.get(normPath);
-                if (!diskHash) return true; // not on disk
-                if (item.id !== diskHash) return true; // hash mismatch (file changed or legacy ID)
-                return false;
+                return !diskFilesMap.has(normPath);
             });
-            
-            // Append orphaned files so they are pruned from the DB
-            ghostFiles.push(...orphanedFiles);
             
             // New files: on disk, but not in existing DB
-            const validExistingDbFiles = existingDbFiles.filter(item => {
-                const normPath = (item as any)._normPath;
-                const diskHash = diskFilesMap.get(normPath);
-                return diskHash && item.id === diskHash;
-            });
-            const existingDbFilesSet = new Set(validExistingDbFiles.map(f => (f as any)._normPath));
             const newFilesOnDisk = allFiles.filter(fileObjItem => {
-                return !existingDbFilesSet.has(fileObjItem.normPath);
+                return !existingPaths.has(fileObjItem.normPath);
             });
 
             if (ghostFiles.length > 0 || newFilesOnDisk.length > 0) {
@@ -576,11 +564,14 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                     }
                 });
                 
+                const matchedMovedPaths = new Set<string>();
+
                 ghostFiles.forEach(gf => {
                     const gfBasename = gf.filename || fastBasename(gf.filePath) || "";
                     const movedTo = newFilesByBasename.get(gfBasename.toLowerCase());
                     
-                    if (movedTo) {
+                    if (movedTo && normalizePath(movedTo) !== normalizePath(gf.filePath)) {
+                        matchedMovedPaths.add(normalizePath(movedTo));
                         changes.push({
                             filename: gfBasename,
                             path: movedTo,
@@ -600,10 +591,10 @@ export async function scanDirectories(paths: string[], rules: any, onStart: (tot
                 });
                 
                 // Track purely added files that were not part of a move
-                const ghostBasenames = new Set(ghostFiles.map(gf => (gf.filename || fastBasename(gf.filePath) || "").toLowerCase()));
                 newFilesOnDisk.forEach(nfObj => { const nf = nfObj.path;
-                    const nfBasename = fastBasename(nf) || "";
-                    if (nfBasename && !ghostBasenames.has(nfBasename.toLowerCase())) {
+                    const normNf = normalizePath(nf);
+                    if (!matchedMovedPaths.has(normNf)) {
+                        const nfBasename = fastBasename(nf) || "";
                         changes.push({
                             filename: nfBasename,
                             path: nf,

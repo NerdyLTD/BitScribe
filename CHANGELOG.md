@@ -1,4 +1,6 @@
 ## [Unreleased]
+- **Excel Report Exporter `scanType` Fix**: Fixed an issue in `excelExporter.ts` where references to `scanType` threw `ReferenceError: scanType is not defined`, causing all XLSX report exports to fail. Also updated column header generator `getColsForScanAndCat` to correctly receive category name (`catType`).
+- **Rescan & Refresh Ghost Files Fix**: Fixed an issue in `scanMediaLibrary` in `@bitscribe/core-db` where files under active scan paths were checked against `item.id !== diskHash` and non-scanned paths were appended to `ghostFiles`, causing false deletions/moves and reporting 1 phantom change on every refresh scan. Ghost file detection now correctly verifies missing disk presence (`!diskFilesMap.has(normPath)`), preserves orphaned database items from other folders, and properly tracks moved file paths.
 - **Modular Component Isolation & Monolith Decomposition (Phases 5-8)**:
   - Extracted UI components from `Dashboard.tsx` and `RuleEditor.tsx` into `@bitscribe/ui-components`:
     - `CodecSelector.tsx`: Reusable multi-select component for video and audio codecs.
