@@ -20,12 +20,13 @@ fn resolve_data_dir() -> std::path::PathBuf {
         return exe_dir;
     }
     
-    let exe_str = exe_dir.to_string_lossy().to_lowercase();
+        let exe_str = exe_dir.to_string_lossy().to_lowercase();
+    let is_inside_app_bundle = exe_str.contains(".app/") || exe_str.contains(".app\") || exe_str.ends_with(".app");
     let is_program_files = exe_str.contains("program files");
     let is_applications = exe_str.contains("/applications") || exe_str.contains("/appdir");
     let is_usr_bin = exe_str.contains("/usr/bin") || exe_str.contains("/opt/");
-    
-    if !is_program_files && !is_applications && !is_usr_bin {
+
+    if !is_inside_app_bundle && !is_program_files && !is_applications && !is_usr_bin {
         let test_file = exe_dir.join(".write_test");
         if std::fs::File::create(&test_file).is_ok() {
             let _ = std::fs::remove_file(test_file);
