@@ -1,13 +1,13 @@
-name: 'Release'
+name: "Release"
 
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag to release (only needed for manual runs)'
+        description: "Tag to release (only needed for manual runs)"
         required: false
 
 jobs:
@@ -18,14 +18,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: 'macos-latest'
-            args: '--target aarch64-apple-darwin'
-          - platform: 'windows-latest'
-            args: ''
+          - platform: "macos-latest"
+            args: "--target aarch64-apple-darwin"
+          - platform: "windows-latest"
+            args: ""
 
     runs-on: ${{ matrix.platform }}
     env:
-      MACOSX_DEPLOYMENT_TARGET: '11.0'
+      MACOSX_DEPLOYMENT_TARGET: "11.0"
 
     steps:
       - uses: actions/checkout@v4
@@ -35,14 +35,14 @@ jobs:
       - name: setup node
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'npm'
+          node-version: "22"
+          cache: "npm"
 
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@v1
         with:
           toolchain: stable
-          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin' || 'x86_64-pc-windows-msvc' }}
+          targets: ${{ matrix.platform == "macos-latest" && "aarch64-apple-darwin" || "x86_64-pc-windows-msvc" }}
 
       - name: install frontend dependencies
         run: npm ci
@@ -50,39 +50,37 @@ jobs:
       - uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           projectPath: apps/steward
-          tagName: ${{ github.ref_type == 'tag' && github.ref_name || github.event.inputs.tag }}
-          releaseName: "BitScribe Steward ${{ github.ref_type == 'tag' && github.ref_name || github.event.inputs.tag }}"
+          tagName: ${{ github.ref_type == "tag" && github.ref_name || github.event.inputs.tag }}
+          releaseName: "BitScribe Steward ${{ github.ref_type == "tag" && github.ref_name || github.event.inputs.tag }}"
           releaseBody: |
-            BitScribe Steward release binaries (.dmg / .app.tar.gz for macOS Apple Silicon, .msi / .exe for Windows).
+            BitScribe Steward official release (.dmg / .app.tar.gz for macOS Apple Silicon, .msi / .exe for Windows).
 
-            ### macOS Installation & First Launch Note (Gatekeeper):
-            Because BitScribe Steward is an open-source application distributed outside the Apple Mac App Store without paid Developer ID certificate notarization:
+            ### macOS GUI Launching (No Terminal Required):
+            1. Download and mount the **.dmg** installer file.
+            2. Drag **BitScribe Steward.app** into your **Applications** folder.
+            3. In **Finder**, go to your **Applications** folder.
+            4. **Right-Click** (or **Control-Click**) `BitScribe Steward.app` and select **Open**.
+            5. Click **Open** on the prompt. macOS will save an exception and launch the application directly in the GUI.
 
-            **If macOS blocks the app with "cannot be opened because developer cannot be verified" or "damaged":**
-
-            Option 1 (System Settings):
-            1. Drag **BitScribe Steward.app** into your  folder.
-            2. Attempt to launch the app once.
-            3. Open **System Settings -> Privacy & Security**.
-            4. Scroll down to the **Security** section where you will see *"BitScribe Steward was blocked from use..."*.
-            5. Click **Open Anyway** (and enter your Mac password / Touch ID).
-
-            Option 2 (Terminal Command):
-            1. Open **Terminal** on your Mac.
-            2. Run: 
-            3. Launch BitScribe Steward normally.
+            *(Optional)* For automated official Apple Developer ID notarization on GitHub Releases, configure `APPLE_CERTIFICATE`, `APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY`, `APPLE_ID`, `APPLE_PASSWORD`, and `APPLE_TEAM_ID` in Repository Secrets.
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
 
       - name: Upload Windows Portable Executable
-        if: matrix.platform == 'windows-latest' && (github.ref_type == 'tag' || github.event.inputs.tag != '')
+        if: matrix.platform == "windows-latest" && (github.ref_type == "tag" || github.event.inputs.tag != "")
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd apps/steward/src-tauri/target/release
           if (Test-Path "BitScribe Steward.exe") { Rename-Item "BitScribe Steward.exe" "BitScribe-Steward-Portable-Windows.exe" }
           if (Test-Path "BitScribeSteward.exe") { Rename-Item "BitScribeSteward.exe" "BitScribe-Steward-Portable-Windows.exe" }
-          gh release upload ${{ github.ref_type == 'tag' && github.ref_name || github.event.inputs.tag }} BitScribe-Steward-Portable-Windows.exe
+          gh release upload ${{ github.ref_type == "tag" && github.ref_name || github.event.inputs.tag }} BitScribe-Steward-Portable-Windows.exe
