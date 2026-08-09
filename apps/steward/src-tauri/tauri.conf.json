@@ -48,9 +48,8 @@
     },
     "macOS": {
       "minimumSystemVersion": "11.0",
-      "hardenedRuntime": false,
-      "signingIdentity": "-",
       "exceptionDomain": null,
+      "signingIdentity": null,
       "providerShortName": null,
       "entitlements": null
     }

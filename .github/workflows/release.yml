@@ -35,7 +35,7 @@ jobs:
       - name: setup node
         uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: '22'
           cache: 'npm'
 
       - name: install Rust stable
@@ -54,7 +54,25 @@ jobs:
           projectPath: apps/steward
           tagName: ${{ github.ref_type == 'tag' && github.ref_name || github.event.inputs.tag }}
           releaseName: "BitScribe Steward ${{ github.ref_type == 'tag' && github.ref_name || github.event.inputs.tag }}"
-          releaseBody: "BitScribe Steward official release binaries (.dmg and .app.tar.gz for macOS Apple Silicon, .msi and .exe for Windows)."
+          releaseBody: |
+            BitScribe Steward release binaries (.dmg / .app.tar.gz for macOS Apple Silicon, .msi / .exe for Windows).
+
+            ### macOS Installation & First Launch Note (Gatekeeper):
+            Because BitScribe Steward is an open-source application distributed outside the Apple Mac App Store without paid Developer ID certificate notarization:
+
+            **If macOS blocks the app with "cannot be opened because developer cannot be verified" or "damaged":**
+
+            Option 1 (System Settings):
+            1. Drag **BitScribe Steward.app** into your  folder.
+            2. Attempt to launch the app once.
+            3. Open **System Settings -> Privacy & Security**.
+            4. Scroll down to the **Security** section where you will see *"BitScribe Steward was blocked from use..."*.
+            5. Click **Open Anyway** (and enter your Mac password / Touch ID).
+
+            Option 2 (Terminal Command):
+            1. Open **Terminal** on your Mac.
+            2. Run: 
+            3. Launch BitScribe Steward normally.
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
