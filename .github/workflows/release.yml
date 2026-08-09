@@ -54,17 +54,7 @@ jobs:
           projectPath: apps/steward
           tagName: ${{ github.ref_type == 'tag' && github.ref_name || github.event.inputs.tag }}
           releaseName: "BitScribe Steward ${{ github.ref_type == 'tag' && github.ref_name || github.event.inputs.tag }}"
-          releaseBody: |
-            BitScribe Steward release binaries (.dmg / .app.tar.gz for macOS Apple Silicon, .msi / .exe for Windows).
-
-            ### macOS Installation Note (Gatekeeper / Apple Silicon):
-            Because this open-source build is distributed outside the Mac App Store without paid Developer ID notarization, macOS Gatekeeper may show: *"BitScribe Steward is damaged and can't be opened"*.
-            
-            To run the app on macOS:
-            1. Drag **BitScribe Steward.app** to your `/Applications` folder.
-            2. Open **Terminal** and run:
-               `xattr -cr "/Applications/BitScribe Steward.app"`
-            3. Launch BitScribe Steward normally.
+          releaseBody: "BitScribe Steward official release binaries (.dmg and .app.tar.gz for macOS Apple Silicon, .msi and .exe for Windows)."
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
