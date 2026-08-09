@@ -61,16 +61,14 @@ jobs:
           tagName: ${{ github.ref_type == "tag" && github.ref_name || github.event.inputs.tag }}
           releaseName: "BitScribe Steward ${{ github.ref_type == "tag" && github.ref_name || github.event.inputs.tag }}"
           releaseBody: |
-            BitScribe Steward official release (.dmg / .app.tar.gz for macOS Apple Silicon, .msi / .exe for Windows).
+            BitScribe Steward release binaries (.dmg / .app.tar.gz for macOS Apple Silicon, .msi / .exe for Windows).
 
-            ### macOS GUI Launching (No Terminal Required):
-            1. Download and mount the **.dmg** installer file.
+            ### macOS Installation & First Launch Guide:
+            1. Download and mount the **`.dmg`** installer file.
             2. Drag **BitScribe Steward.app** into your **Applications** folder.
-            3. In **Finder**, go to your **Applications** folder.
-            4. **Right-Click** (or **Control-Click**) `BitScribe Steward.app` and select **Open**.
-            5. Click **Open** on the prompt. macOS will save an exception and launch the application directly in the GUI.
-
-            *(Optional)* For automated official Apple Developer ID notarization on GitHub Releases, configure `APPLE_CERTIFICATE`, `APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY`, `APPLE_ID`, `APPLE_PASSWORD`, and `APPLE_TEAM_ID` in Repository Secrets.
+            3. Open **BitScribe Steward.app** directly from Applications.
+            
+            *(Note: Application data, SQLite databases, and native ffprobe binaries are written strictly to `~/Library/Application Support/BitScribeSteward/`, preserving bundle signatures and preventing macOS Gatekeeper package corruption).*
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}

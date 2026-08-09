@@ -47,11 +47,7 @@
       "debugApplicationIdSuffix": ".debug"
     },
     "macOS": {
-      "minimumSystemVersion": "11.0",
-      "exceptionDomain": null,
-      "signingIdentity": null,
-      "providerShortName": null,
-      "entitlements": null
+      "minimumSystemVersion": "11.0"
     }
   }
 }
