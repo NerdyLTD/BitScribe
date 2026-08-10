@@ -4,6 +4,8 @@
   # Welcome to BitScribe Steward
   
   **Your Digital Media Library Suite**
+
+  [Official Website](https://www.bitscribe.app)
   
   *Make sense of your digital media collection, whether you're a seasoned archivist, an audiophile, or just someone looking to get their digital life in order!*
 
