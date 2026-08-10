@@ -324,7 +324,7 @@ export const RenameConfigPanel: React.FC<RenameConfigPanelProps> = ({ config, on
                         setDraggedTokenIdx(null);
                         setDropTargetIdx(null);
                       }}
-                      className={`group inline-flex items-center gap-1 px-2 py-1 rounded-lg border font-mono text-[10px] select-none transition-all shadow-sm ${
+                      className={`group relative inline-flex min-w-[68px] justify-center items-center gap-1 px-2.5 py-1 rounded-lg border font-mono text-[10px] select-none transition-all shadow-sm overflow-hidden ${
                         isDragging
                           ? 'opacity-40 border-slate-700 bg-slate-900'
                           : isDropTarget
@@ -340,8 +340,8 @@ export const RenameConfigPanel: React.FC<RenameConfigPanelProps> = ({ config, on
                         {token.replace(/[\{\}\(\)\[\]]/g, '')}
                       </span>
 
-                      {/* Actions on hover (< > x) */}
-                      <div className="hidden group-hover:inline-flex items-center gap-0.5 ml-0.5 border-l border-red-900/50 pl-1 shrink-0">
+                      {/* Absolute Overlay Controls on hover (< > x) */}
+                      <div className="absolute inset-0 bg-red-950/95 border border-red-500/80 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 px-1 z-10 pointer-events-none group-hover:pointer-events-auto">
                         {idx > 0 && (
                           <button
                             type="button"
@@ -349,10 +349,10 @@ export const RenameConfigPanel: React.FC<RenameConfigPanelProps> = ({ config, on
                               e.stopPropagation();
                               handleMoveToken(idx, idx - 1);
                             }}
-                            className="p-0.5 hover:bg-red-900/60 text-red-300 rounded transition"
+                            className="p-0.5 hover:bg-red-800/80 text-red-200 hover:text-white rounded transition"
                             title="Move token left"
                           >
-                            <ChevronLeft className="w-3 h-3" />
+                            <ChevronLeft className="w-3.5 h-3.5" />
                           </button>
                         )}
                         {idx < tokens.length - 1 && (
@@ -362,10 +362,10 @@ export const RenameConfigPanel: React.FC<RenameConfigPanelProps> = ({ config, on
                               e.stopPropagation();
                               handleMoveToken(idx, idx + 1);
                             }}
-                            className="p-0.5 hover:bg-red-900/60 text-red-300 rounded transition"
+                            className="p-0.5 hover:bg-red-800/80 text-red-200 hover:text-white rounded transition"
                             title="Move token right"
                           >
-                            <ChevronRight className="w-3 h-3" />
+                            <ChevronRight className="w-3.5 h-3.5" />
                           </button>
                         )}
                         <button
@@ -374,10 +374,10 @@ export const RenameConfigPanel: React.FC<RenameConfigPanelProps> = ({ config, on
                             e.stopPropagation();
                             handleRemoveToken(idx);
                           }}
-                          className="ml-0.5 text-red-400/70 hover:text-red-100 hover:bg-red-900/80 p-0.5 rounded transition shrink-0"
+                          className="p-0.5 hover:bg-red-800/80 text-red-200 hover:text-white rounded transition"
                           title="Click to remove token"
                         >
-                          <X className="w-3 h-3" />
+                          <X className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </div>
