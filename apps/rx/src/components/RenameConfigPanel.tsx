@@ -184,7 +184,7 @@ export const RenameConfigPanel: React.FC<RenameConfigPanelProps> = ({ config, on
   let tokenCount = 0;
 
   return (
-    <aside className="w-80 border-r border-red-950/30 bg-[#090b10] p-4 space-y-5 overflow-y-auto">
+    <aside className="w-[368px] border-r border-red-950/30 bg-[#090b10] p-4 space-y-5 overflow-y-auto shrink-0">
       <div className="flex items-center gap-2 text-slate-200 font-semibold text-sm border-b border-red-950/40 pb-3">
         <Sliders className="w-4 h-4 text-red-500" />
         Renamer Configuration
@@ -324,7 +324,7 @@ export const RenameConfigPanel: React.FC<RenameConfigPanelProps> = ({ config, on
                         setDraggedTokenIdx(null);
                         setDropTargetIdx(null);
                       }}
-                      className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg border font-mono text-xs select-none transition-all shadow-sm ${
+                      className={`group inline-flex items-center gap-1 px-2 py-1 rounded-lg border font-mono text-[10px] select-none transition-all shadow-sm ${
                         isDragging
                           ? 'opacity-40 border-slate-700 bg-slate-900'
                           : isDropTarget
@@ -336,10 +336,10 @@ export const RenameConfigPanel: React.FC<RenameConfigPanelProps> = ({ config, on
                       <GripVertical className="w-3.5 h-3.5 text-red-400/60 cursor-grab active:cursor-grabbing shrink-0" />
 
                       {/* Token Label */}
-                      <span className="font-semibold text-[11px] tracking-wide">{token}</span>
+                      <span className="font-semibold text-[10px] tracking-wide">{token}</span>
 
-                      {/* Shift Buttons */}
-                      <div className="inline-flex items-center gap-0.5 ml-0.5 border-l border-red-900/50 pl-1 shrink-0">
+                      {/* Actions on hover (< > x) */}
+                      <div className="hidden group-hover:inline-flex items-center gap-0.5 ml-0.5 border-l border-red-900/50 pl-1 shrink-0">
                         {idx > 0 && (
                           <button
                             type="button"
@@ -366,20 +366,18 @@ export const RenameConfigPanel: React.FC<RenameConfigPanelProps> = ({ config, on
                             <ChevronRight className="w-3 h-3" />
                           </button>
                         )}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveToken(idx);
+                          }}
+                          className="ml-0.5 text-red-400/70 hover:text-red-100 hover:bg-red-900/80 p-0.5 rounded transition shrink-0"
+                          title="Click to remove token"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
                       </div>
-
-                      {/* Click to Remove Token */}
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemoveToken(idx);
-                        }}
-                        className="ml-0.5 text-red-400/70 hover:text-red-100 hover:bg-red-900/80 p-0.5 rounded transition shrink-0"
-                        title="Click to remove token"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
                     </div>
                   );
                 })
