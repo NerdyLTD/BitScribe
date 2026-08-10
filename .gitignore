@@ -7,6 +7,15 @@ coverage/
 .env*
 !.env.example
 
+# Git Backups and Credentials Protection
+.git_corrupt_backup/
+.git_*
+*.token
+*.pem
+*.key
+.credentials*
+secrets*
+
 # SQLite and Local Database files
 *.db
 *.db-journal

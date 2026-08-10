@@ -75,7 +75,7 @@ export interface EvaluationResult {
 }
 
 export const APP_NAME = "BitScribe Digital Library Steward";
-export const APP_VERSION = `v${import.meta.env.APP_VERSION || "1.5.0"}`;
+export const APP_VERSION = `v${(import.meta as any).env?.APP_VERSION || "1.5.0"}`;
 export const APP_VERSION_DATE = "July 31, 2026";
 
 export function isMusicCategory(category: string | undefined): boolean {
@@ -214,4 +214,50 @@ export interface RuleCriteria {
   discoveryMusicCodecs: string[];
   discoveryContainers: string[];
   discoveryHdrFormats?: string[];
+}
+
+export type RenamerPreset =
+  | 'simple-movie'
+  | 'detailed-movie'
+  | 'scene-movie'
+  | 'standard-tv'
+  | 'compact-tv'
+  | 'plex-tv'
+  | 'artist-track-title'
+  | 'track-title'
+  | 'album-track-title'
+  | 'custom';
+export type EpisodicFormat = 'S01E02' | '1x02' | 's1e2' | 'S01.E02';
+export type ArticleOption = 'keep' | 'strip' | 'move_to_end';
+export type CaseStyle = 'title_case' | 'clean_case' | 'lowercase' | 'uppercase';
+export type DelimiterOption = 'space' | 'dot' | 'dash' | 'underscore';
+export type SingleWordInitialsMode = 'three_letters' | 'full_word' | 'single_letter';
+
+export interface RenamePatternConfig {
+  mediaCategory: 'movies' | 'tv' | 'music';
+  preset: RenamerPreset;
+  customTemplate: string;
+  episodicFormat: EpisodicFormat;
+  articleOption: ArticleOption;
+  caseStyle: CaseStyle;
+  delimiter: DelimiterOption;
+  sanitizeChars: boolean;
+  autoTrackSidecars: boolean;
+  singleWordInitialsMode?: SingleWordInitialsMode;
+}
+
+export interface RenameCandidate {
+  id: string;
+  originalPath: string;
+  originalFilename: string;
+  proposedFilename: string;
+  proposedPath: string;
+  confidence: 'high' | 'medium' | 'low';
+  confidenceReasons: string[];
+  isCollision: boolean;
+  hasMissingTokens: boolean;
+  selected: boolean;
+  status: 'pending' | 'success' | 'failed' | 'skipped';
+  errorMessage?: string;
+  sidecars?: string[];
 }

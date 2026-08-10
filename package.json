@@ -8,8 +8,10 @@
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
-    "dev": "npm run dev --workspace=apps/steward",
-    "lint": "npm run lint --workspace=apps/steward",
+    "dev": "npm run dev --workspace=apps/rx",
+    "dev:steward": "npm run dev --workspace=apps/steward",
+    "dev:rx": "npm run dev --workspace=apps/rx",
+    "lint": "npm run lint --workspaces --if-present",
     "tauri": "npm run tauri --workspace=apps/steward"
   },
   "dependencies": {

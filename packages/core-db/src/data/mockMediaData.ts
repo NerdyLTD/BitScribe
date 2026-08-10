@@ -142,6 +142,7 @@ export const MOCK_MEDIA_LIBRARY: MediaItem[] = [
     videoResolution: '1080p',
     videoBitrateMbps: 3.9,
     hdrFormat: 'SDR',
+    tags: { title: 'Stranger Things', season: '4', episode: '1', episodeTitle: 'Chapter One: The Hellfire Club', releaseGroup: 'FLUX' },
     audioTracks: [
       { index: 0, codec: 'eac3', channels: 6, language: 'eng', title: 'DDP 5.1' }
     ],
@@ -167,6 +168,7 @@ export const MOCK_MEDIA_LIBRARY: MediaItem[] = [
     videoResolution: '4K',
     videoBitrateMbps: 12.5,
     hdrFormat: 'HDR10',
+    tags: { title: 'The Mandalorian', season: '1', episode: '1', episodeTitle: 'Chapter 1: The Mandalorian', releaseGroup: 'SW' },
     audioTracks: [
       { index: 0, codec: 'eac3', channels: 6, language: 'eng', title: 'EAC3 Atmos' }
     ],
@@ -191,6 +193,7 @@ export const MOCK_MEDIA_LIBRARY: MediaItem[] = [
     videoResolution: '1080p',
     videoBitrateMbps: 3.5,
     hdrFormat: 'SDR',
+    tags: { title: 'Severance', season: '1', episode: '1', episodeTitle: 'Good News About Hell', releaseGroup: 'LUMON' },
     audioTracks: [
       { index: 0, codec: 'aac', channels: 2, language: 'eng', title: 'AAC Stereo' }
     ],
@@ -213,6 +216,7 @@ export const MOCK_MEDIA_LIBRARY: MediaItem[] = [
     videoResolution: '1080p',
     videoBitrateMbps: 4.2,
     hdrFormat: 'SDR',
+    tags: { title: 'Succession', season: '4', episode: '1', episodeTitle: 'The Munsters', releaseGroup: 'WAYSTAR' },
     audioTracks: [
       { index: 0, codec: 'ac3', channels: 6, language: 'eng', title: 'AC3 5.1' }
     ],
@@ -237,6 +241,7 @@ export const MOCK_MEDIA_LIBRARY: MediaItem[] = [
     videoResolution: '4K',
     videoBitrateMbps: 11.8,
     hdrFormat: 'HDR10',
+    tags: { title: 'Game of Thrones', season: '8', episode: '5', episodeTitle: 'The Bells', releaseGroup: 'HBO' },
     audioTracks: [
       { index: 0, codec: 'eac3', channels: 6, language: 'eng', title: 'EAC3 Surround' }
     ],
@@ -533,6 +538,7 @@ export const MOCK_MEDIA_LIBRARY: MediaItem[] = [
     videoResolution: '1080p',
     videoBitrateMbps: 3.8,
     hdrFormat: 'SDR',
+    tags: { title: 'Breaking Bad', season: '1', episode: '1', episodeTitle: 'Pilot', releaseGroup: 'AMC' },
     audioTracks: [
       { index: 0, codec: 'aac', channels: 2, language: 'eng', title: 'AAC Stereo' }
     ],
@@ -555,6 +561,7 @@ export const MOCK_MEDIA_LIBRARY: MediaItem[] = [
     videoResolution: '1080p',
     videoBitrateMbps: 3.2,
     hdrFormat: 'SDR',
+    tags: { title: 'The Office', season: '1', episode: '1', episodeTitle: 'Pilot', releaseGroup: 'NBC' },
     audioTracks: [
       { index: 0, codec: 'aac', channels: 2, language: 'eng', title: 'AAC Stereo' }
     ],
@@ -577,6 +584,7 @@ export const MOCK_MEDIA_LIBRARY: MediaItem[] = [
     videoResolution: '1080p',
     videoBitrateMbps: 3.0,
     hdrFormat: 'SDR',
+    tags: { title: 'Friends', season: '1', episode: '1', episodeTitle: 'The One Where Monica Gets a Roommate', releaseGroup: 'WB' },
     audioTracks: [
       { index: 0, codec: 'aac', channels: 2, language: 'eng', title: 'AAC Stereo' }
     ],
@@ -599,6 +607,7 @@ export const MOCK_MEDIA_LIBRARY: MediaItem[] = [
     videoResolution: '1080p',
     videoBitrateMbps: 4.5,
     hdrFormat: 'SDR',
+    tags: { title: 'Sherlock', season: '1', episode: '1', episodeTitle: 'A Study in Pink', releaseGroup: 'BBC' },
     audioTracks: [
       { index: 0, codec: 'ac3', channels: 6, language: 'eng', title: 'AC3 5.1' }
     ],
@@ -623,6 +632,7 @@ export const MOCK_MEDIA_LIBRARY: MediaItem[] = [
     videoResolution: '1080p',
     videoBitrateMbps: 4.0,
     hdrFormat: 'SDR',
+    tags: { title: 'Fargo', season: '1', episode: '1', episodeTitle: "The Crocodile's Dilemma", releaseGroup: 'FX' },
     audioTracks: [
       { index: 0, codec: 'ac3', channels: 6, language: 'eng', title: 'Dolby Surround 5.1' }
     ],
@@ -917,6 +927,7 @@ export const MOCK_MEDIA_LIBRARY: MediaItem[] = [
     videoResolution: '1080p',
     videoBitrateMbps: 3.2,
     hdrFormat: 'SDR',
+    tags: { title: 'Severance', season: '1', episode: '9', episodeTitle: 'The We We Are', releaseGroup: 'LUMON' },
     audioTracks: [
       { index: 0, codec: 'aac', channels: 2, language: 'eng', title: 'AAC Stereo' }
     ],
@@ -941,6 +952,7 @@ export const MOCK_MEDIA_LIBRARY: MediaItem[] = [
     videoResolution: '4K',
     videoBitrateMbps: 14.2,
     hdrFormat: 'Dolby Vision',
+    tags: { title: 'House of the Dragon', season: '1', episode: '1', episodeTitle: 'Heirs of the Dragon', releaseGroup: 'HBO' },
     audioTracks: [
       { index: 0, codec: 'truehd', channels: 8, language: 'eng', title: 'Atmos 7.1' }
     ],
@@ -963,6 +975,7 @@ export const MOCK_MEDIA_LIBRARY: MediaItem[] = [
     videoResolution: '4K',
     videoBitrateMbps: 13.8,
     hdrFormat: 'HDR10',
+    tags: { title: 'The Last of Us', season: '1', episode: '1', episodeTitle: "When You're Lost in the Darkness", releaseGroup: 'HBO' },
     audioTracks: [
       { index: 0, codec: 'dts', channels: 8, language: 'eng', title: 'DTS-HD MA 7.1' }
     ],
@@ -987,6 +1000,7 @@ export const MOCK_MEDIA_LIBRARY: MediaItem[] = [
     videoResolution: '1080p',
     videoBitrateMbps: 3.5,
     hdrFormat: 'SDR',
+    tags: { title: 'The Mandalorian', season: '2', episode: '8', episodeTitle: 'Chapter 16: The Rescue', releaseGroup: 'SW' },
     audioTracks: [
       { index: 0, codec: 'opus', channels: 2, language: 'eng', title: 'Opus Stereo' }
     ],
@@ -1009,6 +1023,7 @@ export const MOCK_MEDIA_LIBRARY: MediaItem[] = [
     videoResolution: '4K',
     videoBitrateMbps: 11.5,
     hdrFormat: 'HDR10',
+    tags: { title: 'Stranger Things', season: '4', episode: '9', episodeTitle: 'Chapter Nine: The Piggyback', releaseGroup: 'FLUX' },
     audioTracks: [
       { index: 0, codec: 'aac', channels: 2, language: 'eng', title: 'AAC Stereo' }
     ],
@@ -1301,6 +1316,7 @@ export const MOCK_MEDIA_LIBRARY: MediaItem[] = [
     videoResolution: 'SD',
     videoBitrateMbps: 2.5,
     hdrFormat: 'SDR',
+    tags: { title: 'The Simpsons', season: '4', episode: '12', episodeTitle: 'Marge vs. the Monorail', releaseGroup: 'FOX' },
     audioTracks: [
       { index: 0, codec: 'ac3', channels: 2, language: 'eng', title: 'AC3 Stereo' }
     ],
@@ -1323,6 +1339,7 @@ export const MOCK_MEDIA_LIBRARY: MediaItem[] = [
     videoResolution: 'SD',
     videoBitrateMbps: 1.4,
     hdrFormat: 'SDR',
+    tags: { title: 'Star Trek: The Next Generation', season: '1', episode: '1', episodeTitle: 'Encounter at Farpoint', releaseGroup: 'PAR' },
     audioTracks: [
       { index: 0, codec: 'wmav2', channels: 2, language: 'eng', title: 'WMA Stereo' }
     ],
@@ -1345,6 +1362,7 @@ export const MOCK_MEDIA_LIBRARY: MediaItem[] = [
     videoResolution: 'SD',
     videoBitrateMbps: 1.8,
     hdrFormat: 'SDR',
+    tags: { title: 'The Wire', season: '1', episode: '1', episodeTitle: 'The Target', releaseGroup: 'HBO' },
     audioTracks: [
       { index: 0, codec: 'ac3', channels: 2, language: 'eng', title: 'AC3 Stereo' }
     ],
@@ -1367,6 +1385,7 @@ export const MOCK_MEDIA_LIBRARY: MediaItem[] = [
     videoResolution: 'SD',
     videoBitrateMbps: 1.5,
     hdrFormat: 'SDR',
+    tags: { title: 'Retro Sitcom', season: '2', episode: '1', episodeTitle: 'The Reunion', releaseGroup: 'VHS' },
     audioTracks: [
       { index: 0, codec: 'mp3', channels: 2, language: 'und', title: 'MP3 Undefined' }
     ],
@@ -1389,6 +1408,7 @@ export const MOCK_MEDIA_LIBRARY: MediaItem[] = [
     videoResolution: 'SD',
     videoBitrateMbps: 4.5,
     hdrFormat: 'SDR',
+    tags: { title: 'The Twilight Zone', season: '1', episode: '1', episodeTitle: 'Where Is Everybody?', releaseGroup: 'CBS' },
     audioTracks: [
       { index: 0, codec: 'aac', channels: 2, language: 'eng', title: 'AAC Stereo' }
     ],
@@ -1685,6 +1705,7 @@ export const MOCK_MEDIA_LIBRARY: MediaItem[] = [
     videoResolution: '1080p',
     videoBitrateMbps: 4.2,
     hdrFormat: 'SDR',
+    tags: { title: 'True Detective', season: '1', episode: '1', episodeTitle: 'The Long Bright Dark', releaseGroup: 'HBO' },
     audioTracks: [
       { index: 0, codec: 'eac3', channels: 6, language: 'eng', title: 'EAC3 Surround' }
     ],
@@ -1709,6 +1730,7 @@ export const MOCK_MEDIA_LIBRARY: MediaItem[] = [
     videoResolution: '1080p',
     videoBitrateMbps: 3.5,
     hdrFormat: 'SDR',
+    tags: { title: 'Better Call Saul', season: '1', episode: '1', episodeTitle: 'Uno', releaseGroup: 'AMC' },
     audioTracks: [
       { index: 0, codec: 'aac', channels: 2, language: 'eng', title: 'AAC Stereo' }
     ],
@@ -1731,6 +1753,7 @@ export const MOCK_MEDIA_LIBRARY: MediaItem[] = [
     videoResolution: '4K',
     videoBitrateMbps: 12.5,
     hdrFormat: 'HDR10',
+    tags: { title: 'Westworld', season: '1', episode: '1', episodeTitle: 'The Original', releaseGroup: 'HBO' },
     audioTracks: [
       { index: 0, codec: 'eac3', channels: 6, language: 'eng', title: 'Dolby Surround' }
     ],
@@ -1755,6 +1778,7 @@ export const MOCK_MEDIA_LIBRARY: MediaItem[] = [
     videoResolution: '1080p',
     videoBitrateMbps: 3.2,
     hdrFormat: 'SDR',
+    tags: { title: 'The Crown', season: '1', episode: '1', episodeTitle: 'Wolferton Splash', releaseGroup: 'NF' },
     audioTracks: [
       { index: 0, codec: 'aac', channels: 2, language: 'eng', title: 'AAC Stereo' }
     ],
@@ -1777,6 +1801,7 @@ export const MOCK_MEDIA_LIBRARY: MediaItem[] = [
     videoResolution: '4K',
     videoBitrateMbps: 12.8,
     hdrFormat: 'HLG',
+    tags: { title: 'Chernobyl', season: '1', episode: '1', episodeTitle: '1:23:45', releaseGroup: 'HBO' },
     audioTracks: [
       { index: 0, codec: 'aac', channels: 6, language: 'eng', title: 'AAC 5.1 Surround' }
     ],

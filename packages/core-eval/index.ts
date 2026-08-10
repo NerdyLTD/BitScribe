@@ -7,3 +7,4 @@ export * from './src/reportFilters';
 export * from './src/scanUtils';
 export * from './src/sortingHelper';
 export * from './src/constants';
+export * from './src/renamerEngine';
