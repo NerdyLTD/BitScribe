@@ -1,6 +1,6 @@
 {
   "name": "BitScribe Digital Media Library Steward",
-  "description": "Bitscribe is an elegant, full-featured digital media library steward for scanning, cataloging, and auditing video, audio, and subtitle streams.",
+  "description": "BitScribe Digital Media Library Suite featuring BitScribe Steward and BitScribe RX file renamer and remediation engine.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

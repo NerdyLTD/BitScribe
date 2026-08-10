@@ -1,0 +1,35 @@
+{
+  "name": "bitscribe-rx",
+  "description": "BitScribe RX - Active File Renamer & Remediation Tool",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "start": "vite",
+    "clean": "rm -rf dist",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@bitscribe/core-db": "*",
+    "@bitscribe/core-eval": "*",
+    "@bitscribe/core-export": "*",
+    "@bitscribe/core-types": "*",
+    "@bitscribe/desktop-api": "*",
+    "@bitscribe/ui-components": "*",
+    "lucide-react": "^1.28.0",
+    "motion": "^12.43.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^26.1.2",
+    "@vitejs/plugin-react": "^6.0.5",
+    "autoprefixer": "^10.5.4",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~7.0.2",
+    "vite": "^8.2.0"
+  }
+}

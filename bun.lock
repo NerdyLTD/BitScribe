@@ -10,6 +10,31 @@
         "puppeteer": "^25.5.0",
       },
     },
+    "apps/rx": {
+      "name": "bitscribe-rx",
+      "version": "0.1.0",
+      "dependencies": {
+        "@bitscribe/core-db": "*",
+        "@bitscribe/core-eval": "*",
+        "@bitscribe/core-export": "*",
+        "@bitscribe/core-types": "*",
+        "@bitscribe/desktop-api": "*",
+        "@bitscribe/ui-components": "*",
+        "lucide-react": "^1.28.0",
+        "motion": "^12.43.0",
+        "react": "^19.2.8",
+        "react-dom": "^19.2.8",
+      },
+      "devDependencies": {
+        "@tailwindcss/vite": "^4.3.3",
+        "@types/node": "^26.1.2",
+        "@vitejs/plugin-react": "^6.0.5",
+        "autoprefixer": "^10.5.4",
+        "tailwindcss": "^4.3.3",
+        "typescript": "~7.0.2",
+        "vite": "^8.2.0",
+      },
+    },
     "apps/steward": {
       "name": "bitscribe-dmls",
       "version": "1.5.0",
@@ -550,6 +575,8 @@
     "binary": ["binary@0.3.0", "", { "dependencies": { "buffers": "~0.1.1", "chainsaw": "~0.1.0" } }, "sha512-D4H1y5KYwpJgK8wk1Cue5LLPgmwHKYSChkbspQg5JtVuR5ulGckxfR62H3AE9UDkdMC8yyXlqYihuz3Aqg2XZg=="],
 
     "bitscribe-dmls": ["bitscribe-dmls@workspace:apps/steward"],
+
+    "bitscribe-rx": ["bitscribe-rx@workspace:apps/rx"],
 
     "bl": ["bl@4.1.0", "", { "dependencies": { "buffer": "^5.5.0", "inherits": "^2.0.4", "readable-stream": "^3.4.0" } }, "sha512-1W07cM9gS6DcLperZfFSj+bWLtaPGSOHWhPiGzXmvVJbRLdG82sH/Kn8EtW1VqWVA54AKf2h5k5BbnIbwF3h6w=="],
 
