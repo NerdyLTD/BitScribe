@@ -336,7 +336,9 @@ export const RenameConfigPanel: React.FC<RenameConfigPanelProps> = ({ config, on
                       <GripVertical className="w-3.5 h-3.5 text-red-400/60 cursor-grab active:cursor-grabbing shrink-0" />
 
                       {/* Token Label */}
-                      <span className="font-semibold text-[10px] tracking-wide">{token}</span>
+                      <span className="font-semibold text-[10px] tracking-wide">
+                        {token.replace(/[\{\}\(\)\[\]]/g, '')}
+                      </span>
 
                       {/* Actions on hover (< > x) */}
                       <div className="hidden group-hover:inline-flex items-center gap-0.5 ml-0.5 border-l border-red-900/50 pl-1 shrink-0">
@@ -415,7 +417,7 @@ export const RenameConfigPanel: React.FC<RenameConfigPanelProps> = ({ config, on
                 className="px-2 py-1 bg-slate-900 hover:bg-red-950/70 text-slate-300 hover:text-red-200 text-[10px] rounded-lg font-mono border border-slate-800 hover:border-red-800/60 transition flex items-center gap-1"
               >
                 <span>+</span>
-                <span>{token}</span>
+                <span>{token.replace(/[\{\}\(\)\[\]]/g, '')}</span>
               </button>
             ))}
           </div>
