@@ -27,51 +27,34 @@ interface RenameConfigPanelProps {
   onChange: (newConfig: RenamePatternConfig) => void;
 }
 
-interface TemplateSegment {
-  type: 'token' | 'text';
-  value: string;
-  id: string;
+export function parseTokensFromTemplate(template: string): string[] {
+  if (!template || !template.trim()) return [];
+  const tokenRegex = /(\(\{[A-Za-z0-9]+\}\)|\[\{[A-Za-z0-9]+\}\]|\{[A-Za-z0-9]+\})/g;
+  const matches = template.match(tokenRegex);
+  return matches ? matches : [];
 }
 
-function parseTemplateSegments(template: string): TemplateSegment[] {
-  const result: TemplateSegment[] = [];
-  const tokenRegex = /(\{[A-Za-z0-9]+\})/g;
-  let lastIdx = 0;
-  let match: RegExpExecArray | null;
-  let count = 0;
-
-  while ((match = tokenRegex.exec(template)) !== null) {
-    if (match.index > lastIdx) {
-      result.push({
-        type: 'text',
-        value: template.slice(lastIdx, match.index),
-        id: `text_${count++}`,
-      });
+export function stringifyTokensToTemplate(tokens: string[]): string {
+  if (!tokens || tokens.length === 0) return '';
+  let result = '';
+  for (let i = 0; i < tokens.length; i++) {
+    const curr = tokens[i];
+    if (i === 0) {
+      result += curr;
+      continue;
     }
-    result.push({
-      type: 'token',
-      value: match[0],
-      id: `token_${count++}`,
-    });
-    lastIdx = tokenRegex.lastIndex;
+    if (curr.startsWith('(') || curr.startsWith('[')) {
+      result += ` ${curr}`;
+    } else {
+      const prev = tokens[i - 1];
+      if (prev.endsWith(')') || prev.endsWith(']')) {
+        result += ` - ${curr}`;
+      } else {
+        result += ` - ${curr}`;
+      }
+    }
   }
-
-  if (lastIdx < template.length) {
-    result.push({
-      type: 'text',
-      value: template.slice(lastIdx),
-      id: `text_${count++}`,
-    });
-  }
-
-  return result;
-}
-
-function cleanTemplateString(str: string): string {
-  return str
-    .replace(/\s*-\s*-\s*/g, ' - ')
-    .replace(/\s+/g, ' ')
-    .trim();
+  return result.replace(/\s+/g, ' ').trim();
 }
 
 export const RenameConfigPanel: React.FC<RenameConfigPanelProps> = ({ config, onChange }) => {
@@ -123,83 +106,43 @@ export const RenameConfigPanel: React.FC<RenameConfigPanelProps> = ({ config, on
     });
   };
 
-  // Parsing segments for interactive token builder
-  const segments = parseTemplateSegments(config.customTemplate || '');
+  // Parsing tokens for interactive token builder
+  const tokens = parseTokensFromTemplate(config.customTemplate || '');
 
-  const handleRemoveToken = (tokenIndexToRemove: number) => {
-    let currentTokenCount = 0;
-    const nextSegments: TemplateSegment[] = [];
-
-    for (const seg of segments) {
-      if (seg.type === 'token') {
-        if (currentTokenCount === tokenIndexToRemove) {
-          currentTokenCount++;
-          continue; // Skip/remove token
-        }
-        currentTokenCount++;
-      }
-      nextSegments.push(seg);
-    }
-
-    const rawStr = nextSegments.map((s) => s.value).join('');
-    const cleaned = cleanTemplateString(rawStr);
+  const handleRemoveToken = (indexToRemove: number) => {
+    const nextTokens = tokens.filter((_, idx) => idx !== indexToRemove);
+    const newTemplate = stringifyTokensToTemplate(nextTokens);
 
     onChange({
       ...config,
-      customTemplate: cleaned,
+      customTemplate: newTemplate,
       preset: 'custom',
     });
   };
 
-  const handleMoveToken = (fromTokenIdx: number, toTokenIdx: number) => {
-    if (fromTokenIdx === toTokenIdx || fromTokenIdx < 0 || toTokenIdx < 0) return;
+  const handleMoveToken = (fromIdx: number, toIdx: number) => {
+    if (fromIdx === toIdx || fromIdx < 0 || toIdx < 0 || fromIdx >= tokens.length || toIdx >= tokens.length) return;
 
-    const tokenSegmentIndices: number[] = [];
-    segments.forEach((seg, idx) => {
-      if (seg.type === 'token') {
-        tokenSegmentIndices.push(idx);
-      }
-    });
+    const nextTokens = [...tokens];
+    const [moved] = nextTokens.splice(fromIdx, 1);
+    nextTokens.splice(toIdx, 0, moved);
 
-    if (
-      fromTokenIdx >= tokenSegmentIndices.length ||
-      toTokenIdx >= tokenSegmentIndices.length
-    ) {
-      return;
-    }
-
-    const sourceSegIdx = tokenSegmentIndices[fromTokenIdx];
-    const targetSegIdx = tokenSegmentIndices[toTokenIdx];
-
-    const nextSegments = [...segments];
-    const tempVal = nextSegments[sourceSegIdx].value;
-    nextSegments[sourceSegIdx] = {
-      ...nextSegments[sourceSegIdx],
-      value: nextSegments[targetSegIdx].value,
-    };
-    nextSegments[targetSegIdx] = {
-      ...nextSegments[targetSegIdx],
-      value: tempVal,
-    };
-
-    const rawStr = nextSegments.map((s) => s.value).join('');
-    const cleaned = cleanTemplateString(rawStr);
+    const newTemplate = stringifyTokensToTemplate(nextTokens);
 
     onChange({
       ...config,
-      customTemplate: cleaned,
+      customTemplate: newTemplate,
       preset: 'custom',
     });
   };
 
-  const insertToken = (token: string) => {
-    const current = config.customTemplate ? config.customTemplate.trim() : '';
-    const newTemplate = current ? `${current} - ${token}` : token;
-    const cleaned = cleanTemplateString(newTemplate);
+  const insertToken = (tokenToInsert: string) => {
+    const nextTokens = [...tokens, tokenToInsert];
+    const newTemplate = stringifyTokensToTemplate(nextTokens);
 
     onChange({
       ...config,
-      customTemplate: cleaned,
+      customTemplate: newTemplate,
       preset: 'custom',
     });
   };
@@ -232,10 +175,10 @@ export const RenameConfigPanel: React.FC<RenameConfigPanelProps> = ({ config, on
   // Category specific token chips
   const tokenChips =
     currentCategory === 'movies'
-      ? ['{Title}', '{Year}', '{Resolution}', '{VideoCodec}', '{AudioCodec}', '{Channels}', '{ReleaseGroup}']
+      ? ['{Title}', '({Year})', '{Resolution}', '{VideoCodec}', '{AudioCodec}', '{Channels}', '{ReleaseGroup}']
       : currentCategory === 'tv'
-      ? ['{Title}', '{SeasonEpisode}', '{EpTitle}', '{Initials}', '{Year}', '{Resolution}', '{VideoCodec}', '{AudioCodec}']
-      : ['{Artist}', '{Title}', '{Album}', '{Track}', '{Year}', '{AudioCodec}', '{BitDepth}'];
+      ? ['{Title}', '{SeasonEpisode}', '{EpTitle}', '({Year})', '{Initials}', '{Resolution}', '{VideoCodec}', '{AudioCodec}']
+      : ['{Artist}', '{Title}', '{Album}', '{Track}', '({Year})', '{AudioCodec}', '{BitDepth}'];
 
   // Calculate tokens list
   let tokenCount = 0;
@@ -341,41 +284,30 @@ export const RenameConfigPanel: React.FC<RenameConfigPanelProps> = ({ config, on
         {/* Interactive Drag-and-Drop / Click-to-Remove Token Box */}
         <div className="p-2.5 bg-slate-950 border border-red-900/40 rounded-xl space-y-2 shadow-inner">
           {!showRawInput ? (
-            <div className="flex flex-wrap items-center gap-1.5 min-h-[42px] p-1">
-              {segments.length === 0 ? (
+            <div className="flex flex-wrap items-center gap-1.5 min-h-[44px] p-1">
+              {tokens.length === 0 ? (
                 <span className="text-xs text-slate-600 italic">No template tokens added. Click below to insert.</span>
               ) : (
-                segments.map((seg) => {
-                  if (seg.type === 'text') {
-                    if (!seg.value.trim() && !seg.value.includes('-')) return null;
-                    return (
-                      <span key={seg.id} className="text-[11px] font-mono text-slate-500 select-none px-0.5">
-                        {seg.value}
-                      </span>
-                    );
-                  }
-
-                  const currentTokenIdx = tokenCount++;
-                  const totalTokens = segments.filter((s) => s.type === 'token').length;
-                  const isDragging = draggedTokenIdx === currentTokenIdx;
-                  const isDropTarget = dropTargetIdx === currentTokenIdx;
+                tokens.map((token, idx) => {
+                  const isDragging = draggedTokenIdx === idx;
+                  const isDropTarget = dropTargetIdx === idx;
 
                   return (
                     <div
-                      key={seg.id}
+                      key={`${token}_${idx}`}
                       draggable
                       onDragStart={(e) => {
-                        e.dataTransfer.setData('text/plain', String(currentTokenIdx));
-                        setDraggedTokenIdx(currentTokenIdx);
+                        e.dataTransfer.setData('text/plain', String(idx));
+                        setDraggedTokenIdx(idx);
                       }}
                       onDragOver={(e) => {
                         e.preventDefault();
-                        if (dropTargetIdx !== currentTokenIdx) {
-                          setDropTargetIdx(currentTokenIdx);
+                        if (dropTargetIdx !== idx) {
+                          setDropTargetIdx(idx);
                         }
                       }}
                       onDragLeave={() => {
-                        if (dropTargetIdx === currentTokenIdx) {
+                        if (dropTargetIdx === idx) {
                           setDropTargetIdx(null);
                         }
                       }}
@@ -383,7 +315,7 @@ export const RenameConfigPanel: React.FC<RenameConfigPanelProps> = ({ config, on
                         e.preventDefault();
                         const sourceIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
                         if (!isNaN(sourceIdx)) {
-                          handleMoveToken(sourceIdx, currentTokenIdx);
+                          handleMoveToken(sourceIdx, idx);
                         }
                         setDraggedTokenIdx(null);
                         setDropTargetIdx(null);
@@ -392,7 +324,7 @@ export const RenameConfigPanel: React.FC<RenameConfigPanelProps> = ({ config, on
                         setDraggedTokenIdx(null);
                         setDropTargetIdx(null);
                       }}
-                      className={`group relative flex items-center gap-1 px-2 py-1 rounded-lg border font-mono text-xs transition-all shadow-sm ${
+                      className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg border font-mono text-xs select-none transition-all shadow-sm ${
                         isDragging
                           ? 'opacity-40 border-slate-700 bg-slate-900'
                           : isDropTarget
@@ -401,21 +333,19 @@ export const RenameConfigPanel: React.FC<RenameConfigPanelProps> = ({ config, on
                       }`}
                     >
                       {/* Drag handle */}
-                      <span className="cursor-grab active:cursor-grabbing text-red-400/60 group-hover:text-red-300">
-                        <GripVertical className="w-3.5 h-3.5" />
-                      </span>
+                      <GripVertical className="w-3.5 h-3.5 text-red-400/60 cursor-grab active:cursor-grabbing shrink-0" />
 
                       {/* Token Label */}
-                      <span className="font-semibold tracking-wide">{seg.value}</span>
+                      <span className="font-semibold text-[11px] tracking-wide">{token}</span>
 
-                      {/* Quick Move Arrows */}
-                      <div className="hidden group-hover:flex items-center gap-0.5 ml-0.5 border-l border-red-900/50 pl-1">
-                        {currentTokenIdx > 0 && (
+                      {/* Shift Buttons */}
+                      <div className="inline-flex items-center gap-0.5 ml-0.5 border-l border-red-900/50 pl-1 shrink-0">
+                        {idx > 0 && (
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleMoveToken(currentTokenIdx, currentTokenIdx - 1);
+                              handleMoveToken(idx, idx - 1);
                             }}
                             className="p-0.5 hover:bg-red-900/60 text-red-300 rounded transition"
                             title="Move token left"
@@ -423,12 +353,12 @@ export const RenameConfigPanel: React.FC<RenameConfigPanelProps> = ({ config, on
                             <ChevronLeft className="w-3 h-3" />
                           </button>
                         )}
-                        {currentTokenIdx < totalTokens - 1 && (
+                        {idx < tokens.length - 1 && (
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleMoveToken(currentTokenIdx, currentTokenIdx + 1);
+                              handleMoveToken(idx, idx + 1);
                             }}
                             className="p-0.5 hover:bg-red-900/60 text-red-300 rounded transition"
                             title="Move token right"
@@ -443,9 +373,9 @@ export const RenameConfigPanel: React.FC<RenameConfigPanelProps> = ({ config, on
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleRemoveToken(currentTokenIdx);
+                          handleRemoveToken(idx);
                         }}
-                        className="ml-0.5 text-red-400/70 hover:text-red-100 hover:bg-red-900/80 p-0.5 rounded transition"
+                        className="ml-0.5 text-red-400/70 hover:text-red-100 hover:bg-red-900/80 p-0.5 rounded transition shrink-0"
                         title="Click to remove token"
                       >
                         <X className="w-3 h-3" />
@@ -470,7 +400,7 @@ export const RenameConfigPanel: React.FC<RenameConfigPanelProps> = ({ config, on
 
           <div className="text-[10px] text-slate-500 flex items-center justify-between border-t border-slate-900 pt-1 px-0.5">
             <span>Drag chips to reorder • Click X to remove</span>
-            <span className="font-mono text-red-400/80">{segments.filter((s) => s.type === 'token').length} tokens</span>
+            <span className="font-mono text-red-400/80">{tokens.length} tokens</span>
           </div>
         </div>
 
