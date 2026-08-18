@@ -24,9 +24,14 @@ try {
         fs.chmodSync(path.join(srcTauriBin, 'ffprobe-x86_64-apple-darwin'), 0o755);
     }
     
-    if (fs.existsSync(path.join(staticPath, 'darwin', 'arm64', 'ffprobe'))) {
-        fs.copyFileSync(path.join(staticPath, 'darwin', 'arm64', 'ffprobe'), path.join(srcTauriBin, 'ffprobe-aarch64-apple-darwin'));
-        fs.chmodSync(path.join(srcTauriBin, 'ffprobe-aarch64-apple-darwin'), 0o755);
+    const arm64Target = path.join(srcTauriBin, 'ffprobe-aarch64-apple-darwin');
+    if (!fs.existsSync(arm64Target)) {
+        if (fs.existsSync(path.join(staticPath, 'darwin', 'arm64', 'ffprobe'))) {
+            fs.copyFileSync(path.join(staticPath, 'darwin', 'arm64', 'ffprobe'), arm64Target);
+            fs.chmodSync(arm64Target, 0o755);
+        }
+    } else {
+        fs.chmodSync(arm64Target, 0o755);
     }
     
     console.log("Successfully copied ffprobe binaries for Tauri sidecar.");

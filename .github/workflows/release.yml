@@ -1,14 +1,16 @@
-name: "Release"
+name: Release
 
 on:
-  push:
-    tags:
-      - "v*"
   workflow_dispatch:
     inputs:
       tag:
-        description: "Tag to release (only needed for manual runs)"
-        required: false
+        description: "Release tag (e.g. v1.6.0)"
+        required: true
+        default: "v1.6.0"
+        type: string
+  push:
+    tags:
+      - "v*"
 
 jobs:
   publish-tauri:
@@ -18,9 +20,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: "macos-latest"
+          - platform: "macos-14"
+            target: "aarch64-apple-darwin"
             args: "--target aarch64-apple-darwin"
           - platform: "windows-latest"
+            target: "x86_64-pc-windows-msvc"
             args: ""
 
     runs-on: ${{ matrix.platform }}
@@ -42,10 +46,13 @@ jobs:
         uses: dtolnay/rust-toolchain@v1
         with:
           toolchain: stable
-          targets: ${{ matrix.platform == "macos-latest" && "aarch64-apple-darwin" || "x86_64-pc-windows-msvc" }}
+          targets: ${{ matrix.target }}
 
       - name: install frontend dependencies
         run: npm ci
+
+      - name: prepare sidecar binaries
+        run: node apps/steward/scripts/setup-ffprobe.cjs
 
       - uses: tauri-apps/tauri-action@v1
         env:
@@ -58,8 +65,8 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           projectPath: apps/steward
-          tagName: ${{ github.ref_type == "tag" && github.ref_name || github.event.inputs.tag }}
-          releaseName: "BitScribe Steward ${{ github.ref_type == "tag" && github.ref_name || github.event.inputs.tag }}"
+          tagName: ${{ inputs.tag || github.ref_name }}
+          releaseName: "BitScribe Steward ${{ inputs.tag || github.ref_name }}"
           releaseBody: |
             BitScribe Steward release binaries (.dmg / .app.tar.gz for macOS Apple Silicon, .msi / .exe for Windows).
 
@@ -67,18 +74,18 @@ jobs:
             1. Download and mount the **`.dmg`** installer file.
             2. Drag **BitScribe Steward.app** into your **Applications** folder.
             3. Open **BitScribe Steward.app** directly from Applications.
-            
+
             *(Note: Application data, SQLite databases, and native ffprobe binaries are written strictly to `~/Library/Application Support/BitScribeSteward/`, preserving bundle signatures and preventing macOS Gatekeeper package corruption).*
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
 
       - name: Upload Windows Portable Executable
-        if: matrix.platform == "windows-latest" && (github.ref_type == "tag" || github.event.inputs.tag != "")
+        if: matrix.platform == "windows-latest"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd apps/steward/src-tauri/target/release
           if (Test-Path "BitScribe Steward.exe") { Rename-Item "BitScribe Steward.exe" "BitScribe-Steward-Portable-Windows.exe" }
           if (Test-Path "BitScribeSteward.exe") { Rename-Item "BitScribeSteward.exe" "BitScribe-Steward-Portable-Windows.exe" }
-          gh release upload ${{ github.ref_type == "tag" && github.ref_name || github.event.inputs.tag }} BitScribe-Steward-Portable-Windows.exe
+          gh release upload ${{ inputs.tag || github.ref_name }} BitScribe-Steward-Portable-Windows.exe
