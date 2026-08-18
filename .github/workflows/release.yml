@@ -81,7 +81,7 @@ jobs:
           args: ${{ matrix.args }}
 
       - name: Upload Windows Portable Executable
-        if: matrix.platform == "windows-latest"
+        if: matrix.platform == 'windows-latest'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
